@@ -119,6 +119,9 @@ source $ZSH/oh-my-zsh.sh
 # Editor
 export EDITOR="zed --wait"
 
+# User-installed zsh completions (must come BEFORE compinit so it picks them up)
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+
 # Fix for Docker & AWS plugin completions
 autoload bashcompinit && bashcompinit
 autoload -Uz compinit && compinit -i
@@ -141,14 +144,41 @@ alias claude='claude --effort max --enable-auto-mode --chrome'
 git config --global alias.up 'pull --rebase --autostash'
 ```
 
-## 11. Write ~/.zprofile
+## 11. Install `git multi` Completion
+
+`git multi` (from `git-plus`) runs a git command in every subdirectory but ships with no zsh completion. Install one that delegates to git's own subcommand completion so `git multi sw<TAB>` expands to `git multi switch`, etc.
+
+```bash
+mkdir -p ~/.local/share/zsh/site-functions
+cat > ~/.local/share/zsh/site-functions/_git-multi <<'EOF'
+#compdef git-multi
+
+# git-multi (from git-plus) runs a git command in every subdirectory.
+# Complete its arguments as a regular git command line — same pattern
+# zsh uses for `_git-for-each-repo`.
+_git-multi() {
+  _arguments -S \
+    ':git command:_git_commands' \
+    '*:: := _git'
+}
+
+_git-multi "$@"
+EOF
+rm -f ~/.zcompdump*
+```
+
+Open a fresh shell to pick up the regenerated completion cache.
+
+> **Note:** The `~/.local/share/zsh/site-functions` line in `~/.zshrc` must come **before** `compinit` for any completions in that directory to be loaded. Section 9 already places it correctly.
+
+## 12. Write ~/.zprofile
 
 ```bash
 # pipx
 export PATH="$PATH:$HOME/.local/bin"
 ```
 
-## 12. Post-Setup Verification
+## 13. Post-Setup Verification
 
 Run these checks and report results:
 
