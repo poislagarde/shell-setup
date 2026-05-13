@@ -135,7 +135,7 @@ export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 alias awsdarwin-dev='export AWS_PROFILE=darwin-dev && aws sso login --profile darwin-dev && eval $(aws configure export-credentials --profile darwin-dev --format env)'
 
 # Claude Code
-alias claude='claude --effort max --enable-auto-mode --chrome'
+alias claude='claude --chrome'
 ```
 
 ## 10. Configure Git
