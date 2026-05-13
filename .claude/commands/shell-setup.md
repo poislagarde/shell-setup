@@ -178,7 +178,37 @@ Open a fresh shell to pick up the regenerated completion cache.
 export PATH="$PATH:$HOME/.local/bin"
 ```
 
-## 13. Post-Setup Verification
+## 13. Restore Claude Code Configuration
+
+Deep-copy this repo's `.claude/` into `~/.claude/`. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
+
+Run from the root of this repo:
+
+```bash
+mkdir -p ~/.claude
+
+# 1. Deep-merge settings.json: existing ⨯ repo (repo wins on conflict).
+#    `jq -s '.[0] * .[1]'` recursively merges two JSON objects; the right
+#    operand wins on leaf collisions and arrays are replaced (not concatenated).
+if [ -f .claude/settings.json ]; then
+  if [ -f ~/.claude/settings.json ]; then
+    tmp=$(mktemp)
+    jq -s '.[0] * .[1]' ~/.claude/settings.json .claude/settings.json > "$tmp" \
+      && mv "$tmp" ~/.claude/settings.json
+  else
+    cp .claude/settings.json ~/.claude/settings.json
+  fi
+fi
+
+# 2. Copy everything else, overwriting on conflict but preserving files in
+#    ~/.claude that aren't in the repo (no --delete).
+rsync -av --exclude='settings.json' .claude/ ~/.claude/
+
+# 3. Make the statusline script executable.
+[ -f ~/.claude/statusline-command.sh ] && chmod +x ~/.claude/statusline-command.sh
+```
+
+## 14. Post-Setup Verification
 
 Run these checks and report results:
 
