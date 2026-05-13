@@ -132,19 +132,128 @@ export PATH="$PATH:$HOME/.local/bin"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
 # AWS SSO
-alias awsdarwin-dev='export AWS_PROFILE=darwin-dev && aws sso login --profile darwin-dev && eval $(aws configure export-credentials --profile darwin-dev --format env)'
+alias awsdarwin-dev='export AWS_PROFILE=dev && aws sso login --profile dev && eval $(aws configure export-credentials --profile dev --format env)'
 
 # Claude Code
 alias claude='claude --chrome'
 ```
 
-## 10. Configure Git
+## 10. Install AWS CLI
+
+Use the official macOS installer (not Homebrew — AWS does not maintain third-party repositories). Reference: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+```bash
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+sudo installer -pkg AWSCLIV2.pkg -target /
+rm AWSCLIV2.pkg
+```
+
+Verify:
+
+```bash
+which aws    # expect /usr/local/bin/aws
+aws --version
+```
+
+## 11. Configure AWS CLI Profiles
+
+Set up three SSO profiles sharing one SSO session:
+
+- `prod` — read-only role on the production account
+- `prod-admin` — admin role on the production account (used explicitly via `--profile prod-admin`)
+- `dev` — admin role on the development account
+
+Use the AWS CLI's built-in interactive commands rather than constructing `~/.aws/config` directly. `aws configure sso-session` creates the shared session; `aws configure sso --profile <name>` opens the browser, lets the user pick the actual account and role from what their SSO directory exposes, and writes the profile.
+
+Because the flow is interactive and opens a browser, run it in a separate Terminal window. The wrapper script signals completion by touching `/tmp/aws-sso-setup-done` only on success (any earlier failure leaves the marker absent, so the agent will not proceed).
+
+### Step 1: Write the wrapper script
+
+```bash
+cat > /tmp/aws-sso-setup.sh <<'SCRIPT'
+#!/bin/bash
+set -e
+MARKER=/tmp/aws-sso-setup-done
+rm -f "$MARKER"
+
+echo "==============================================="
+echo " AWS SSO Setup"
+echo "==============================================="
+echo
+echo "This will configure three SSO profiles sharing one SSO session:"
+echo "  - prod       (read-only role on the prod account)"
+echo "  - prod-admin (admin role on the prod account)"
+echo "  - dev        (admin role on the dev account)"
+echo
+echo "You will be prompted for the SSO start URL and region, then the"
+echo "browser will open three times — once per profile — so you can pick"
+echo "the account and role for each."
+echo
+read -r -p "Press Enter to start... "
+
+echo
+echo "--- Step 1/4: Configure the shared SSO session ---"
+echo "Suggested session name: darwin"
+aws configure sso-session
+
+echo
+echo "--- Step 2/4: Configure profile 'prod' (read-only role on prod account) ---"
+aws configure sso --profile prod
+
+echo
+echo "--- Step 3/4: Configure profile 'prod-admin' (admin role on prod account) ---"
+aws configure sso --profile prod-admin
+
+echo
+echo "--- Step 4/4: Configure profile 'dev' (admin role on dev account) ---"
+aws configure sso --profile dev
+
+echo
+echo "All three profiles configured successfully."
+touch "$MARKER"
+echo "(You can close this window.)"
+sleep 3
+SCRIPT
+chmod +x /tmp/aws-sso-setup.sh
+```
+
+### Step 2: Launch the script in a new Terminal window
+
+```bash
+rm -f /tmp/aws-sso-setup-done
+osascript \
+  -e 'tell application "Terminal" to do script "/tmp/aws-sso-setup.sh"' \
+  -e 'tell application "Terminal" to activate'
+```
+
+### Step 3: Wait for the completion marker
+
+The user will be answering CLI prompts and completing browser-based SSO logins for each profile — this typically takes 5–15 minutes. Run the wait in the background (do not use a foreground Bash call — its 2-minute default and 10-minute max timeout are both too short).
+
+```bash
+until [ -f /tmp/aws-sso-setup-done ]; do sleep 2; done && echo "AWS SSO setup completed"
+```
+
+If no completion notification arrives after ~20 minutes, check in with the user about whether they hit an error in the other window.
+
+### Step 4: Verify and clean up
+
+```bash
+aws configure list-profiles
+rm -f /tmp/aws-sso-setup.sh /tmp/aws-sso-setup-done
+```
+
+`aws configure list-profiles` should show `prod`, `prod-admin`, and `dev` (plus any pre-existing profiles).
+
+> **Note:** The `awsdarwin-dev` alias in `~/.zshrc` (section 9) targets the `dev` profile name. The wrapper script enforces that name via `aws configure sso --profile dev`, so the alias keeps working as long as the script ran cleanly.
+
+## 12. Configure Git
 
 ```bash
 git config --global alias.up 'pull --rebase --autostash'
 ```
 
-## 11. Install `git multi` Completion
+## 13. Install `git multi` Completion
 
 `git multi` (from `git-plus`) runs a git command in every subdirectory but ships with no zsh completion. Install one that delegates to git's own subcommand completion so `git multi sw<TAB>` expands to `git multi switch`, etc.
 
@@ -171,14 +280,14 @@ Open a fresh shell to pick up the regenerated completion cache.
 
 > **Note:** The `~/.local/share/zsh/site-functions` line in `~/.zshrc` must come **before** `compinit` for any completions in that directory to be loaded. Section 9 already places it correctly.
 
-## 12. Write ~/.zprofile
+## 14. Write ~/.zprofile
 
 ```bash
 # pipx
 export PATH="$PATH:$HOME/.local/bin"
 ```
 
-## 13. Restore Claude Code Configuration
+## 15. Restore Claude Code Configuration
 
 Deep-copy this repo's `.claude/` into `~/.claude/`. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
@@ -208,7 +317,7 @@ rsync -av --exclude='settings.json' .claude/ ~/.claude/
 [ -f ~/.claude/statusline-command.sh ] && chmod +x ~/.claude/statusline-command.sh
 ```
 
-## 14. Post-Setup Verification
+## 16. Post-Setup Verification
 
 Run these checks and report results:
 
