@@ -38,6 +38,7 @@ brew install \
   nvm \
   pipx \
   railway \
+  tmux \
   yt-dlp
 ```
 
@@ -47,8 +48,15 @@ brew install \
 brew install --cask \
   codex \
   gcloud-cli \
+  ghostty \
   sanesidebuttons \
   session-manager-plugin
+```
+
+Ghostty needs Full Disk Access to read history files under protected directories. Open the pane and let the user add `/Applications/Ghostty.app`:
+
+```bash
+open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
 ```
 
 ## 5. Install Oh My Zsh
@@ -317,7 +325,38 @@ rsync -av --exclude='settings.json' .claude/ ~/.claude/
 [ -f ~/.claude/statusline-command.sh ] && chmod +x ~/.claude/statusline-command.sh
 ```
 
-## 16. Post-Setup Verification
+## 16. Restore Ghostty Configuration
+
+Drop this repo's Ghostty config into `~/.config/ghostty/`. The file is a flat key=value config (no merging logic needed); overwrite if a prior config exists.
+
+Run from the root of this repo:
+
+```bash
+mkdir -p ~/.config/ghostty
+cp ghostty/config ~/.config/ghostty/config
+```
+
+Verify it parses:
+
+```bash
+/Applications/Ghostty.app/Contents/MacOS/ghostty +validate-config --config-file=~/.config/ghostty/config
+```
+
+Reload a running Ghostty with `⌘⇧,` to pick up the new config.
+
+## 17. Restore tmux Configuration
+
+Drop this repo's tmux config at `~/.tmux.conf`. Enables mouse support (scroll + click-to-select-pane).
+
+Run from the root of this repo:
+
+```bash
+cp tmux/tmux.conf ~/.tmux.conf
+```
+
+Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).
+
+## 18. Post-Setup Verification
 
 Run these checks and report results:
 
