@@ -139,8 +139,18 @@ export PATH="$HOME/bin:$PATH"
 export PATH="$PATH:$HOME/.local/bin"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
-# AWS SSO
-alias awsdarwin-dev='export AWS_PROFILE=dev && aws sso login --profile dev && eval $(aws configure export-credentials --profile dev --format env)'
+# AWS SSO: log in with a profile and export its credentials into the current shell
+# Usage: awsenv <profile>     e.g. awsenv dev | awsenv prod | awsenv prod-admin
+awsenv() {
+  local profile="$1"
+  if [[ -z "$profile" ]]; then
+    echo "Usage: awsenv <profile>" >&2
+    return 1
+  fi
+  export AWS_PROFILE="$profile"
+  aws sso login --profile "$profile" || return $?
+  eval "$(aws configure export-credentials --profile "$profile" --format env)"
+}
 
 # Claude Code
 alias claude='claude --chrome'
@@ -253,7 +263,7 @@ rm -f /tmp/aws-sso-setup.sh /tmp/aws-sso-setup-done
 
 `aws configure list-profiles` should show `prod`, `prod-admin`, and `dev` (plus any pre-existing profiles).
 
-> **Note:** The `awsdarwin-dev` alias in `~/.zshrc` (section 9) targets the `dev` profile name. The wrapper script enforces that name via `aws configure sso --profile dev`, so the alias keeps working as long as the script ran cleanly.
+> **Note:** The `awsenv` function in `~/.zshrc` (section 9) takes a profile name as its argument (`awsenv dev`, `awsenv prod`, `awsenv prod-admin`). The wrapper script creates those three profile names, so the function works with any of them as long as the script ran cleanly.
 
 ## 12. Configure Git
 
