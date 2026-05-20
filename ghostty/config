@@ -46,6 +46,11 @@ window-colorspace = srgb
 # Set to `left` to let Right-Option keep typing characters like ®, ¨.
 macos-option-as-alt = true
 
+# Send physical ANSI backquote chords directly to tmux as modified-key
+# sequences, bypassing the macOS dead-key text path.
+keybind = alt+Backquote=csi:27;3;96~
+keybind = alt+shift+Backquote=csi:27;4;96~
+
 
 # --- Panel splits ---
 #   ⌃⇧=  → Split Vertically   (side-by-side)
