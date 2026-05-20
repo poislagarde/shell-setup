@@ -31,7 +31,7 @@ An 18-section provisioning checklist:
 13. **`_git-multi` zsh completion** — custom completion that delegates to git's own subcommand completion so `git multi sw<TAB>` expands.
 14. **`~/.zprofile`** — pipx PATH.
 15. **Restore Claude Code config** — copies this repo's `.claude/` into `~/.claude/`. Uses `jq -s '.[0] * .[1]'` to deep-merge `settings.json` (this repo wins on key conflicts, untouched keys preserved) and `rsync -av` (no `--delete`) for everything else so runtime files in `~/.claude/` are left intact.
-16. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (iTerm2-style quick terminal, splits, Natural Text Editing).
+16. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (quick terminal, splits, natural text editing keybinds).
 17. **Restore tmux config** — copies this repo's `tmux/tmux.conf` to `~/.tmux.conf` (mouse support on).
 18. **Verification** — sources the new shell, prints versions, confirms node was installed under `~/.nvm/versions/node/`.
 

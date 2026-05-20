@@ -1,40 +1,38 @@
-# --- iTerm2-style hotkey window (Ghostty's "Quick Terminal") ---
+# --- Quick Terminal ---
 
 # Global hotkey to summon/dismiss. `global:` makes it work even when Ghostty
-# isn't focused — that's the iTerm2 hotkey-window behavior.
-# Default iTerm2 binding is ⌥Space; change to taste (e.g. `global:cmd+grave_accent`).
+# isn't focused, so the toggle works from any app.
+# ⌥Space is a familiar default (alternative: `global:cmd+grave_accent`).
 keybind = global:alt+space=toggle_quick_terminal
 
 # Where the panel slides in from: top | bottom | left | right | center
 quick-terminal-position = top
 
 # Size of the panel — pinned in pixels so column/row count stays constant
-# across monitors (your built-in is the narrowest at 1512×982 UI points,
-# external LG is 2048×2304, portable MB16QHG is 1600×1000).
-# Format for position=top is `HEIGHT,WIDTH`. Without the second value Ghostty
-# would maximize the secondary axis — that's what caused the width to change
-# when you moved between displays.
+# across monitors of different sizes. Format for position=top is
+# `HEIGHT,WIDTH`; omitting the second value lets Ghostty maximize the
+# secondary axis, which makes the width change between displays.
 #
-# 640px ≈ 37 rows at JetBrains Mono 13pt (default font). If you see 36 or
-# 38 rows after launching, nudge ±15px until it's exactly 37.
+# 640px ≈ 37 rows at JetBrains Mono 13pt (default font). Nudge ±15px to
+# hit a target row count.
 quick-terminal-size = 640px,1400px
 
 # Which display to show on: main | mouse | macos-menu-bar
-quick-terminal-screen = main
+quick-terminal-screen = mouse
 
 # Slide animation length in seconds. 0 disables.
 quick-terminal-animation-duration = 0.2
 
-# Hide automatically when focus leaves it (iTerm2 default behavior).
-quick-terminal-autohide = true
+# Hide automatically when focus leaves it.
+quick-terminal-autohide = false
 
-# Follow you across macOS Spaces instead of staying pinned: move | remain | move-and-attach
+# Follow the active macOS Space instead of staying pinned: move | remain | move-and-attach
 quick-terminal-space-behavior = move
 
 
 # --- Appearance ---
-# Semi-transparent background (matches your iTerm2 Hotkey profile transparency
-# of ~0.104). Ghostty's scale is the inverse: 1.0 = opaque, 0.0 = invisible.
+# Semi-transparent background (~10% transparency). Ghostty's scale is the
+# inverse: 1.0 = opaque, 0.0 = invisible.
 background-opacity = 0.9
 
 font-thicken = true
@@ -45,12 +43,11 @@ window-colorspace = srgb
 # Treat the Option key as Alt so `alt+*` keybinds (and Meta-prefixed shell
 # shortcuts) fire. Without this, Option+Backspace, Option+arrows, etc. don't
 # trigger keybinds — Ghostty passes them through as macOS dead-key sequences.
-# Set to `left` if you want Right-Option to keep typing characters like ®, ¨.
+# Set to `left` to let Right-Option keep typing characters like ®, ¨.
 macos-option-as-alt = true
 
 
-# --- Panel splits (ported from iTerm2) ---
-# Your iTerm2 bindings (Preferences > Keys):
+# --- Panel splits ---
 #   ⌃⇧=  → Split Vertically   (side-by-side)
 #   ⌃⇧-  → Split Horizontally (stacked)
 keybind = ctrl+shift+==new_split:right
@@ -62,17 +59,14 @@ keybind = ctrl+shift+-=new_split:down
 #   ⌘⌥+arrow → goto_split:<direction>
 #   ⌘D / ⌘⇧D → also bound to new_split:right / new_split:down (bonus paths)
 
-# iTerm2's ⌘⇧T opens a new tab with the "Hotkey CC Window" profile. Ghostty
-# has no profile system, so that distinction is lost — and ⌘⇧T is already
-# bound by default to `undo` (reopen the most recently closed tab/split),
-# which is generally more useful. Uncomment to mimic iTerm2 instead:
+# ⌘⇧T is bound by default to `undo` (reopen the most recently closed tab/
+# split). Uncomment to rebind to `new_tab` instead:
 # keybind = super+shift+t=new_tab
 
 
-# --- Natural Text Editing (ported from iTerm2) ---
-# These send the same byte sequences your iTerm2 profile sends.
-# Ghostty already binds most of these by default; the two below are the ones
-# iTerm2 ships in its preset that Ghostty does NOT bind out of the box.
+# --- Natural Text Editing ---
+# Ghostty already binds most of these by default; the ones below cover the
+# gaps it does NOT bind out of the box.
 #
 # Already-default in Ghostty (kept commented for reference):
 #   keybind = super+arrow_left=text:\x01    # Cmd+←  → start of line (^A)
@@ -80,6 +74,11 @@ keybind = ctrl+shift+-=new_split:down
 #   keybind = super+backspace=text:\x15     # Cmd+⌫  → kill to line start (^U)
 #   keybind = alt+arrow_left=esc:b          # ⌥+←   → word back
 #   keybind = alt+arrow_right=esc:f         # ⌥+→   → word fwd
+
+# ⌘+⌫  → delete to line start (^U).
+# Pinned explicitly because tmux + extended-keys negotiates CSI-u encoding,
+# which bypasses zsh's `^U` keymap and falls through to `kill-whole-line`.
+keybind = super+backspace=text:\x15
 
 # ⌥+⌫  → delete word backward.
 # Use Ctrl+W (0x17) — the universal tty WERASE code that works in bash, zsh,
@@ -90,5 +89,5 @@ keybind = alt+backspace=text:\x17
 # ⌥+⌦ (Option + Forward Delete / fn+⌥+⌫) → delete word forward
 keybind = alt+delete=esc:d
 
-# ⌦ (forward delete, fn+⌫) → send ^D (matches your iTerm2 "Send Hex Codes: 0x4")
+# ⌦ (forward delete, fn+⌫) → send ^D
 keybind = delete=text:\x04
