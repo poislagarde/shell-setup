@@ -124,6 +124,11 @@ FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 
 source $ZSH/oh-my-zsh.sh
 
+# Cmd+Backspace in Ghostty sends ^U. zsh's default `^U` is `kill-whole-line`
+# (whole line), which doesn't match macOS Cmd+Backspace semantics. Rebind to
+# `backward-kill-line` so it only clears from the cursor to the start of line.
+bindkey '^U' backward-kill-line
+
 # Editor
 export EDITOR="zed --wait"
 
@@ -152,8 +157,14 @@ awsenv() {
   eval "$(aws configure export-credentials --profile "$profile" --format env)"
 }
 
-# Claude Code
-alias claude='claude --chrome'
+# Claude Code.
+# CLAUDE_CODE_TMUX_TRUECOLOR=1 disables Claude Code's hard-coded color-level
+# downgrade from 24-bit to 256-palette whenever it sees $TMUX is set (a
+# pessimistic fallback for tmux setups that don't pass true color through).
+# Our tmux config (default-terminal=tmux-256color + xterm*:Tc override) does
+# support 24-bit end-to-end, so we opt back into full color. Harmless outside
+# tmux — the var is only consulted when $TMUX is set.
+alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
 ```
 
 ## 10. Install AWS CLI

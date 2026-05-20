@@ -75,9 +75,9 @@ keybind = ctrl+shift+-=new_split:down
 #   keybind = alt+arrow_left=esc:b          # ⌥+←   → word back
 #   keybind = alt+arrow_right=esc:f         # ⌥+→   → word fwd
 
-# ⌘+⌫  → delete to line start (^U).
-# Pinned explicitly because tmux + extended-keys negotiates CSI-u encoding,
-# which bypasses zsh's `^U` keymap and falls through to `kill-whole-line`.
+# ⌘+⌫  → delete to line start (^U). Paired with `bindkey '^U' backward-kill-line`
+# in ~/.zshrc — zsh's default `^U` is `kill-whole-line` which doesn't match
+# macOS semantics.
 keybind = super+backspace=text:\x15
 
 # ⌥+⌫  → delete word backward.
