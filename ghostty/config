@@ -96,3 +96,16 @@ keybind = alt+delete=esc:d
 
 # ⌦ (forward delete, fn+⌫) → send ^D
 keybind = delete=text:\x04
+
+# ⌘K → Ctrl+L. Ghostty's default super+k=clear_screen clears Ghostty's
+# scrollback, but inside tmux that buffer is empty (tmux owns the screen),
+# so it appears to do nothing. Sending Ctrl+L instead lets:
+#   - outside tmux: the shell's clear-screen widget fire (zsh redraws prompt)
+#   - inside tmux:  our `bind -n C-l send-keys C-l \; clear-history` upgrade
+#                   clear both the screen and tmux's scrollback.
+keybind = super+k=text:\x0c
+
+# ⌘⇧K → nuke Ghostty's own scrollback buffer (the original super+k behavior).
+# Useful outside tmux when you want the full wipe instead of just a viewport
+# redraw. Inside tmux it's a no-op (tmux owns the screen) — use ⌘K there.
+keybind = super+shift+k=clear_screen
