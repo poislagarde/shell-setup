@@ -51,6 +51,13 @@ macos-option-as-alt = true
 keybind = alt+Backquote=csi:27;3;96~
 keybind = alt+shift+Backquote=csi:27;4;96~
 
+# Send Alt+Shift+= and Alt+Shift+- as CSI 27 modified-key sequences so tmux
+# matches them as M-S-= / M-S-- (used for split-window). Default forwarding
+# gives ^[+ / ^[_, which tmux's extended-keys mode doesn't reliably map back
+# to the M-S- form the bindings expect.
+keybind = alt+shift+==csi:27;4;61~
+keybind = alt+shift+-=csi:27;4;45~
+
 
 # --- Panel splits ---
 #   ⌃⇧=  → Split Vertically   (side-by-side)
