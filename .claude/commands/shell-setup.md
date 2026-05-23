@@ -129,6 +129,21 @@ source $ZSH/oh-my-zsh.sh
 # `backward-kill-line` so it only clears from the cursor to the start of line.
 bindkey '^U' backward-kill-line
 
+# Shift+Enter → insert a literal newline (keep editing on next line) instead
+# of submitting. Pairs with Ghostty's `keybind = shift+enter=csi:27;2;13~`;
+# tmux forwards the same CSI 27 modified-key form via `extended-keys always`.
+zle-insert-newline() { LBUFFER+=$'\n' }
+zle -N zle-insert-newline
+bindkey '^[[27;2;13~' zle-insert-newline
+
+# Cursor: blinking thin bar at the prompt. Outside tmux, Ghostty's default
+# already gives us this. Inside tmux, tmux owns cursor rendering and defaults
+# to a steady block — so re-assert DECSCUSR=5 (blinking bar) on each prompt.
+# Pairs with `terminal-features 'xterm*:cstyle'` in tmux.conf so the escape is
+# forwarded to Ghostty instead of swallowed.
+_zsh_cursor_blinking_bar() { print -n '\e[5 q' }
+precmd_functions+=(_zsh_cursor_blinking_bar)
+
 # Editor
 export EDITOR="zed --wait"
 

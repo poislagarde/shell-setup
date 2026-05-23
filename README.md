@@ -24,7 +24,7 @@ An 18-section provisioning checklist:
 6. **NVM** — point `NVM_DIR` at `~/.nvm` so `brew upgrade nvm` can't wipe node installs.
 7. **Node** — install latest LTS via nvm, alias `default`.
 8. **Global npm packages** — `vercel`.
-9. **`~/.zshrc`** — Oh My Zsh theme/plugins, NVM dir, Homebrew completions, user site-functions on `fpath`, PATH, `awsenv <profile>` AWS SSO helper, `claude` alias.
+9. **`~/.zshrc`** — Oh My Zsh theme/plugins, NVM dir, Homebrew completions, user site-functions on `fpath`, PATH, `awsenv <profile>` AWS SSO helper, `claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics), Shift+Enter inserts a literal newline (paired with the Ghostty/tmux CSI 27 plumbing), and a precmd that re-asserts a blinking thin-bar cursor (so inside tmux matches outside).
 10. **AWS CLI** — official macOS installer.
 11. **AWS SSO profiles** — interactive `prod` / `prod-admin` / `dev` setup.
 12. **Git** — `git up` alias for `pull --rebase --autostash`.
