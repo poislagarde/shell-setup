@@ -79,8 +79,24 @@ keybind = ctrl+shift+-=new_split:down
 # Ghostty's defaults already cover the rest of the split workflow:
 #   ⌘W       → close_surface            (close current pane)
 #   ⌘] / ⌘[  → goto_split:next/previous
-#   ⌘⌥+arrow → goto_split:<direction>
 #   ⌘D / ⌘⇧D → also bound to new_split:right / new_split:down (bonus paths)
+
+# ⌘⌥+arrow → move focus between panes, working in BOTH Ghostty's native splits
+# and tmux. The `performable:` prefix makes Ghostty consume the chord only when
+# the action can run; otherwise it behaves "as if the keybind was not set" and
+# encodes the key through to the running program (modifier 11 — ESC[1;11{...}),
+# where tmux's user-key bindings catch it (see ~/.tmux.conf).
+#
+# Spatial movement so a 2x2 grid navigates geometrically (right really goes
+# right). Ghostty's spatial goto_split does NOT wrap, so at a grid edge with no
+# neighbor the action is non-performable and the chord falls through, encoded as
+# modifier 11 (ESC[1;11{...}). Inside tmux that's intended — tmux catches it.
+# Outside tmux (Ghostty splits) the shell would print a stray escape there, so
+# ~/.zshrc binds those four sequences to a no-op to swallow them silently.
+keybind = performable:super+alt+left=goto_split:left
+keybind = performable:super+alt+right=goto_split:right
+keybind = performable:super+alt+up=goto_split:up
+keybind = performable:super+alt+down=goto_split:down
 
 # ⌘⇧T is bound by default to `undo` (reopen the most recently closed tab/
 # split). Uncomment to rebind to `new_tab` instead:

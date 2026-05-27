@@ -144,6 +144,17 @@ zle-insert-space() { LBUFFER+=' ' }
 zle -N zle-insert-space
 bindkey '^[[27;2;32~' zle-insert-space
 
+# Cmd+Opt+arrow → pane navigation, handled by Ghostty/tmux. Inside a Ghostty
+# split grid these move spatially; at an edge with no neighbor the chord falls
+# through to the shell as modifier 11 (^[[1;11{A,B,C,D}). Bind those to a no-op
+# so nothing prints. (Inside tmux they never reach zsh — tmux catches them.)
+zle-noop() { }
+zle -N zle-noop
+bindkey '^[[1;11A' zle-noop
+bindkey '^[[1;11B' zle-noop
+bindkey '^[[1;11C' zle-noop
+bindkey '^[[1;11D' zle-noop
+
 # Cursor: blinking thin bar at the prompt. Outside tmux, Ghostty's default
 # already gives us this. Inside tmux, tmux owns cursor rendering and defaults
 # to a steady block — so re-assert DECSCUSR=5 (blinking bar) on each prompt.
