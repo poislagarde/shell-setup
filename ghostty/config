@@ -13,11 +13,11 @@ quick-terminal-position = top
 # `HEIGHT,WIDTH`; omitting the second value lets Ghostty maximize the
 # secondary axis, which makes the width change between displays.
 #
-# 640px ≈ 37 rows at JetBrains Mono 13pt (default font). Nudge ±15px to
-# hit a target row count. Width 1466px ≈ 188 columns at the same font
-# (~7.8px/cell advance); pinning px keeps the column count constant across
+# 778px ≈ 45 rows at JetBrains Mono 13pt (default font, ~17.3px/row). Nudge
+# ±17px to hit a target row count. Width 1466px ≈ 188 columns at the same font
+# (~7.8px/cell advance); pinning px keeps the row/column count constant across
 # monitors of different sizes.
-quick-terminal-size = 640px,1466px
+quick-terminal-size = 778px,1466px
 
 # Which display to show on: main | mouse | macos-menu-bar
 quick-terminal-screen = mouse
