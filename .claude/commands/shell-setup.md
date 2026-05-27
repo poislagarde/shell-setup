@@ -136,6 +136,14 @@ zle-insert-newline() { LBUFFER+=$'\n' }
 zle -N zle-insert-newline
 bindkey '^[[27;2;13~' zle-insert-newline
 
+# Shift+Space → insert a normal space. `extended-keys always` makes tmux
+# re-encode Shift+Space as the CSI 27 form (^[[27;2;32~, 32=space, 2=shift)
+# and forward it to zsh, which otherwise can't decode it and leaks the `2~`
+# tail. Bind it back to inserting a literal space.
+zle-insert-space() { LBUFFER+=' ' }
+zle -N zle-insert-space
+bindkey '^[[27;2;32~' zle-insert-space
+
 # Cursor: blinking thin bar at the prompt. Outside tmux, Ghostty's default
 # already gives us this. Inside tmux, tmux owns cursor rendering and defaults
 # to a steady block — so re-assert DECSCUSR=5 (blinking bar) on each prompt.
