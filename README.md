@@ -24,7 +24,7 @@ An 18-section provisioning checklist:
 6. **NVM** — point `NVM_DIR` at `~/.nvm` so `brew upgrade nvm` can't wipe node installs.
 7. **Node** — install latest LTS via nvm, alias `default`.
 8. **Global npm packages** — `vercel`.
-9. **`~/.zshrc`** — Oh My Zsh theme/plugins, NVM dir, Homebrew completions, user site-functions on `fpath`, PATH, `awsenv <profile>` AWS SSO helper, `claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics), Shift+Enter inserts a literal newline (paired with the Ghostty/tmux CSI 27 plumbing), and a precmd that re-asserts a blinking thin-bar cursor (so inside tmux matches outside).
+9. **`~/.zshrc`** — appends this repo's `zsh/zshrc` to `~/.zshrc` as a **managed block** delimited by `# >>> shell-setup managed >>>` / `# <<< shell-setup managed <<<` markers. Re-runs strip the old block and re-append the current template, so the section is idempotent — the OMZ-installer-default zshrc and any machine-local additions are preserved. First run also stashes the pre-shell-setup file at `~/.zshrc.pre-shell-setup`. The block extends scalar OMZ opinions (theme, autotitle, update mode) but **adds** to the OMZ `plugins` array via `plugins+=(...)` + `typeset -U plugins`, so any plugins the user enabled in their own zshrc survive the merge (de-duplicated). The block re-sources OMZ so the merged plugin list takes effect. Block contents: Oh My Zsh theme + required plugins, NVM dir, Homebrew completions, user site-functions on `fpath`, PATH, `awsenv <profile>` AWS SSO helper, `claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics), Shift+Enter inserts a literal newline (paired with the Ghostty/tmux CSI 27 plumbing), and a precmd that re-asserts a blinking thin-bar cursor (so inside tmux matches outside).
 10. **AWS CLI** — official macOS installer.
 11. **AWS SSO profiles** — interactive `prod` / `prod-admin` / `dev` setup.
 12. **Git** — `git up` alias for `pull --rebase --autostash`.
@@ -47,6 +47,8 @@ ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 tmux/
 └── tmux.conf                # tmux config (mouse support on)
+zsh/
+└── zshrc                    # ~/.zshrc template (theme/plugins, PATH, keybinds, awsenv)
 ```
 
 `settings.local.json` is intentionally excluded — Claude Code treats it as machine-local and the standard global gitignore drops it.

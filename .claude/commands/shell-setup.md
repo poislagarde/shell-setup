@@ -104,102 +104,65 @@ npm install -g vercel
 
 (corepack and npm ship with node)
 
-## 9. Write ~/.zshrc
+## 9. Append the managed block to ~/.zshrc
 
-Write the following to `~/.zshrc` (back up any existing one first):
+The `~/.zshrc` template lives in this repo at `zsh/zshrc`. Rather than
+overwriting `~/.zshrc` (which would clobber whatever Oh My Zsh's installer just
+wrote, plus any machine-local additions), append the template as a **managed
+block** delimited by marker comments. On re-run, the old block is stripped and
+the current template re-appended — so running this section multiple times
+leaves the file in the same state as running it once (idempotent).
+
+Run from the root of this repo:
 
 ```bash
-# Oh My Zsh
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="refined"
-zstyle ':omz:update' mode auto
-DISABLE_AUTO_TITLE="true"
-plugins=(git nvm autojump golang)
+touch ~/.zshrc
 
-# NVM: use ~/.nvm so brew upgrades don't wipe node installations
-export NVM_DIR="$HOME/.nvm"
+# First-run backup: preserve the pre-shell-setup zshrc once. Subsequent runs
+# (which already have the marker) are a no-op and won't overwrite the backup.
+if ! grep -q '^# >>> shell-setup managed >>>$' ~/.zshrc \
+   && [ ! -f ~/.zshrc.pre-shell-setup ]; then
+  cp ~/.zshrc ~/.zshrc.pre-shell-setup
+fi
 
-# Homebrew Shell Completion
-FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+# Strip any prior managed block (no-op if absent). BSD sed (`-i ''`).
+sed -i '' '/^# >>> shell-setup managed >>>$/,/^# <<< shell-setup managed <<<$/d' ~/.zshrc
 
-source $ZSH/oh-my-zsh.sh
+# Trim any trailing blank lines left behind by the strip (or pre-existing in
+# the file). Keeps the separator below at exactly one blank line across reruns.
+while [ -s ~/.zshrc ] && [ -z "$(tail -n 1 ~/.zshrc)" ]; do
+  sed -i '' -e '$d' ~/.zshrc
+done
 
-# Cmd+Backspace in Ghostty sends ^U. zsh's default `^U` is `kill-whole-line`
-# (whole line), which doesn't match macOS Cmd+Backspace semantics. Rebind to
-# `backward-kill-line` so it only clears from the cursor to the start of line.
-bindkey '^U' backward-kill-line
-
-# Shift+Enter → insert a literal newline (keep editing on next line) instead
-# of submitting. Pairs with Ghostty's `keybind = shift+enter=csi:27;2;13~`;
-# tmux forwards the same CSI 27 modified-key form via `extended-keys always`.
-zle-insert-newline() { LBUFFER+=$'\n' }
-zle -N zle-insert-newline
-bindkey '^[[27;2;13~' zle-insert-newline
-
-# Shift+Space → insert a normal space. `extended-keys always` makes tmux
-# re-encode Shift+Space as the CSI 27 form (^[[27;2;32~, 32=space, 2=shift)
-# and forward it to zsh, which otherwise can't decode it and leaks the `2~`
-# tail. Bind it back to inserting a literal space.
-zle-insert-space() { LBUFFER+=' ' }
-zle -N zle-insert-space
-bindkey '^[[27;2;32~' zle-insert-space
-
-# Cmd+Opt+arrow → pane navigation, handled by Ghostty/tmux. Inside a Ghostty
-# split grid these move spatially; at an edge with no neighbor the chord falls
-# through to the shell as modifier 11 (^[[1;11{A,B,C,D}). Bind those to a no-op
-# so nothing prints. (Inside tmux they never reach zsh — tmux catches them.)
-zle-noop() { }
-zle -N zle-noop
-bindkey '^[[1;11A' zle-noop
-bindkey '^[[1;11B' zle-noop
-bindkey '^[[1;11C' zle-noop
-bindkey '^[[1;11D' zle-noop
-
-# Cursor: blinking thin bar at the prompt. Outside tmux, Ghostty's default
-# already gives us this. Inside tmux, tmux owns cursor rendering and defaults
-# to a steady block — so re-assert DECSCUSR=5 (blinking bar) on each prompt.
-# Pairs with `terminal-features 'xterm*:cstyle'` in tmux.conf so the escape is
-# forwarded to Ghostty instead of swallowed.
-_zsh_cursor_blinking_bar() { print -n '\e[5 q' }
-precmd_functions+=(_zsh_cursor_blinking_bar)
-
-# Editor
-export EDITOR="zed --wait"
-
-# User-installed zsh completions (must come BEFORE compinit so it picks them up)
-fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
-
-# Fix for Docker & AWS plugin completions
-autoload bashcompinit && bashcompinit
-autoload -Uz compinit && compinit -i
-
-# PATH
-export PATH="$HOME/bin:$PATH"
-export PATH="$PATH:$HOME/.local/bin"
-export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
-
-# AWS SSO: log in with a profile and export its credentials into the current shell
-# Usage: awsenv <profile>     e.g. awsenv dev | awsenv prod | awsenv prod-admin
-awsenv() {
-  local profile="$1"
-  if [[ -z "$profile" ]]; then
-    echo "Usage: awsenv <profile>" >&2
-    return 1
-  fi
-  export AWS_PROFILE="$profile"
-  aws sso login --profile "$profile" || return $?
-  eval "$(aws configure export-credentials --profile "$profile" --format env)"
-}
-
-# Claude Code.
-# CLAUDE_CODE_TMUX_TRUECOLOR=1 disables Claude Code's hard-coded color-level
-# downgrade from 24-bit to 256-palette whenever it sees $TMUX is set (a
-# pessimistic fallback for tmux setups that don't pass true color through).
-# Our tmux config (default-terminal=tmux-256color + xterm*:Tc override) does
-# support 24-bit end-to-end, so we opt back into full color. Harmless outside
-# tmux — the var is only consulted when $TMUX is set.
-alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
+# Append the current template, wrapped in markers.
+{
+  printf '\n# >>> shell-setup managed >>>\n'
+  cat zsh/zshrc
+  printf '# <<< shell-setup managed <<<\n'
+} >> ~/.zshrc
 ```
+
+The managed block sets up Oh My Zsh (theme + shell-setup's required plugins),
+points `NVM_DIR` at `~/.nvm`, wires Homebrew + user site-functions completions
+onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, and the
+`claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS
+Cmd+Backspace semantics), Shift+Enter / Shift+Space re-encoded via the
+Ghostty/tmux CSI 27 plumbing, Cmd+Opt+arrow edge-fallthrough no-ops, and a
+precmd that re-asserts a blinking thin-bar cursor inside tmux.
+
+Because the managed block lives at the end of `~/.zshrc`, its scalar
+assignments (theme, `DISABLE_AUTO_TITLE`, etc.) win over anything earlier in
+the file (zsh reads top-to-bottom, last assignment wins). The `plugins` array
+is treated specially: the block uses `plugins+=(git nvm autojump golang)` plus
+`typeset -U plugins` so any plugins the user enabled earlier in their zshrc
+are preserved and merged with shell-setup's required ones (de-duplicated). The
+re-`source $ZSH/oh-my-zsh.sh` inside the block re-runs OMZ with the merged
+plugin list so the additions actually load.
+
+> **Note:** if you tweak `zsh/zshrc` in the repo, re-run just the three
+> commands above to refresh the managed block in `~/.zshrc`. If you edit the
+> managed block in `~/.zshrc` directly (between the markers), copy the same
+> change back into `zsh/zshrc` so a fresh laptop gets it. See `AGENTS.md`.
 
 ## 10. Install AWS CLI
 

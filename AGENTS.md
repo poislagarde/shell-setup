@@ -24,8 +24,10 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >
 > - `~/.config/ghostty/config` → symlink to `ghostty/config` (edit either; one file).
 > - `~/.tmux.conf` → symlink to `tmux/tmux.conf` (edit either; one file).
-> - `~/.zshrc`, `~/.zprofile` → **regular files**, not symlinked — edit both the
->   home file and the `shell-setup.md` instructions.
+> - `~/.zshrc` → **regular file**, not symlinked — edit both the home file and
+>   the repo template `zsh/zshrc`.
+> - `~/.zprofile` → **regular file**, not symlinked — edit both the home file and
+>   the `shell-setup.md` instructions (still inlined there).
 > - `~/.claude/` → **regular directory**, not symlinked — edit both the repo
 >   `.claude/` and `~/.claude/`.
 
@@ -36,4 +38,5 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
 | Claude Code | `.claude/` (settings.json, commands, statusline) | `~/.claude/` |
-| zsh (`~/.zshrc`, `~/.zprofile`) | described in `.claude/commands/shell-setup.md` | `~/.zshrc`, `~/.zprofile` |
+| zsh (`~/.zshrc`) | `zsh/zshrc` | `~/.zshrc` |
+| zsh (`~/.zprofile`) | described in `.claude/commands/shell-setup.md` | `~/.zprofile` |

@@ -1,0 +1,98 @@
+# Oh My Zsh — extends, doesn't replace.
+# Runs AFTER the OMZ-installer-default zshrc (which sets ZSH and sources OMZ
+# with plugins=(git)). We override scalar opinions (theme, autotitle, update
+# mode), then extend the `plugins` array additively so any plugins enabled
+# above this block survive. `typeset -U` de-dups so OMZ doesn't double-load
+# anything. The `source` at the bottom re-runs OMZ with the merged set — OMZ
+# reads `plugins` only during its `source`, so re-sourcing is what makes the
+# additions actually load.
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="refined"
+zstyle ':omz:update' mode auto
+DISABLE_AUTO_TITLE="true"
+plugins+=(git nvm autojump golang)
+typeset -U plugins
+
+# NVM: use ~/.nvm so brew upgrades don't wipe node installations
+export NVM_DIR="$HOME/.nvm"
+
+# Homebrew Shell Completion
+FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+
+source $ZSH/oh-my-zsh.sh
+
+# Cmd+Backspace in Ghostty sends ^U. zsh's default `^U` is `kill-whole-line`
+# (whole line), which doesn't match macOS Cmd+Backspace semantics. Rebind to
+# `backward-kill-line` so it only clears from the cursor to the start of line.
+bindkey '^U' backward-kill-line
+
+# Shift+Enter → insert a literal newline (keep editing on next line) instead
+# of submitting. Pairs with Ghostty's `keybind = shift+enter=csi:27;2;13~`;
+# tmux forwards the same CSI 27 modified-key form via `extended-keys always`.
+zle-insert-newline() { LBUFFER+=$'\n' }
+zle -N zle-insert-newline
+bindkey '^[[27;2;13~' zle-insert-newline
+
+# Shift+Space → insert a normal space. `extended-keys always` makes tmux
+# re-encode Shift+Space as the CSI 27 form (^[[27;2;32~, 32=space, 2=shift)
+# and forward it to zsh, which otherwise can't decode it and leaks the `2~`
+# tail. Bind it back to inserting a literal space.
+zle-insert-space() { LBUFFER+=' ' }
+zle -N zle-insert-space
+bindkey '^[[27;2;32~' zle-insert-space
+
+# Cmd+Opt+arrow → pane navigation, handled by Ghostty/tmux. Inside a Ghostty
+# split grid these move spatially; at an edge with no neighbor the chord falls
+# through to the shell as modifier 11 (^[[1;11{A,B,C,D}). Bind those to a no-op
+# so nothing prints. (Inside tmux they never reach zsh — tmux catches them.)
+zle-noop() { }
+zle -N zle-noop
+bindkey '^[[1;11A' zle-noop
+bindkey '^[[1;11B' zle-noop
+bindkey '^[[1;11C' zle-noop
+bindkey '^[[1;11D' zle-noop
+
+# Cursor: blinking thin bar at the prompt. Outside tmux, Ghostty's default
+# already gives us this. Inside tmux, tmux owns cursor rendering and defaults
+# to a steady block — so re-assert DECSCUSR=5 (blinking bar) on each prompt.
+# Pairs with `terminal-features 'xterm*:cstyle'` in tmux.conf so the escape is
+# forwarded to Ghostty instead of swallowed.
+_zsh_cursor_blinking_bar() { print -n '\e[5 q' }
+precmd_functions+=(_zsh_cursor_blinking_bar)
+
+# Editor
+export EDITOR="zed --wait"
+
+# User-installed zsh completions (must come BEFORE compinit so it picks them up)
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+
+# Fix for Docker & AWS plugin completions
+autoload bashcompinit && bashcompinit
+autoload -Uz compinit && compinit -i
+
+# PATH
+export PATH="$HOME/bin:$PATH"
+export PATH="$PATH:$HOME/.local/bin"
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+
+# AWS SSO: log in with a profile and export its credentials into the current shell
+# Usage: awsenv <profile>     e.g. awsenv dev | awsenv prod | awsenv prod-admin
+awsenv() {
+  local profile="$1"
+  if [[ -z "$profile" ]]; then
+    echo "Usage: awsenv <profile>" >&2
+    return 1
+  fi
+  export AWS_PROFILE="$profile"
+  aws sso login --profile "$profile" || return $?
+  eval "$(aws configure export-credentials --profile "$profile" --format env)"
+}
+
+# Claude Code.
+# CLAUDE_CODE_TMUX_TRUECOLOR=1 disables Claude Code's hard-coded color-level
+# downgrade from 24-bit to 256-palette whenever it sees $TMUX is set (a
+# pessimistic fallback for tmux setups that don't pass true color through).
+# Our tmux config (default-terminal=tmux-256color + xterm*:Tc override) does
+# support 24-bit end-to-end, so we opt back into full color. Harmless outside
+# tmux — the var is only consulted when $TMUX is set.
+alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
