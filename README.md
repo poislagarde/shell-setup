@@ -14,11 +14,11 @@ The command lives at [`.claude/commands/shell-setup.md`](.claude/commands/shell-
 
 ## What it does
 
-A 19-section provisioning checklist:
+An 18-section provisioning checklist:
 
 1. **Homebrew** — installer + PATH wiring for the current session.
 2. **Taps** — `auth0/auth0-cli`.
-3. **Formulae** — `autojump`, `auth0`, `bfg`, `gh`, `git-plus`, `go`, `libpq`, `nvm`, `pipx`, `railway`, `tmux`, `yt-dlp`.
+3. **Formulae** — `autojump`, `auth0`, `bfg`, `gh`, `go`, `libpq`, `nvm`, `pipx`, `railway`, `tmux`, `yt-dlp`.
 4. **Casks** — `codex`, `gcloud-cli`, `ghostty`, `sanesidebuttons`, `session-manager-plugin`. Opens the Full Disk Access pane so Ghostty can be granted access.
 5. **Oh My Zsh** — installer.
 6. **NVM** — point `NVM_DIR` at `~/.nvm` so `brew upgrade nvm` can't wipe node installs.
@@ -28,13 +28,12 @@ A 19-section provisioning checklist:
 10. **AWS CLI** — official macOS installer.
 11. **AWS SSO profiles** — interactive `prod` / `prod-admin` / `dev` setup.
 12. **Git** — `git up` alias for `pull --rebase --autostash`.
-13. **`_git-multi` zsh completion** — custom completion that delegates to git's own subcommand completion so `git multi sw<TAB>` expands.
-14. **`git-mux`** — clones [`poislagarde/git-mux`](https://github.com/poislagarde/git-mux) into `~/repos/git-mux` and runs its `install.sh`, which symlinks the script to `~/bin/git-mux` and installs the `_git-mux` zsh completion. `git mux <cmd>` then runs a git command across repos **serially with per-host SSH connection multiplexing** (avoids tripping a host's connection-rate throttle).
-15. **`~/.zprofile`** — pipx PATH.
-16. **Restore Claude Code config** — copies this repo's `.claude/` into `~/.claude/`. Uses `jq -s '.[0] * .[1]'` to deep-merge `settings.json` (this repo wins on key conflicts, untouched keys preserved) and `rsync -av` (no `--delete`) for everything else so runtime files in `~/.claude/` are left intact.
-17. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (quick terminal, splits, natural text editing keybinds).
-18. **Restore tmux config** — copies this repo's `tmux/tmux.conf` to `~/.tmux.conf` (mouse support on).
-19. **Verification** — sources the new shell, prints versions, confirms node was installed under `~/.nvm/versions/node/`.
+13. **`git-mux`** — clones [`poislagarde/git-mux`](https://github.com/poislagarde/git-mux) into `~/repos/git-mux` and runs its `install.sh`, which symlinks the script to `~/bin/git-mux` and installs the `_git-mux` zsh completion. `git mux <cmd>` then runs a git command across repos **serially with per-host SSH connection multiplexing** (avoids tripping a host's connection-rate throttle); it supersedes `git multi`.
+14. **`~/.zprofile`** — pipx PATH.
+15. **Restore Claude Code config** — copies this repo's `.claude/` into `~/.claude/`. Uses `jq -s '.[0] * .[1]'` to deep-merge `settings.json` (this repo wins on key conflicts, untouched keys preserved) and `rsync -av` (no `--delete`) for everything else so runtime files in `~/.claude/` are left intact.
+16. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (quick terminal, splits, natural text editing keybinds).
+17. **Restore tmux config** — copies this repo's `tmux/tmux.conf` to `~/.tmux.conf` (mouse support on).
+18. **Verification** — sources the new shell, prints versions, confirms node was installed under `~/.nvm/versions/node/`.
 
 ## Repo layout
 
