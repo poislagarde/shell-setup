@@ -306,14 +306,36 @@ Open a fresh shell to pick up the regenerated completion cache.
 
 > **Note:** The `~/.local/share/zsh/site-functions` line in `~/.zshrc` must come **before** `compinit` for any completions in that directory to be loaded. Section 9 already places it correctly.
 
-## 14. Write ~/.zprofile
+## 14. Install `git-mux`
+
+[`git-mux`](https://github.com/poislagarde/git-mux) runs a git command across every repo in a directory **serially with per-host SSH connection multiplexing** (one shared connection per server), so a bulk `git mux up` doesn't trip a host's connection-rate throttle the way a parallel `git multi up` does. Works for any SSH git host, not just GitHub.
+
+Clone the repo and symlink the script onto PATH (`~/bin` is already on PATH from section 9):
+
+```bash
+mkdir -p ~/repos ~/bin
+[ -d ~/repos/git-mux ] || git clone git@github.com:poislagarde/git-mux.git ~/repos/git-mux
+ln -sf ~/repos/git-mux/git-mux ~/bin/git-mux
+```
+
+Install its zsh completion the same way as `git multi` above:
+
+```bash
+mkdir -p ~/.local/share/zsh/site-functions
+ln -sf ~/repos/git-mux/completions/_git-mux ~/.local/share/zsh/site-functions/_git-mux
+rm -f ~/.zcompdump*
+```
+
+Verify from a directory of repos: `git mux -n up` lists the repos and the plan. (`git mux --help` won't work — git intercepts `--help` to look for a man page — so use `git-mux --help` directly.)
+
+## 15. Write ~/.zprofile
 
 ```bash
 # pipx
 export PATH="$PATH:$HOME/.local/bin"
 ```
 
-## 15. Restore Claude Code Configuration
+## 16. Restore Claude Code Configuration
 
 Deep-copy this repo's `.claude/` into `~/.claude/`. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
@@ -343,7 +365,7 @@ rsync -av --exclude='settings.json' .claude/ ~/.claude/
 [ -f ~/.claude/statusline-command.sh ] && chmod +x ~/.claude/statusline-command.sh
 ```
 
-## 16. Restore Ghostty Configuration
+## 17. Restore Ghostty Configuration
 
 Drop this repo's Ghostty config into `~/.config/ghostty/`. The file is a flat key=value config (no merging logic needed); overwrite if a prior config exists.
 
@@ -362,7 +384,7 @@ Verify it parses:
 
 Reload a running Ghostty with `⌘⇧,` to pick up the new config.
 
-## 17. Restore tmux Configuration
+## 18. Restore tmux Configuration
 
 Drop this repo's tmux config at `~/.tmux.conf`. Enables mouse support (scroll + click-to-select-pane).
 
@@ -374,7 +396,7 @@ cp tmux/tmux.conf ~/.tmux.conf
 
 Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).
 
-## 18. Post-Setup Verification
+## 19. Post-Setup Verification
 
 Run these checks and report results:
 
