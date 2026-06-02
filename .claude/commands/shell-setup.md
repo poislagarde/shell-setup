@@ -310,21 +310,15 @@ Open a fresh shell to pick up the regenerated completion cache.
 
 [`git-mux`](https://github.com/poislagarde/git-mux) runs a git command across every repo in a directory **serially with per-host SSH connection multiplexing** (one shared connection per server), so a bulk `git mux up` doesn't trip a host's connection-rate throttle the way a parallel `git multi up` does. Works for any SSH git host, not just GitHub.
 
-Clone the repo and symlink the script onto PATH (`~/bin` is already on PATH from section 9):
+Clone the repo and run its installer, which symlinks the script to `~/bin/git-mux` (`~/bin` is already on PATH from section 9) and installs the `_git-mux` zsh completion into `~/.local/share/zsh/site-functions`:
 
 ```bash
-mkdir -p ~/repos ~/bin
+mkdir -p ~/repos
 [ -d ~/repos/git-mux ] || git clone git@github.com:poislagarde/git-mux.git ~/repos/git-mux
-ln -sf ~/repos/git-mux/git-mux ~/bin/git-mux
+~/repos/git-mux/install.sh
 ```
 
-Install its zsh completion the same way as `git multi` above:
-
-```bash
-mkdir -p ~/.local/share/zsh/site-functions
-ln -sf ~/repos/git-mux/completions/_git-mux ~/.local/share/zsh/site-functions/_git-mux
-rm -f ~/.zcompdump*
-```
+The `_git-mux` completion delegates to git's own command completion just like the `_git-multi` one in section 13 (so `git mux sw<TAB>` expands to `git mux switch`), and additionally completes git-mux's own flags. Open a fresh shell to pick it up.
 
 Verify from a directory of repos: `git mux -n up` lists the repos and the plan. (`git mux --help` won't work — git intercepts `--help` to look for a man page — so use `git-mux --help` directly.)
 

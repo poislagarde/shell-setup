@@ -29,7 +29,7 @@ A 19-section provisioning checklist:
 11. **AWS SSO profiles** — interactive `prod` / `prod-admin` / `dev` setup.
 12. **Git** — `git up` alias for `pull --rebase --autostash`.
 13. **`_git-multi` zsh completion** — custom completion that delegates to git's own subcommand completion so `git multi sw<TAB>` expands.
-14. **`git-mux`** — clones [`poislagarde/git-mux`](https://github.com/poislagarde/git-mux) into `~/repos/git-mux` and symlinks the script to `~/bin/git-mux`, so `git mux <cmd>` runs a git command across repos **serially with per-host SSH connection multiplexing** (avoids tripping a host's connection-rate throttle). Also installs its `_git-mux` zsh completion.
+14. **`git-mux`** — clones [`poislagarde/git-mux`](https://github.com/poislagarde/git-mux) into `~/repos/git-mux` and runs its `install.sh`, which symlinks the script to `~/bin/git-mux` and installs the `_git-mux` zsh completion. `git mux <cmd>` then runs a git command across repos **serially with per-host SSH connection multiplexing** (avoids tripping a host's connection-rate throttle).
 15. **`~/.zprofile`** — pipx PATH.
 16. **Restore Claude Code config** — copies this repo's `.claude/` into `~/.claude/`. Uses `jq -s '.[0] * .[1]'` to deep-merge `settings.json` (this repo wins on key conflicts, untouched keys preserved) and `rsync -av` (no `--delete`) for everything else so runtime files in `~/.claude/` are left intact.
 17. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (quick terminal, splits, natural text editing keybinds).
