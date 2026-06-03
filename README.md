@@ -28,7 +28,7 @@ An 18-section provisioning checklist:
 10. **AWS CLI** — official macOS installer.
 11. **AWS SSO profiles** — interactive `prod` / `prod-admin` / `dev` setup.
 12. **Git** — `git up` alias for `pull --rebase --autostash`.
-13. **`git-mux`** — clones [`poislagarde/git-mux`](https://github.com/poislagarde/git-mux) into `~/repos/git-mux` and runs its `install.sh`, which symlinks the script to `~/bin/git-mux` and installs the `_git-mux` zsh completion. `git mux <cmd>` then runs a git command across repos **serially with per-host SSH connection multiplexing** (avoids tripping a host's connection-rate throttle); it supersedes `git multi`.
+13. **`git-mux`** — clones [`poislagarde/git-mux`](https://github.com/poislagarde/git-mux) into `~/repos/git-mux`, runs its `install.sh` (symlinks the script to `~/.local/bin/git-mux`), and symlinks the shipped `_git-mux` zsh completion into site-functions. `git mux <cmd>` then runs a git command across repos **serially with per-host SSH connection multiplexing** (avoids tripping a host's connection-rate throttle); it supersedes `git multi`.
 14. **`~/.zprofile`** — pipx PATH.
 15. **Restore Claude Code config** — copies this repo's `.claude/` into `~/.claude/`. Uses `jq -s '.[0] * .[1]'` to deep-merge `settings.json` (this repo wins on key conflicts, untouched keys preserved) and `rsync -av` (no `--delete`) for everything else so runtime files in `~/.claude/` are left intact.
 16. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (quick terminal, splits, natural text editing keybinds).

@@ -282,12 +282,14 @@ git config --global alias.up 'pull --rebase --autostash'
 
 [`git-mux`](https://github.com/poislagarde/git-mux) runs a git command across every repo in a directory **serially with per-host SSH connection multiplexing** (one shared connection per server), so a bulk `git mux pull` doesn't trip a host's connection-rate throttle the way many parallel pulls do. Works for any SSH git host, not just GitHub. (It supersedes `git multi`, which is no longer installed.)
 
-Clone the repo and run its installer, which symlinks the script to `~/bin/git-mux` (`~/bin` is already on PATH from section 9) and installs the `_git-mux` zsh completion into `~/.local/share/zsh/site-functions`:
+Clone the repo and run its installer (symlinks the script to `~/.local/bin/git-mux`, already on PATH from section 9). The installer ships but does not auto-install the zsh completion, so symlink it into the site-functions dir (on `fpath` from section 9) to enable it:
 
 ```bash
 mkdir -p ~/repos
 [ -d ~/repos/git-mux ] || git clone git@github.com:poislagarde/git-mux.git ~/repos/git-mux
 ~/repos/git-mux/install.sh
+ln -sf ~/repos/git-mux/completions/_git-mux ~/.local/share/zsh/site-functions/_git-mux
+rm -f ~/.zcompdump*
 ```
 
 The `_git-mux` completion delegates to git's own command completion (so `git mux sw<TAB>` expands to `git mux switch`) and additionally completes git-mux's own flags. Open a fresh shell to pick it up.
