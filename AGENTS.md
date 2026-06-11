@@ -37,6 +37,7 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
+| tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.tmux/assistant-resurrect` (symlink to the repo dir; edit either; one place) |
 | Claude Code | `.claude/` (settings.json, commands, statusline) | `~/.claude/` |
 | zsh (`~/.zshrc`) | `zsh/zshrc` | `~/.zshrc` |
 | zsh (`~/.zprofile`) | described in `.claude/commands/shell-setup.md` | `~/.zprofile` |

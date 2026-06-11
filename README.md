@@ -24,7 +24,7 @@ An 18-section provisioning checklist:
 6. **NVM** — point `NVM_DIR` at `~/.nvm` so `brew upgrade nvm` can't wipe node installs.
 7. **Node** — install latest LTS via nvm, alias `default`.
 8. **Global npm packages** — `vercel`.
-9. **`~/.zshrc`** — appends this repo's `zsh/zshrc` to `~/.zshrc` as a **managed block** delimited by `# >>> shell-setup managed >>>` / `# <<< shell-setup managed <<<` markers. Re-runs strip the old block and re-append the current template, so the section is idempotent — the OMZ-installer-default zshrc and any machine-local additions are preserved. First run also stashes the pre-shell-setup file at `~/.zshrc.pre-shell-setup`. The block extends scalar OMZ opinions (theme, autotitle, update mode) but **adds** to the OMZ `plugins` array via `plugins+=(...)` + `typeset -U plugins`, so any plugins the user enabled in their own zshrc survive the merge (de-duplicated). The block re-sources OMZ so the merged plugin list takes effect. Block contents: Oh My Zsh theme + required plugins, NVM dir, Homebrew completions, user site-functions on `fpath`, PATH, `awsenv <profile>` AWS SSO helper, `claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics), Shift+Enter inserts a literal newline (paired with the Ghostty/tmux CSI 27 plumbing), and a precmd that re-asserts a blinking thin-bar cursor (so inside tmux matches outside).
+9. **`~/.zshrc`** — appends this repo's `zsh/zshrc` to `~/.zshrc` as a **managed block** delimited by `# >>> shell-setup managed >>>` / `# <<< shell-setup managed <<<` markers. Re-runs strip the old block and re-append the current template, so the section is idempotent — the OMZ-installer-default zshrc and any machine-local additions are preserved. First run also stashes the pre-shell-setup file at `~/.zshrc.pre-shell-setup`. The block extends scalar OMZ opinions (theme, autotitle, update mode) but **adds** to the OMZ `plugins` array via `plugins+=(...)` + `typeset -U plugins`, so any plugins the user enabled in their own zshrc survive the merge (de-duplicated). The block re-sources OMZ so the merged plugin list takes effect. Block contents: Oh My Zsh theme + required plugins, NVM dir, Homebrew completions, user site-functions on `fpath`, PATH, `awsenv <profile>` AWS SSO helper, `claude` alias, and a tmux auto-start (interactive Ghostty shells attach to / create the `main` session — pairs with §17's session persistence). Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics), Shift+Enter inserts a literal newline (paired with the Ghostty/tmux CSI 27 plumbing), and a precmd that re-asserts a blinking thin-bar cursor (so inside tmux matches outside).
 10. **AWS CLI** — official macOS installer.
 11. **AWS SSO profiles** — interactive `prod` / `prod-admin` / `dev` setup.
 12. **Git** — `git up` alias for `pull --rebase --autostash`.
@@ -32,7 +32,7 @@ An 18-section provisioning checklist:
 14. **`~/.zprofile`** — pipx PATH.
 15. **Restore Claude Code config** — copies this repo's `.claude/` into `~/.claude/`. Uses `jq -s '.[0] * .[1]'` to deep-merge `settings.json` (this repo wins on key conflicts, untouched keys preserved) and `rsync -av` (no `--delete`) for everything else so runtime files in `~/.claude/` are left intact.
 16. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (quick terminal, splits, natural text editing keybinds).
-17. **Restore tmux config** — copies this repo's `tmux/tmux.conf` to `~/.tmux.conf` (mouse support on).
+17. **Restore tmux config** — copies this repo's `tmux/tmux.conf` to `~/.tmux.conf` (mouse support on), bootstraps [TPM](https://github.com/tmux-plugins/tpm) into `~/.tmux/plugins/`, and installs tmux-resurrect + tmux-continuum: the tmux environment (sessions, windows, panes, layouts, cwds, visible pane contents) auto-saves every 15 min **and on every client detach** (so quitting Ghostty — including the automatic quit during a macOS restart — snapshots the latest state) and auto-restores when the server starts, so the quick terminal survives Ghostty quits and reboots. `npm start` panes are relaunched on restore (`@resurrect-processes`). Also symlinks `tmux/assistant-resurrect/` to `~/.tmux/assistant-resurrect`: resurrect hook scripts (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) that save each pane's **Claude Code / Codex CLI session ID** (Claude via a SessionStart hook in `.claude/settings.json`, Codex via its `~/.codex/state_*.sqlite` thread DB) and resume the conversations in the restored panes with `claude --resume <id>` / `codex resume <id>`.
 18. **Verification** — sources the new shell, prints versions, confirms node was installed under `~/.nvm/versions/node/`.
 
 ## Repo layout
@@ -46,7 +46,8 @@ An 18-section provisioning checklist:
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 tmux/
-└── tmux.conf                # tmux config (mouse support on)
+├── tmux.conf                # tmux config (mouse support, resurrect/continuum persistence)
+└── assistant-resurrect/     # resurrect hooks: save/resume Claude Code + Codex sessions
 zsh/
 └── zshrc                    # ~/.zshrc template (theme/plugins, PATH, keybinds, awsenv)
 ```

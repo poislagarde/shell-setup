@@ -96,3 +96,21 @@ awsenv() {
 # support 24-bit end-to-end, so we opt back into full color. Harmless outside
 # tmux — the var is only consulted when $TMUX is set.
 alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
+
+# Ghostty shells live inside tmux: attach to (or create) the "main" session.
+# Paired with tmux-resurrect/continuum in tmux.conf, this is what makes
+# quitting Ghostty or rebooting the Mac non-destructive — the first shell
+# after a restart boots the tmux server, continuum restores the saved
+# windows/panes into "main", and this attach lands straight in them. Ghostty
+# has no env var that singles out the quick terminal, so this fires in every
+# Ghostty surface; extra tabs/windows attach to the SAME session (mirrored
+# clients — intended: one persistent environment). Guards:
+#   -o interactive — defensive; .zshrc shouldn't load otherwise
+#   -z $TMUX       — don't nest inside an existing session
+#   TERM_PROGRAM   — Ghostty only (leaves VS Code's terminal, ssh, etc. alone)
+# Deliberately NOT `exec`: detaching (prefix+d) falls back to this plain zsh
+# instead of closing the surface — that's also the escape hatch when you want
+# a vanilla non-tmux shell.
+if [[ -o interactive && -z "$TMUX" && "$TERM_PROGRAM" == "ghostty" ]]; then
+  tmux new-session -A -s main
+fi

@@ -147,7 +147,11 @@ onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, and the
 `claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS
 Cmd+Backspace semantics), Shift+Enter / Shift+Space re-encoded via the
 Ghostty/tmux CSI 27 plumbing, Cmd+Opt+arrow edge-fallthrough no-ops, and a
-precmd that re-asserts a blinking thin-bar cursor inside tmux.
+precmd that re-asserts a blinking thin-bar cursor inside tmux. It ends with a
+tmux auto-start: interactive Ghostty shells attach to (or create) the `main`
+tmux session (`tmux new -A -s main`), which pairs with §17's
+resurrect/continuum persistence so the quick terminal survives Ghostty quits
+and reboots.
 
 Because the managed block lives at the end of `~/.zshrc`, its scalar
 assignments (theme, `DISABLE_AUTO_TITLE`, etc.) win over anything earlier in
@@ -309,6 +313,8 @@ export PATH="$PATH:$HOME/.local/bin"
 
 Deep-copy this repo's `.claude/` into `~/.claude/`. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
+The merged `settings.json` includes SessionStart/SessionEnd hooks pointing at `~/.tmux/assistant-resurrect/` — the assistant session persistence scripts symlinked there by §17. Until §17 runs, Claude Code skips the missing hook scripts harmlessly.
+
 Run from the root of this repo:
 
 ```bash
@@ -356,15 +362,32 @@ Reload a running Ghostty with `⌘⇧,` to pick up the new config.
 
 ## 17. Restore tmux Configuration
 
-Drop this repo's tmux config at `~/.tmux.conf`. Enables mouse support (scroll + click-to-select-pane).
+Drop this repo's tmux config at `~/.tmux.conf`. Enables mouse support (scroll + click-to-select-pane) and session persistence across reboots (tmux-resurrect + tmux-continuum via TPM).
 
 Run from the root of this repo:
 
 ```bash
 cp tmux/tmux.conf ~/.tmux.conf
+
+# Bootstrap TPM (tmux plugin manager) and install the plugins declared in
+# tmux.conf (tmux-resurrect + tmux-continuum). install_plugins needs a running
+# tmux server that has already sourced the config (TPM's `run` line exports
+# TMUX_PLUGIN_MANAGER_PATH into it) — hence the start-server + source first.
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+tmux start-server
+tmux source-file ~/.tmux.conf
+~/.tmux/plugins/tpm/bin/install_plugins
+
+# Assistant session persistence: symlink the resurrect hook scripts to the
+# fixed path referenced by tmux.conf and ~/.claude/settings.json.
+ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.tmux/assistant-resurrect
 ```
 
 Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).
+
+Session persistence: continuum auto-saves the environment (sessions, windows, panes, layouts, per-pane cwd, visible pane contents) to `~/.local/share/tmux/resurrect/` every 15 minutes, a `client-detached` hook additionally saves the moment Ghostty quits (including the automatic quit during macOS shutdown), and the environment auto-restores when the tmux server starts. Combined with the zshrc auto-start (§9: Ghostty shells run `tmux new -A -s main`), quitting Ghostty or rebooting restores the quick terminal's windows on next summon. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
+
+Panes whose command starts with `npm start` are relaunched verbatim on restore (`@resurrect-processes`, additive to resurrect's default whitelist of vim/less/top/…). On top of the layout, panes running **Claude Code or Codex CLI get their conversations resumed**: `tmux/assistant-resurrect/` (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) hooks resurrect's save to record each pane's assistant session ID (Claude via a SessionStart hook registered in `.claude/settings.json` — see §15; Codex via its `~/.codex/state_*.sqlite` thread DB), and hooks resurrect's restore to type `claude --resume <id>` / `codex resume <id>` into the restored panes. Sessions started before the Claude hook existed fall back to a per-cwd newest-transcript lookup (same semantics as `claude --continue`).
 
 ## 18. Post-Setup Verification
 

@@ -26,5 +26,27 @@
   "showTurnDuration": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.tmux/assistant-resurrect/claude-session-track.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.tmux/assistant-resurrect/claude-session-cleanup.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
