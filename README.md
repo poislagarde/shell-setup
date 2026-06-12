@@ -14,26 +14,16 @@ The command lives at [`.claude/commands/shell-setup.md`](.claude/commands/shell-
 
 ## What it does
 
-An 18-section provisioning checklist:
+Claude runs an 18-section checklist top to bottom, pausing for verification between sections. At a high level:
 
-1. **Homebrew** — installer + PATH wiring for the current session.
-2. **Taps** — `auth0/auth0-cli`.
-3. **Formulae** — `autojump`, `auth0`, `bfg`, `gh`, `go`, `libpq`, `nvm`, `pipx`, `railway`, `tmux`, `yt-dlp`.
-4. **Casks** — `codex`, `gcloud-cli`, `ghostty`, `sanesidebuttons`, `session-manager-plugin`. Opens the Full Disk Access pane so Ghostty can be granted access.
-5. **Oh My Zsh** — installer.
-6. **NVM** — point `NVM_DIR` at `~/.nvm` so `brew upgrade nvm` can't wipe node installs.
-7. **Node** — install latest LTS via nvm, alias `default`.
-8. **Global npm packages** — `vercel`.
-9. **`~/.zshrc`** — appends this repo's `zsh/zshrc` to `~/.zshrc` as a **managed block** delimited by `# >>> shell-setup managed >>>` / `# <<< shell-setup managed <<<` markers. Re-runs strip the old block and re-append the current template, so the section is idempotent — the OMZ-installer-default zshrc and any machine-local additions are preserved. First run also stashes the pre-shell-setup file at `~/.zshrc.pre-shell-setup`. The block extends scalar OMZ opinions (theme, autotitle, update mode) but **adds** to the OMZ `plugins` array via `plugins+=(...)` + `typeset -U plugins`, so any plugins the user enabled in their own zshrc survive the merge (de-duplicated). The block re-sources OMZ so the merged plugin list takes effect. Block contents: Oh My Zsh theme + required plugins, NVM dir, Homebrew completions, user site-functions on `fpath`, PATH, `awsenv <profile>` AWS SSO helper, `claude` alias, a `tm` session helper (`tm <name>` attaches/creates; plain `tm` shows a numbered picker marking each session attached/detached — Alt+Shift+S inside tmux opens the equivalent choose-tree), and a tmux auto-start (the quick terminal — detected via `GHOSTTY_QUICK_TERMINAL`, Ghostty ≥1.3; splits inside it inherit the var only on builds newer than 1.3.1 — owns the `quick`/`quick-N` session namespace, each quick-terminal surface adopting the lowest detached one or minting the next free `quick-N`; regular Ghostty windows/tabs/panes adopt the first detached non-quick session or create `main` / an auto-numbered one — so surfaces get distinct sessions instead of mirroring, and after a reboot each new surface re-adopts a restored session in order — pairs with §17's session persistence). Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics), Shift+Enter inserts a literal newline (paired with the Ghostty/tmux CSI 27 plumbing), and a precmd that re-asserts a blinking thin-bar cursor (so inside tmux matches outside).
-10. **AWS CLI** — official macOS installer.
-11. **AWS SSO profiles** — interactive `prod` / `prod-admin` / `dev` setup.
-12. **Git** — `git up` alias for `pull --rebase --autostash`.
-13. **`git-mux`** — clones [`poislagarde/git-mux`](https://github.com/poislagarde/git-mux) into `~/repos/git-mux`, runs its `install.sh` (symlinks the script to `~/.local/bin/git-mux`), and symlinks the shipped `_git-mux` zsh completion into site-functions. `git mux <cmd>` then runs a git command across repos **serially with per-host SSH connection multiplexing** (avoids tripping a host's connection-rate throttle); it supersedes `git multi`.
-14. **`~/.zprofile`** — pipx PATH.
-15. **Restore Claude Code config** — copies this repo's `.claude/` into `~/.claude/`. Uses `jq -s '.[0] * .[1]'` to deep-merge `settings.json` (this repo wins on key conflicts, untouched keys preserved) and `rsync -av` (no `--delete`) for everything else so runtime files in `~/.claude/` are left intact.
-16. **Restore Ghostty config** — copies this repo's `ghostty/config` to `~/.config/ghostty/config` (quick terminal, splits, natural text editing keybinds, `window-save-state = always` so window/tab/split layout survives quits).
-17. **Restore tmux config** — copies this repo's `tmux/tmux.conf` to `~/.tmux.conf` (mouse support on), bootstraps [TPM](https://github.com/tmux-plugins/tpm) into `~/.tmux/plugins/`, and installs tmux-resurrect + tmux-continuum: the tmux environment (sessions, windows, panes, layouts, cwds, visible pane contents) auto-saves every 15 min **and on every client detach** (so quitting Ghostty — including the automatic quit during a macOS restart — snapshots the latest state) and auto-restores when the server starts, so every tmux session survives Ghostty quits and reboots (paired with §9's auto-attach, surfaces opened after a restart re-adopt the restored sessions). `npm start` panes are relaunched on restore (`@resurrect-processes`). Also symlinks `tmux/assistant-resurrect/` to `~/.tmux/assistant-resurrect`: resurrect hook scripts (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) that save each pane's **Claude Code / Codex CLI session ID** (Claude via a SessionStart hook in `.claude/settings.json`, Codex via its `~/.codex/state_*.sqlite` thread DB) and resume the conversations in the restored panes with `claude --resume <id>` / `codex resume <id>`.
-18. **Verification** — sources the new shell, prints versions, confirms node was installed under `~/.nvm/versions/node/`.
+- **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `codex`, `gcloud-cli`, …).
+- **Node** — nvm pinned to `~/.nvm` (survives `brew upgrade`), latest LTS as `default`.
+- **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, keyboard tweaks, and a tmux auto-start that gives each Ghostty surface its own session).
+- **AWS** — official CLI installer + interactive SSO profile setup (`prod` / `prod-admin` / `dev`).
+- **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
+- **Dotfiles** — Claude Code (`.claude/`), Ghostty, and tmux configs; the latter two are wired with tmux-resurrect/continuum so sessions, layouts, and even Claude/Codex conversations survive Ghostty quits and reboots.
+
+This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
 ## Repo layout
 
@@ -53,3 +43,119 @@ zsh/
 ```
 
 `settings.local.json` is intentionally excluded — Claude Code treats it as machine-local and the standard global gitignore drops it.
+
+## tmux keybinds
+
+Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** — Ghostty forwards Alt / Cmd+Opt keys into tmux, so they fire only when tmux owns the keyboard.
+
+### Windows (tabs)
+
+| Keys | Action |
+| --- | --- |
+| `Alt+=` | New window |
+| `Alt+` `` ` `` | Next window |
+| `Alt+Shift+` `` ` `` | Previous window |
+| `Alt+1` … `Alt+9` | Jump to window 1–9 |
+| `Alt+0` | Jump to window 0 |
+| prefix, `,` | Rename current window |
+| prefix, `&` | Kill current window |
+
+### Panes (splits)
+
+| Keys | Action |
+| --- | --- |
+| `Alt+Shift+=` | Split right (side-by-side) |
+| `Alt+Shift+-` | Split down (stacked) |
+| `Cmd+Opt+←/→/↑/↓` | Move focus between panes (spatial) |
+| `Alt+Shift+Enter` | Zoom / unzoom active pane (fullscreen) |
+| prefix, `z` | Zoom / unzoom (default alias) |
+| prefix, `{` / `}` | Swap pane with previous / next |
+| prefix, `x` | Kill current pane |
+| prefix, `Space` | Cycle pane layouts |
+
+> `Cmd+Opt+arrow` and `Alt+Shift+Enter` also drive Ghostty's own splits when you're *not* inside tmux — same keys, both layers.
+
+### Sessions
+
+| Keys | Action |
+| --- | --- |
+| `Alt+Shift+S` | **Session picker** — `choose-tree`, each marked (attached)/(detached) |
+| prefix, `s` | Session/window tree (default picker) |
+| prefix, `w` | Window picker across sessions |
+| prefix, `$` | Rename current session |
+| prefix, `d` | Detach (drops to a plain shell; surface stays open) |
+
+In a shell (inside or outside tmux):
+
+| Command | Action |
+| --- | --- |
+| `tm` | Numbered session picker (attached/detached marked) |
+| `tm <name>` | Attach to — or create — session `<name>` |
+| `tmux kill-session -t <name>` | Kill a session (stops resurrect persisting it) |
+
+> Session names are special: **`quick`** / `quick-N` are owned by the Ghostty quick terminal; regular windows/tabs auto-adopt any other detached session or create `main`.
+
+### Screen / scrollback
+
+| Keys | Action |
+| --- | --- |
+| `Cmd+K` / `Ctrl-L` | Clear screen **and** tmux scrollback |
+| Mouse wheel | Scroll into copy-mode (2 lines/notch) |
+| prefix, `[` | Enter copy-mode (arrows/PgUp to scroll, `q` to quit) |
+| prefix, `]` | Paste most recent buffer |
+
+Copy-mode is vi-style: `Space` start selection, `Enter` copy (also to the macOS clipboard), `/` search forward, `?` search back.
+
+### Session persistence (resurrect + continuum)
+
+| Keys | Action |
+| --- | --- |
+| prefix, `Ctrl-s` | Save environment now |
+| prefix, `Ctrl-r` | Restore last saved environment |
+
+Auto-saves every 15 min and on every Ghostty quit; auto-restores when the tmux server starts. Claude Code / Codex panes resume their conversations on restore.
+
+### Misc defaults worth knowing
+
+| Keys | Action |
+| --- | --- |
+| prefix, `?` | List all key bindings |
+| prefix, `:` | tmux command prompt |
+| prefix, `c` | New window (default; `Alt+=` is the custom shortcut) |
+
+## Ghostty keybinds
+
+These act on Ghostty surfaces directly. Inside tmux, the Alt-based window/pane chords above take over (Ghostty forwards them); the Cmd-based ones below stay with Ghostty.
+
+### Quick terminal & splits
+
+| Keys | Action |
+| --- | --- |
+| `Alt+Space` | Toggle the quick terminal (global — works from any app) |
+| `Ctrl+Shift+=` | Split right (side-by-side) |
+| `Ctrl+Shift+-` | Split down (stacked) |
+| `Cmd+Opt+←/→/↑/↓` | Move focus between splits (spatial) |
+| `Alt+Shift+Enter` | Toggle split zoom |
+| `Cmd+]` / `Cmd+[` | Next / previous split |
+| `Cmd+W` | Close the split / surface |
+
+### Screen / scrollback
+
+| Keys | Action |
+| --- | --- |
+| `Cmd+K` | Clear screen (sends `Ctrl-L`; clears tmux scrollback too) |
+| `Cmd+Shift+K` | Clear Ghostty's own scrollback buffer |
+
+### Text editing at the prompt
+
+The gaps Ghostty doesn't bind out of the box:
+
+| Keys | Action |
+| --- | --- |
+| `Cmd+←` / `Cmd+→` | Start / end of line |
+| `Cmd+Backspace` | Delete to line start |
+| `Alt+←` / `Alt+→` | Word back / forward |
+| `Alt+Backspace` | Delete word backward |
+| `Alt+Delete` (`fn+Alt+Backspace`) | Delete word forward |
+| `fn+Backspace` (`⌦`) | Forward-delete a character |
+| `Shift+Enter` | Insert a literal newline (multi-line editing) |

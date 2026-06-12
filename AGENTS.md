@@ -15,6 +15,15 @@ home copy means the change is lost on the next bootstrap. Always do both, then
 tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 ~/.tmux.conf`, `source ~/.zshrc`).
 
+> **Keep the README keybind cheatsheets in sync.** `README.md` has "tmux
+> keybinds" and "Ghostty keybinds" tables. Whenever you add, remove, or change a
+> binding in `tmux/tmux.conf` (`bind` / `bind -n` lines) or `ghostty/config`
+> (`keybind = …` lines), update the matching README table in the same change —
+> it's a third place the edit has to land. Skip the pure CSI-forwarding Ghostty
+> keybinds (e.g. `keybind = alt+shift+s=csi:27;4;115~`): those are plumbing that
+> *implements* a tmux chord, not user-facing shortcuts, so they belong in the
+> tmux table (as the chord they produce), not the Ghostty one.
+
 > **Note:** some home files may be **symlinks** back into this repo — in that
 > case editing the repo file *is* editing the home file, so there's only one
 > place to change. Always check first with `ls -l` / `readlink` before editing,
