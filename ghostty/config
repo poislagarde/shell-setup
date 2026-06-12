@@ -70,6 +70,13 @@ keybind = alt+shift+Backquote=csi:27;4;96~
 keybind = alt+shift+==csi:27;4;61~
 keybind = alt+shift+-=csi:27;4;45~
 
+# Alt+Shift+S → CSI 27 modified-key sequence (code 115 = 's', modifier 4 =
+# Shift+Alt) so tmux matches it as M-S-s for the session picker (choose-tree,
+# see ~/.tmux.conf). Without this explicit forwarding the chord doesn't reach
+# tmux in the M-S- form the binding expects — same fix as the = / - chords
+# above, just for a letter.
+keybind = alt+shift+s=csi:27;4;115~
+
 # Shift+Enter — send a distinct CSI 27 modified-key sequence so zsh can bind
 # it to insert a literal newline (multi-line editing). Default Ghostty sends
 # \r for both Enter and Shift+Enter unless the app enables the kitty keyboard

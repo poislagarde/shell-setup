@@ -143,15 +143,23 @@ done
 
 The managed block sets up Oh My Zsh (theme + shell-setup's required plugins),
 points `NVM_DIR` at `~/.nvm`, wires Homebrew + user site-functions completions
-onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, and the
-`claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS
+onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, the
+`claude` alias, and the `tm` session helper (`tm <name>` attaches/creates a
+session; plain `tm` is a numbered picker marking sessions attached/detached
+— inside tmux, Alt+Shift+S opens the equivalent choose-tree, see §17). Keyboard tweaks: `^U` → `backward-kill-line` (macOS
 Cmd+Backspace semantics), Shift+Enter / Shift+Space re-encoded via the
 Ghostty/tmux CSI 27 plumbing, Cmd+Opt+arrow edge-fallthrough no-ops, and a
 precmd that re-asserts a blinking thin-bar cursor inside tmux. It ends with a
-tmux auto-start: interactive Ghostty shells attach to (or create) the `main`
-tmux session (`tmux new -A -s main`), which pairs with §17's
-resurrect/continuum persistence so the quick terminal survives Ghostty quits
-and reboots.
+tmux auto-start for interactive Ghostty shells: the quick terminal (detected
+via `GHOSTTY_QUICK_TERMINAL=1`, Ghostty ≥1.3; splits inside it inherit the
+var only on builds newer than 1.3.1) owns
+the `quick`/`quick-N` session namespace — each quick-terminal surface adopts
+the lowest-numbered detached `quick*` session or mints the next free
+`quick-N`; regular windows/tabs/panes do the same outside the namespace —
+adopt the first detached non-quick session, else create `main`, else a fresh
+auto-numbered session — so surfaces get distinct sessions instead of
+mirroring one. Pairs with §17's resurrect/continuum persistence so all
+sessions survive Ghostty quits and reboots.
 
 Because the managed block lives at the end of `~/.zshrc`, its scalar
 assignments (theme, `DISABLE_AUTO_TITLE`, etc.) win over anything earlier in
@@ -385,7 +393,7 @@ ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.tmux/assistant-resurrect
 
 Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).
 
-Session persistence: continuum auto-saves the environment (sessions, windows, panes, layouts, per-pane cwd, visible pane contents) to `~/.local/share/tmux/resurrect/` every 15 minutes, a `client-detached` hook additionally saves the moment Ghostty quits (including the automatic quit during macOS shutdown), and the environment auto-restores when the tmux server starts. Combined with the zshrc auto-start (§9: Ghostty shells run `tmux new -A -s main`), quitting Ghostty or rebooting restores the quick terminal's windows on next summon. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
+Session persistence: continuum auto-saves the environment (sessions, windows, panes, layouts, per-pane cwd, visible pane contents) to `~/.local/share/tmux/resurrect/` every 15 minutes, a `client-detached` hook additionally saves the moment Ghostty quits (including the automatic quit during macOS shutdown), and the environment auto-restores when the tmux server starts. Combined with the zshrc auto-start (§9: quick-terminal surfaces own the `quick`/`quick-N` session namespace, regular surfaces adopt/create the rest), quitting Ghostty or rebooting restores every session — each surface opened after a restart re-attaches one. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
 
 Panes whose command starts with `npm start` are relaunched verbatim on restore (`@resurrect-processes`, additive to resurrect's default whitelist of vim/less/top/…). On top of the layout, panes running **Claude Code or Codex CLI get their conversations resumed**: `tmux/assistant-resurrect/` (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) hooks resurrect's save to record each pane's assistant session ID (Claude via a SessionStart hook registered in `.claude/settings.json` — see §15; Codex via its `~/.codex/state_*.sqlite` thread DB), and hooks resurrect's restore to type `claude --resume <id>` / `codex resume <id>` into the restored panes. Sessions started before the Claude hook existed fall back to a per-cwd newest-transcript lookup (same semantics as `claude --continue`).
 

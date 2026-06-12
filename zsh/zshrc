@@ -97,20 +97,120 @@ awsenv() {
 # tmux — the var is only consulted when $TMUX is set.
 alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
 
-# Ghostty shells live inside tmux: attach to (or create) the "main" session.
+# tm — tmux session helper. `tm <name>` attaches to (or creates) the named
+# session, switching the current client instead when already inside tmux.
+# Plain `tm` shows a numbered picker of existing sessions, each marked
+# (attached)/(detached), via zsh's `select` builtin (no fzf dependency).
+# Inside tmux, Alt+Shift+S (choose-tree, see tmux.conf) is the richer equivalent;
+# `tm` is mainly for shells outside tmux — the detached escape-hatch shell,
+# VS Code's terminal, ssh. Names/labels are split from ONE list-sessions
+# call (tab-separated) so the two arrays can't drift if sessions churn.
+tm() {
+  emulate -L zsh
+  if (( $# )); then
+    if [[ -n "$TMUX" ]]; then
+      tmux new-session -d -s "$1" 2>/dev/null
+      tmux switch-client -t "=$1"
+    else
+      tmux new-session -A -s "$1"
+    fi
+    return
+  fi
+  local -a lines names display
+  lines=(${(f)"$(tmux list-sessions \
+    -F '#{session_name}	#{session_windows}w#{?session_attached, (attached), (detached)}' \
+    2>/dev/null)"})
+  if (( ${#lines} == 0 )); then
+    echo "tm: no tmux sessions — use \`tm <name>\` to start one" >&2
+    return 1
+  fi
+  names=("${(@)lines%%	*}")
+  display=("${(@)lines/	/ — }")
+  local choice PS3="tm> "
+  select choice in "${display[@]}"; do
+    [[ -n "$choice" ]] || { echo "tm: invalid choice" >&2; return 1 }
+    if [[ -n "$TMUX" ]]; then
+      tmux switch-client -t "=${names[$REPLY]}"
+    else
+      tmux attach-session -t "=${names[$REPLY]}"
+    fi
+    return
+  done
+  return 1  # reached on EOF (Ctrl+D) — nothing picked
+}
+
+# Ghostty shells live inside tmux. Two attach policies, split on the
+# GHOSTTY_QUICK_TERMINAL=1 env var (Ghostty ≥1.3 sets it in quick-terminal
+# shells; splits created inside the quick terminal inherit it only on builds
+# NEWER than 1.3.1 — the newSplit() override landed on main after the 1.3.1
+# release, so on 1.3.1 a Ghostty split in the quick terminal lacks the var
+# and joins the regular namespace below; use tmux splits there instead,
+# which also survive quits — Ghostty doesn't save quick-terminal layout):
+#   - Quick terminal → owns the "quick" namespace: quick, quick-2, quick-3,
+#     … Each quick-terminal surface adopts the lowest-numbered detached
+#     quick* session (sort -V orders "quick" before "quick-2" before
+#     "quick-10"), so the first summon always gets the scratchpad back and
+#     a Ghostty split inside the quick terminal gets its own quick-N
+#     instead of mirroring the first pane. No detached one → create "quick"
+#     if it's missing, else mint the next free quick-N.
+#   - Regular windows/tabs/panes → same dance outside the quick namespace:
+#     adopt the first detached non-quick* session; otherwise create "main"
+#     if it's missing, else a fresh auto-numbered session.
+# Surfaces therefore never mirror — each gets its own session. Closing a
+# tab/pane only detaches its session, ready for the next surface of the
+# same kind to re-adopt; kill sessions you're done with
+# (`tmux kill-session -t name`) or resurrect will persist them forever.
 # Paired with tmux-resurrect/continuum in tmux.conf, this is what makes
 # quitting Ghostty or rebooting the Mac non-destructive — the first shell
-# after a restart boots the tmux server, continuum restores the saved
-# windows/panes into "main", and this attach lands straight in them. Ghostty
-# has no env var that singles out the quick terminal, so this fires in every
-# Ghostty surface; extra tabs/windows attach to the SAME session (mirrored
-# clients — intended: one persistent environment). Guards:
+# after a restart boots the tmux server, continuum restores ALL saved
+# sessions (detached), and each Ghostty surface opened after that re-adopts
+# one of them. Guards:
 #   -o interactive — defensive; .zshrc shouldn't load otherwise
 #   -z $TMUX       — don't nest inside an existing session
 #   TERM_PROGRAM   — Ghostty only (leaves VS Code's terminal, ssh, etc. alone)
 # Deliberately NOT `exec`: detaching (prefix+d) falls back to this plain zsh
 # instead of closing the surface — that's also the escape hatch when you want
-# a vanilla non-tmux shell.
+# a vanilla non-tmux shell. From there `tmux attach -t name` mirrors a
+# session onto a second surface on purpose, which the auto-attach never
+# does. The list-sessions -f filters (need tmux ≥3.2) match detached
+# (#{session_attached} is the attached-client COUNT, hence ==0) sessions in
+# or out of the quick namespace; the m/r flag is an anchored regex match, so
+# a session named "quicknotes" counts as regular, not quick. -F prints just
+# the name, robust to names with spaces. Session targets use tmux's `=name`
+# exact-match prefix and MUST stay quoted: a bare `=word` triggers zsh's
+# =-expansion (command-path lookup) and errors out.
 if [[ -o interactive && -z "$TMUX" && "$TERM_PROGRAM" == "ghostty" ]]; then
-  tmux new-session -A -s main
+  if [[ -n "$GHOSTTY_QUICK_TERMINAL" ]]; then
+    _tmux_detached=$(tmux list-sessions \
+      -f '#{&&:#{==:#{session_attached},0},#{m/r:^quick(-[0-9]+)?$,#{session_name}}}' \
+      -F '#{session_name}' 2>/dev/null | sort -V | head -n 1)
+    if [[ -n "$_tmux_detached" ]]; then
+      tmux attach-session -t "=$_tmux_detached"
+    elif ! tmux has-session -t '=quick' 2>/dev/null; then
+      # Also the cold-boot path: this boots the server, continuum restores
+      # all saved sessions, and -A attaches the restored "quick".
+      tmux new-session -A -s quick
+    else
+      _tmux_n=2
+      while tmux has-session -t "=quick-$_tmux_n" 2>/dev/null; do
+        (( _tmux_n++ ))
+      done
+      tmux new-session -s "quick-$_tmux_n"
+    fi
+    unset _tmux_detached _tmux_n
+  else
+    _tmux_detached=$(tmux list-sessions \
+      -f '#{&&:#{==:#{session_attached},0},#{?#{m/r:^quick(-[0-9]+)?$,#{session_name}},0,1}}' \
+      -F '#{session_name}' 2>/dev/null | head -n 1)
+    if [[ -n "$_tmux_detached" ]]; then
+      tmux attach-session -t "=$_tmux_detached"
+    elif ! tmux has-session -t '=main' 2>/dev/null; then
+      # Also the cold-boot path: this boots the server, continuum restores
+      # all saved sessions, and -A attaches the restored "main".
+      tmux new-session -A -s main
+    else
+      tmux new-session
+    fi
+    unset _tmux_detached
+  fi
 fi
