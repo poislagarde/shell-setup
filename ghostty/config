@@ -32,6 +32,16 @@ quick-terminal-autohide = false
 quick-terminal-space-behavior = move
 
 
+# --- Window restore ---
+# Save window state (positions, sizes, tabs, splits, and — via shell
+# integration — working directories) on every exit, not just forced
+# terminations, and restore it on launch. macOS only. Restored surfaces get
+# fresh shells; the zshrc tmux auto-attach then re-adopts the restored
+# (detached) tmux sessions one per surface, so layout comes from Ghostty and
+# content/processes come from tmux-resurrect.
+window-save-state = always
+
+
 # --- Appearance ---
 # Semi-transparent background (~10% transparency). Ghostty's scale is the
 # inverse: 1.0 = opaque, 0.0 = invisible.
