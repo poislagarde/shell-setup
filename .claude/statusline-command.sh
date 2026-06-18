@@ -51,7 +51,7 @@ line1="📁 $display_cwd"
 line2=""
 if [ -n "$used" ]; then
   used_int=$(printf '%.0f' "$used")
-  line2="🧠 ${used_int}%"
+  line2="🧠 ${used_int} %"
 fi
 
 if [ -n "$five_pct" ]; then
