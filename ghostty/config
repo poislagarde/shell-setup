@@ -1,0 +1,201 @@
+# --- Quick Terminal ---
+
+# Global hotkey to summon/dismiss. `global:` makes it work even when Ghostty
+# isn't focused, so the toggle works from any app.
+# ⌥Space is a familiar default (alternative: `global:cmd+grave_accent`).
+keybind = global:alt+space=toggle_quick_terminal
+
+# Where the panel slides in from: top | bottom | left | right | center
+quick-terminal-position = top
+
+# Size of the panel — pinned in pixels so column/row count stays constant
+# across monitors of different sizes. Format for position=top is
+# `HEIGHT,WIDTH`; omitting the second value lets Ghostty maximize the
+# secondary axis, which makes the width change between displays.
+#
+# 778px ≈ 48 rows at JetBrains Mono 12pt (see font-size below, ~16px/row). Nudge
+# ±16px to hit a target row count. Width 1466px ≈ 203 columns at the same font
+# (~7.2px/cell advance); pinning px keeps the row/column count constant across
+# monitors of different sizes.
+quick-terminal-size = 778px,1466px
+
+# Which display to show on: main | mouse | macos-menu-bar
+quick-terminal-screen = mouse
+
+# Slide animation length in seconds. 0 disables.
+quick-terminal-animation-duration = 0.2
+
+# Hide automatically when focus leaves it.
+quick-terminal-autohide = false
+
+# Follow the active macOS Space instead of staying pinned: move | remain | move-and-attach
+quick-terminal-space-behavior = move
+
+
+# --- Window restore ---
+# Save window state (positions, sizes, tabs, splits, and — via shell
+# integration — working directories) on every exit, not just forced
+# terminations, and restore it on launch. macOS only. Restored surfaces get
+# fresh shells; the zshrc tmux auto-attach then re-adopts the restored
+# (detached) tmux sessions one per surface, so layout comes from Ghostty and
+# content/processes come from tmux-resurrect.
+window-save-state = always
+
+
+# --- Appearance ---
+# Semi-transparent background (~10% transparency). Ghostty's scale is the
+# inverse: 1.0 = opaque, 0.0 = invisible.
+background-opacity = 0.9
+
+# Do NOT set `font-family` here. The tmux pane-border glyphs (branch U+E725,
+# folder U+F07C) come from Symbols Nerd Font Mono (installed by /shell-setup via
+# `brew install --cask font-symbols-only-nerd-font`), and Ghostty's automatic
+# fallback already resolves them at single-cell width — verified, no explicit
+# config needed. Adding `font-family = JetBrains Mono` + `font-family = Symbols
+# Nerd Font Mono` here inflates the grid cell width and renders ALL text
+# spaced-out / double-width (the symbol font's metrics leak into the cell
+# metrics). Leaving the font implicit keeps both the text and the glyphs correct.
+
+# Default for JetBrains Mono is 13pt; 12 is a touch smaller (more rows/columns
+# in the same window). See the quick-terminal-size note above for how this
+# affects the row/column math.
+font-size = 12
+font-thicken = true
+window-colorspace = srgb
+
+
+# --- Mouse behavior ---
+# Deliberately NOT setting mouse-shift-capture: Shift must stay Ghostty's
+# mouse-reporting bypass so Cmd+Shift+click opens links while tmux owns the
+# mouse. The tmux pane/window drag-swaps use Ctrl instead (C- bindings),
+# which the mouse protocol forwards to tmux on its own.
+
+
+# --- Keyboard behavior ---
+# Treat the Option key as Alt so `alt+*` keybinds (and Meta-prefixed shell
+# shortcuts) fire. Without this, Option+Backspace, Option+arrows, etc. don't
+# trigger keybinds — Ghostty passes them through as macOS dead-key sequences.
+# Set to `left` to let Right-Option keep typing characters like ®, ¨.
+macos-option-as-alt = true
+
+# Send physical ANSI backquote chords directly to tmux as modified-key
+# sequences, bypassing the macOS dead-key text path.
+keybind = alt+Backquote=csi:27;3;96~
+keybind = alt+shift+Backquote=csi:27;4;96~
+
+# Send Alt+Shift+= and Alt+Shift+- as CSI 27 modified-key sequences so tmux
+# matches them as M-S-= / M-S-- (used for split-window). Default forwarding
+# gives ^[+ / ^[_, which tmux's extended-keys mode doesn't reliably map back
+# to the M-S- form the bindings expect.
+keybind = alt+shift+==csi:27;4;61~
+keybind = alt+shift+-=csi:27;4;45~
+
+# Ctrl+Alt(+Shift) variants → forward as CSI 27 sequences so tmux matches them
+# as C-M-= / C-M-S-= / C-M-S-- / C-M-p — the "open Claude Code" window/split
+# binds (see ~/.tmux.conf). Modifier math for CSI 27;<mod>;<code>~ is
+# mod = 1 + Shift(1) + Alt(2) + Ctrl(4): Ctrl+Alt = 7, Ctrl+Alt+Shift = 8.
+# Codes: '=' 61, '-' 45, 'p' 112. Same explicit-forwarding reason as the
+# alt+shift chords above — default forwarding wouldn't map back to the C-M- form.
+keybind = ctrl+alt+==csi:27;7;61~
+keybind = ctrl+alt+shift+==csi:27;8;61~
+keybind = ctrl+alt+shift+-=csi:27;8;45~
+keybind = ctrl+alt+p=csi:27;7;112~
+
+# Alt+Shift+S → CSI 27 modified-key sequence (code 115 = 's', modifier 4 =
+# Shift+Alt) so tmux matches it as M-S-s for the session picker (choose-tree,
+# see ~/.tmux.conf). Without this explicit forwarding the chord doesn't reach
+# tmux in the M-S- form the binding expects — same fix as the = / - chords
+# above, just for a letter.
+keybind = alt+shift+s=csi:27;4;115~
+
+# Shift+Enter — send the same ESC+Enter byte sequence as Alt+Enter. Codex TUI
+# treats that as "insert newline" (it ignores the CSI 27 modified-key
+# encoding, so don't switch to that form). zsh binds this sequence back to a
+# literal newline too, so shells get the same multi-line editing behavior.
+keybind = shift+enter=text:\x1b\x0d
+
+
+# --- Panel splits ---
+#   ⌃⇧=  → Split Vertically   (side-by-side)
+#   ⌃⇧-  → Split Horizontally (stacked)
+keybind = ctrl+shift+==new_split:right
+keybind = ctrl+shift+-=new_split:down
+
+# Ghostty's defaults already cover the rest of the split workflow:
+#   ⌘W       → close_surface            (close current pane)
+#   ⌘] / ⌘[  → goto_split:next/previous
+#   ⌘D / ⌘⇧D → also bound to new_split:right / new_split:down (bonus paths)
+
+# ⌘⌥+arrow → move focus between panes, working in BOTH Ghostty's native splits
+# and tmux. The `performable:` prefix makes Ghostty consume the chord only when
+# the action can run; otherwise it behaves "as if the keybind was not set" and
+# encodes the key through to the running program (modifier 11 — ESC[1;11{...}),
+# where tmux's user-key bindings catch it (see ~/.tmux.conf).
+#
+# Spatial movement so a 2x2 grid navigates geometrically (right really goes
+# right). Ghostty's spatial goto_split does NOT wrap, so at a grid edge with no
+# neighbor the action is non-performable and the chord falls through, encoded as
+# modifier 11 (ESC[1;11{...}). Inside tmux that's intended — tmux catches it.
+# Outside tmux (Ghostty splits) the shell would print a stray escape there, so
+# ~/.zshrc binds those four sequences to a no-op to swallow them silently.
+keybind = performable:super+alt+left=goto_split:left
+keybind = performable:super+alt+right=goto_split:right
+keybind = performable:super+alt+up=goto_split:up
+keybind = performable:super+alt+down=goto_split:down
+
+# ⌥⇧⏎ → toggle "fullscreen" (zoom) on the active pane, working in BOTH
+# Ghostty's native splits and tmux — same `performable:` pattern as the
+# opt+cmd+arrow navigation above. When the active surface is part of a
+# Ghostty split tree, Ghostty zooms it. When there's nothing for Ghostty to
+# zoom (single Ghostty pane running tmux), `toggle_split_zoom` is
+# non-performable and the chord falls through to the running program. Tmux's
+# `extended-keys always` + `terminal-features 'xterm*:extkeys'` enables
+# modifyOtherKeys upstream in Ghostty, so the fall-through is encoded as
+# `\e[27;4;13~` — which tmux matches as M-S-Enter (see ~/.tmux.conf).
+keybind = performable:alt+shift+enter=toggle_split_zoom
+
+# ⌘⇧T is bound by default to `undo` (reopen the most recently closed tab/
+# split). Uncomment to rebind to `new_tab` instead:
+# keybind = super+shift+t=new_tab
+
+
+# --- Natural Text Editing ---
+# Ghostty already binds most of these by default; the ones below cover the
+# gaps it does NOT bind out of the box.
+#
+# Already-default in Ghostty (kept commented for reference):
+#   keybind = super+arrow_left=text:\x01    # Cmd+←  → start of line (^A)
+#   keybind = super+arrow_right=text:\x05   # Cmd+→  → end of line   (^E)
+#   keybind = super+backspace=text:\x15     # Cmd+⌫  → kill to line start (^U)
+#   keybind = alt+arrow_left=esc:b          # ⌥+←   → word back
+#   keybind = alt+arrow_right=esc:f         # ⌥+→   → word fwd
+
+# ⌘+⌫  → delete to line start (^U). Paired with `bindkey '^U' backward-kill-line`
+# in ~/.zshrc — zsh's default `^U` is `kill-whole-line` which doesn't match
+# macOS semantics.
+keybind = super+backspace=text:\x15
+
+# ⌥+⌫  → delete word backward.
+# Use Ctrl+W (0x17) — the universal tty WERASE code that works in bash, zsh,
+# Ink/Node apps like Claude Code, vim, etc. (ESC+DEL is the older bash-only
+# convention and isn't recognized by Claude Code's input handler.)
+keybind = alt+backspace=text:\x17
+
+# ⌥+⌦ (Option + Forward Delete / fn+⌥+⌫) → delete word forward
+keybind = alt+delete=esc:d
+
+# ⌦ (forward delete, fn+⌫) → send ^D
+keybind = delete=text:\x04
+
+# ⌘K → Ctrl+L. Ghostty's default super+k=clear_screen clears Ghostty's
+# scrollback, but inside tmux that buffer is empty (tmux owns the screen),
+# so it appears to do nothing. Sending Ctrl+L instead lets:
+#   - outside tmux: the shell's clear-screen widget fire (zsh redraws prompt)
+#   - inside tmux:  our `bind -n C-l send-keys C-l \; clear-history` upgrade
+#                   clear both the screen and tmux's scrollback.
+keybind = super+k=text:\x0c
+
+# ⌘⇧K → nuke Ghostty's own scrollback buffer (the original super+k behavior).
+# Useful outside tmux when you want the full wipe instead of just a viewport
+# redraw. Inside tmux it's a no-op (tmux owns the screen) — use ⌘K there.
+keybind = super+shift+k=clear_screen
