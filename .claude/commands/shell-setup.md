@@ -403,13 +403,38 @@ rsync -av --exclude='settings.json' --exclude='commands/shell-setup.md' .claude/
 mkdir -p ~/.codex
 cp .codex/hooks.json ~/.codex/hooks.json
 
-# 5. Codex TUI settings: merge the tracked [tui] block into ~/.codex/config.toml.
-#    The status_line ports the Claude statusline as closely as Codex's native
-#    footer items allow: context used, model/reasoning, PR number, weekly limit,
-#    and 5h limit. That file is
-#    otherwise machine-local state (project trust levels, marketplaces, hook
-#    trust hashes) — never copy it wholesale.
-if [ ! -f ~/.codex/config.toml ] || ! grep -q '^\[tui\]' ~/.codex/config.toml; then
+# 5. Codex settings: merge the tracked top-level defaults and [tui] block into
+#    ~/.codex/config.toml. Preserve all other machine-local settings.
+touch ~/.codex/config.toml
+
+# Replace or add each tracked root-level scalar before the first TOML table.
+while IFS= read -r assignment; do
+  case "$assignment" in
+    ''|'#'*) continue ;;
+  esac
+  key=${assignment%% *}
+  tmp=$(mktemp)
+  awk -v key="$key" -v assignment="$assignment" '
+    BEGIN { in_root = 1; replaced = 0 }
+    in_root && /^[[:space:]]*\[/ {
+      if (!replaced) print assignment
+      in_root = 0
+    }
+    in_root && $0 ~ ("^" key "[[:space:]]*=") {
+      if (!replaced) print assignment
+      replaced = 1
+      next
+    }
+    { print }
+    END {
+      if (in_root && !replaced) print assignment
+    }
+  ' ~/.codex/config.toml > "$tmp" && mv "$tmp" ~/.codex/config.toml
+done < .codex/config-defaults.toml
+
+# The native footer shows context used, model/reasoning, PR number, weekly
+# limit, and 5h limit.
+if ! grep -q '^\[tui\]' ~/.codex/config.toml; then
   cat .codex/config-tui.toml >> ~/.codex/config.toml
 else
   echo "~/.codex/config.toml already has a [tui] section — reconcile it with .codex/config-tui.toml by hand."

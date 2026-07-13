@@ -34,8 +34,9 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ├── settings.json            # Claude Code settings (statusline, plugins, prefs)
 └── statusline-command.sh    # statusline: ctx % + model[effort] (left), weekly + 5h usage (right); degrades to fit width
 .codex/
-├── hooks.json               # Codex SessionStart hook (assistant-resurrect session tracking)
-└── config-tui.toml          # Codex TUI statusline: context used + model/reasoning + PR + weekly/5h limits
+├── config-defaults.toml     # Codex default model and reasoning effort
+├── config-tui.toml          # Codex TUI statusline: context used + model/reasoning + PR + weekly/5h limits
+└── hooks.json               # Codex SessionStart hook (assistant-resurrect session tracking)
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 tmux/

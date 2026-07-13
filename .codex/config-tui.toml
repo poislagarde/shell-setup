@@ -1,7 +1,7 @@
 # Codex TUI settings — merged into ~/.codex/config.toml by /shell-setup §15.
-# ~/.codex/config.toml is otherwise machine-local state (project trust levels,
-# marketplaces, hook trust hashes): never copy it wholesale — append/reconcile
-# this block only.
+# Other tracked top-level defaults live in config-defaults.toml. The remaining
+# config is machine-local state (project trust levels, marketplaces, hook trust
+# hashes): never copy it wholesale — append/reconcile this block only.
 
 [tui]
 status_line = [
