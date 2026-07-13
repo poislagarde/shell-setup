@@ -1,0 +1,5 @@
+# Codex defaults — merged into the top level of ~/.codex/config.toml by
+# /shell-setup §15. Keep all other top-level settings machine-local.
+
+model = "gpt-5.6-sol"
+model_reasoning_effort = "ultra"

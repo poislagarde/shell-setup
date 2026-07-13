@@ -95,6 +95,7 @@ snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
 | tmux status refresh | `tmux/status-refresh.sh` | `~/.tmux/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
 | Claude Code | `.claude/` (settings.json, commands, statusline) | `~/.claude/` |
 | Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (copy; Codex must be told to *trust* the hook on first run) |
-| Codex TUI | `.codex/config-tui.toml` | the `[tui]` block of `~/.codex/config.toml` (merge that block only — the rest of the file is machine-local state; never copy it wholesale) |
+| Codex defaults | `.codex/config-defaults.toml` | the top-level `model` and `model_reasoning_effort` keys of `~/.codex/config.toml` (merge those keys only; preserve the rest) |
+| Codex TUI | `.codex/config-tui.toml` | the `[tui]` block of `~/.codex/config.toml` (merge that block only; preserve every other section) |
 | zsh (`~/.zshrc`) | `zsh/zshrc` | `~/.zshrc` |
 | zsh (`~/.zprofile`) | described in `.claude/commands/shell-setup.md` | `~/.zprofile` |
