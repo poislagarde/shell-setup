@@ -10,8 +10,9 @@
 #                 session ID running in it, write a JSON sidecar next to
 #                 resurrect's own save files.
 #   restore.sh  — resurrect post-restore hook: read the sidecar and type
-#                 `claude --resume <id>` / `codex resume <id>` into the
-#                 restored panes.
+#                 `claude --resume <id>` / `resume-codex.sh <id>` into the
+#                 restored panes. The Codex launcher retries the UUID after a
+#                 successful startup update.
 #   session-track.sh / session-cleanup.sh <tool> — SessionStart/SessionEnd
 #                 hooks (one script, parameterized by claude|codex) that record
 #                 which session id each running claude/codex process (pid)
