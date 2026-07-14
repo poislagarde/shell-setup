@@ -6,9 +6,9 @@
 # The relaunch is typed into the pane's shell with send-keys (the same
 # mechanism resurrect uses for its own process restores), NOT exec'd
 # directly — so the user's interactive zsh expands the `claude` alias, which
-# is what re-applies CLAUDE_CODE_TMUX_TRUECOLOR=1 and --chrome. Flags that
-# only existed ad hoc on the original command line are NOT preserved; keep
-# standing flags in the alias. Keystrokes buffer in the pty while zsh is
+# is what re-applies CLAUDE_CODE_TMUX_TRUECOLOR=1 and --chrome. Codex goes
+# through resume-codex.sh so a successful startup update retries the same
+# session ID with the new binary. Keystrokes buffer in the pty while zsh is
 # still initializing, so no readiness wait is needed.
 set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -45,7 +45,7 @@ jq -c '.[]' "$SIDECAR" 2>/dev/null | while read -r entry; do
 
 	case "$tool" in
 	claude) cmd="claude --resume $sid" ;;
-	codex) cmd="codex resume $sid" ;;
+	codex) cmd="$SCRIPT_DIR/resume-codex.sh $sid" ;;
 	*) continue ;;
 	esac
 	tmux send-keys -t "=$pane" "$cmd" Enter

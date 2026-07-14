@@ -156,7 +156,7 @@ Copy-mode is vi-style: `Space` start selection, `Enter` copy (also to the macOS 
 | prefix, `Ctrl-s` | Save environment now |
 | prefix, `Ctrl-r` | Restore last saved environment |
 
-Auto-saves every 15 min and on every Ghostty quit; auto-restores when the tmux server starts. Claude Code / Codex panes resume their conversations on restore.
+Auto-saves every 15 min and on every Ghostty quit; auto-restores when the tmux server starts. Claude Code / Codex panes resume their conversations on restore. If Codex updates during a restored launch, the same conversation resumes with the new binary.
 
 ### Misc defaults worth knowing
 
