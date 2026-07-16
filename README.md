@@ -93,7 +93,7 @@ Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix
 | `Alt+Shift+` `` ` `` | Previous window |
 | `Alt+1` … `Alt+9` | Jump to window 1–9 |
 | `Alt+0` | Jump to window 10 |
-| `Ctrl` + left-drag window tab | Drag onto another tab to swap windows |
+| `Ctrl` + left-drag window tab | Move the dragged window; intervening tabs shift |
 | prefix, `,` | Rename current window |
 | prefix, `&` | Kill current window |
 
