@@ -201,4 +201,5 @@ The gaps Ghostty doesn't bind out of the box:
 | `Alt+Backspace` | Delete word backward |
 | `Alt+Delete` (`fn+Alt+Backspace`) | Delete word forward |
 | `fn+Backspace` (`⌦`) | Forward-delete a character |
+| `Shift+Space` | Insert a regular space |
 | `Shift+Enter` | Insert a literal newline in shells and Codex-style TUIs |
