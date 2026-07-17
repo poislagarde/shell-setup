@@ -78,6 +78,9 @@ window-colorspace = srgb
 # Set to `left` to let Right-Option keep typing characters like ®, ¨.
 macos-option-as-alt = true
 
+# Normalize Shift+Space to a plain space across shells and terminal apps.
+keybind = shift+space=text:\x20
+
 # Send physical ANSI backquote chords directly to tmux as modified-key
 # sequences, bypassing the macOS dead-key text path.
 keybind = alt+Backquote=csi:27;3;96~
