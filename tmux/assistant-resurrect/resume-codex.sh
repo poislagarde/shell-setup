@@ -73,4 +73,13 @@ if [ "$STATUS" -eq 0 ] &&
 	exec "$CODEX_BIN" resume "$SID"
 fi
 
+# The binary changed but the updater result wasn't confirmed (unrecognized
+# updater output, or another pane replaced the shared binary during a normal
+# quit). Don't reopen on a guess — leave the resume command on screen.
+if [ -n "$VERSION_BEFORE" ] && [ -n "$VERSION_AFTER" ] &&
+	[ "$VERSION_BEFORE" != "$VERSION_AFTER" ]; then
+	printf 'Codex binary changed (%s -> %s); reopen this session with: codex resume %s\n' \
+		"$VERSION_BEFORE" "$VERSION_AFTER" "$SID"
+fi
+
 exit "$STATUS"
