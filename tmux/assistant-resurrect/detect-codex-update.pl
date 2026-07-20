@@ -2,9 +2,10 @@
 use strict;
 use warnings;
 
-# Codex renders conversation content inside the terminal's alternate screen.
-# Its CLI prints the updater result only after leaving that screen, so require
-# that ordering before creating the marker consumed by resume-codex.sh.
+# Codex prints the updater result on the primary screen — at startup before
+# the TUI (alternate screen) ever opens, or after leaving it. Count only
+# success text seen outside the alternate screen, and discard it if the TUI
+# opens afterwards (the session reopened, so no restart is pending).
 my $marker = shift @ARGV;
 exit 2 if !defined($marker) || @ARGV;
 
@@ -12,7 +13,6 @@ my $enter_alt = "\e[?1049h";
 my $leave_alt = "\e[?1049l";
 my $success = 'Update ran successfully! Please restart Codex.';
 my $buffer = '';
-my $saw_alt = 0;
 my $in_alt = 0;
 my $candidate = 0;
 my $keep = length($success) - 1;
@@ -34,12 +34,11 @@ while (1) {
 		my ($index, $type, $length) = @{$events[0]};
 		$buffer = substr($buffer, $index + $length);
 		if ($type eq 'enter') {
-			$saw_alt = 1;
 			$in_alt = 1;
 			$candidate = 0;
 		} elsif ($type eq 'leave') {
-			$in_alt = 0 if $saw_alt;
-		} elsif ($saw_alt && !$in_alt) {
+			$in_alt = 0;
+		} elsif (!$in_alt) {
 			$candidate = 1;
 		}
 	}
