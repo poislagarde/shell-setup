@@ -63,7 +63,7 @@ What the setup puts on your PATH, plus the shell helpers and aliases it defines 
 | `awsenv` *(helper)* | Log into an AWS SSO profile and export its credentials into the current shell: `awsenv dev` / `awsenv prod` / `awsenv prod-admin` (the three profiles from §11). |
 | `bfg` | BFG Repo-Cleaner — strip large files or secrets from git history. `bfg --delete-files secrets.txt` or `bfg --replace-text passwords.txt`, then `git reflog expire --expire=now --all && git gc --prune=now --aggressive`. |
 | `claude` *(alias)* | Claude Code, aliased to `claude --chrome` with tmux truecolor forced on. `claude` to start, `claude --resume` / `claude --continue` to pick up a conversation. Installed via the native installer (§8) — update with `claude update`. |
-| `codex` | OpenAI Codex CLI. `codex` to start; `codex resume <id>`. Installed via its native installer (§8) — update with `codex update`. |
+| `codex` *(alias)* | OpenAI Codex CLI, aliased to force `model_reasoning_effort=ultra` on every launch (Codex rewrites the value in `~/.codex/config.toml`, so the config alone doesn't stick). `codex` to start; `codex resume <id>`. Installed via its native installer (§8) — update with `codex update`. |
 | `cswap` | Switch between logged-in Claude Code accounts. Register once per account (log in first, then `cswap --add-account`); switch with `cswap --switch`, `cswap --switch-to <n\|email>`, or the `cswap --tui` menu; `cswap --list` shows registered accounts. Restart Claude Code after switching to pick up the new token. |
 | `gcloud` | Google Cloud CLI. `gcloud auth login`, `gcloud config set project <id>`. |
 | `gh` | GitHub CLI. `gh pr create`, `gh pr view --web`, `gh repo clone <repo>`. |

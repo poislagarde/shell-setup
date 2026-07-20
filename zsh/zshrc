@@ -99,6 +99,13 @@ awsenv() {
 # tmux — the var is only consulted when $TMUX is set.
 alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
 
+# Codex. Force the preferred reasoning effort on every launch — Codex itself
+# rewrites model_reasoning_effort in ~/.codex/config.toml (the /model picker
+# and updates persist their own value), so the file can't be trusted to hold.
+# An explicit -c beats the file; flags passed on the command line come after
+# this one and still win.
+alias codex='codex -c model_reasoning_effort=ultra'
+
 # Root of the projects tree. Consumed by the tmux C-M-p bind (see tmux.conf),
 # which opens a new Claude Code window here. Exported (not just set) so it's
 # visible to the `zsh -ic` that bind spawns; change it per-machine as needed.
