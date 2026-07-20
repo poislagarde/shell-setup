@@ -496,11 +496,24 @@ tmux source-file ~/.tmux.conf
 # Assistant session persistence: symlink the resurrect hook scripts to the
 # fixed path referenced by tmux.conf and ~/.claude/settings.json.
 ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.tmux/assistant-resurrect
+
+# launchd owns the tmux server: the agent runs `tmux -D` in the foreground so
+# no terminal app's death can take the server down, and KeepAlive restarts it
+# after a kill — config load + continuum then auto-restore every session. The
+# plist must be a copy, not a symlink (launchd is unreliable with symlinked
+# agent plists); the script it runs is a ~/.tmux symlink. If a server booted
+# by a shell already holds the socket, the agent waits and takes over when
+# that server exits. To stop the server for real (KeepAlive fights a plain
+# kill-server): launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server
+ln -sfn "$(pwd)/tmux/tmux-server-agent.sh" ~/.tmux/tmux-server-agent.sh
+cp tmux/local.shell-setup.tmux-server.plist ~/Library/LaunchAgents/
+launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1 ||
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist
 ```
 
 Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).
 
-Session persistence: continuum auto-saves the environment (sessions, windows, panes, layouts, per-pane cwd, visible pane contents) to `~/.local/share/tmux/resurrect/` every 15 minutes, a `client-detached` hook additionally saves the moment Ghostty quits (including the automatic quit during macOS shutdown), and the environment auto-restores when the tmux server starts. Combined with the zshrc auto-start (§9: quick-terminal surfaces own the `quick`/`quick-N` session namespace, regular surfaces adopt/create the rest), quitting Ghostty or rebooting restores every session — each surface opened after a restart re-attaches one. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
+Session persistence: continuum auto-saves the environment (sessions, windows, panes, layouts, per-pane cwd, visible pane contents) to `~/.local/share/tmux/resurrect/` every 15 minutes, a `client-detached` hook additionally saves the moment Ghostty quits (including the automatic quit during macOS shutdown), and the environment auto-restores when the tmux server starts. The launchd agent above makes that last step self-healing: the server runs under launchd rather than any terminal's process tree, starts at login, and is restarted after any kill — where the auto-restore brings every session back. Combined with the zshrc auto-start (§9: quick-terminal surfaces own the `quick`/`quick-N` session namespace, regular surfaces adopt/create the rest), quitting Ghostty or rebooting restores every session — each surface opened after a restart re-attaches one. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
 
 Panes whose command starts with `npm start` are relaunched verbatim on restore (`@resurrect-processes`, additive to resurrect's default whitelist of vim/less/top/…). On top of the layout, panes running **Claude Code or Codex CLI get their conversations resumed**: `tmux/assistant-resurrect/` (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) hooks resurrect's save to record each pane's assistant session ID (both assistants via one `session-track.sh <tool>` SessionStart hook — registered in `.claude/settings.json` for Claude and `.codex/hooks.json` for Codex, see §15), and hooks resurrect's restore to relaunch that ID in the restored pane. Codex uses `resume-codex.sh <id>` so a successful startup update retries the same ID with the new binary. When no hook record exists, save falls back per assistant: Claude to the newest transcript for the cwd (same semantics as `claude --continue`), Codex to its `~/.codex/state_*.sqlite` thread DB (opened `immutable` since the running Codex app-server holds the file).
 
@@ -530,3 +543,9 @@ an npm global. Likewise `codex` → `~/.local/bin/codex` (a symlink into
 Confirm `~/.tmux.conf` and `~/.config/ghostty/config` are **symlinks into
 this repo** (`ls -l` shows `->`), not copies — a copy silently drifts from
 the repo on the next edit.
+
+Confirm the tmux server agent is loaded and running:
+
+```bash
+launchctl print gui/$(id -u)/local.shell-setup.tmux-server | grep -E "state|pid"
+```

@@ -40,10 +40,12 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 tmux/
-├── tmux.conf                    # tmux config (mouse support, resurrect/continuum persistence)
-├── build-pane-border-format.sh  # generates the responsive pane-border-format (run after edits)
-├── pane-border-format.conf      # generated; source-file'd by tmux.conf (symlinked to ~/.tmux/)
-└── assistant-resurrect/         # resurrect hooks: save/resume Claude Code + Codex sessions
+├── tmux.conf                            # tmux config (mouse support, resurrect/continuum persistence)
+├── build-pane-border-format.sh          # generates the responsive pane-border-format (run after edits)
+├── pane-border-format.conf              # generated; source-file'd by tmux.conf (symlinked to ~/.tmux/)
+├── local.shell-setup.tmux-server.plist  # LaunchAgent: launchd owns the tmux server (copied to ~/Library/LaunchAgents/)
+├── tmux-server-agent.sh                 # what the agent runs: foreground server (tmux -D), restarted on death
+└── assistant-resurrect/                 # resurrect hooks: save/resume Claude Code + Codex sessions
 zsh/
 └── zshrc                    # ~/.zshrc template (theme/plugins, PATH, keybinds, awsenv)
 ```
@@ -157,6 +159,8 @@ Copy-mode is vi-style: `Space` start selection, `Enter` copy (also to the macOS 
 | prefix, `Ctrl-r` | Restore last saved environment |
 
 Auto-saves every 15 min and on every Ghostty quit; auto-restores when the tmux server starts. Claude Code / Codex panes resume their conversations on restore. If Codex updates during a restored launch, the same conversation resumes with the new binary.
+
+The tmux server itself runs under launchd (`local.shell-setup.tmux-server`): it starts at login, lives outside any terminal app's process tree, and is restarted after any kill — where the auto-restore brings every session back. `tmux kill-server` therefore acts as a full restart; to actually stop the server: `launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server`.
 
 ### Misc defaults worth knowing
 
