@@ -6,9 +6,9 @@
 #
 #     tmux/build-pane-border-format.sh && tmux source-file ~/.tmux.conf
 #
-# Why a builder instead of writing the format by hand: the branch-width
-# sub-expression (#{w:#(…git…)}) is repeated in every fit/trim calculation, so
-# the final format is ~13 KB — impossible to maintain inline. Here it is a
+# Why a builder instead of writing the format by hand: the width/trim
+# arithmetic sub-expressions are repeated in every fit calculation, so the
+# final format runs to a few KB — impossible to maintain inline. Here it is a
 # handful of named shell fragments composed at the bottom.
 #
 # ── What the border shows ────────────────────────────────────────────────────
@@ -41,17 +41,12 @@
 # available width; the cwd/title/branch are only trimmed in the trim stage.
 #
 # ── tmux-format quirks this relies on (all learned the hard way) ──────────────
-#  * #(…) shell jobs use `echo`, never `printf "…%s…"`: tmux runs strftime over
-#    the format before executing #(), so a literal %s becomes a Unix timestamp.
-#  * The generated value is SINGLE-quoted in the .conf: tmux expands $VAR inside
-#    a double-quoted config value at parse time, which would blank the shell's
-#    $p/$b before #() ran. Single quotes keep them literal; #{…}/#() still
-#    expand at render time.
-#  * #{w:X} (display width) only evaluates when X contains a nested #{…}/#() —
+#  * NO #(…) shell jobs anywhere in this format — see the @branch note in the
+#    primitives section. Keep it that way; async jobs flash the bar.
+#  * The generated value is SINGLE-quoted in the .conf: a double-quoted config
+#    value would $-expand at parse time. #{…} still expands at render time.
+#  * #{w:X} (display width) only evaluates when X contains a nested #{…} —
 #    a bare #{w:literal} reads 0. Every width term here wraps such a nesting.
-#  * The branch #() is async: it refreshes on status-interval (≤15s) and reads
-#    empty on the very first (cold-cache) render. Identical #() strings are
-#    deduped by tmux, so it is one git process per pane per refresh.
 #  * The filler between #[align=left] and #[align=right] is drawn with the
 #    pane-border style, not the last #[…] style in the format — so the
 #    segments' bg colors don't bleed into the line.
@@ -104,13 +99,18 @@ AL=$(printf '\356\202\262')
 PB=$(printf '\342\240\200')
 
 # ── primitives ───────────────────────────────────────────────────────────────
-# Branch name (no leaf), or empty outside a repo / detached prints the short SHA.
-BN='#(p="#{pane_current_path}";b=$(git -C "$p" symbolic-ref --short HEAD 2>/dev/null||git -C "$p" rev-parse --short HEAD 2>/dev/null);[ -n "$b" ]&&echo "$b")'
-# "1" when the repo has uncommitted (tracked) changes — `git diff HEAD` exits 1
-# on any staged/unstaged change vs HEAD; we echo only on exit 1 (0=clean,
-# ≥128=not a repo). Turns the branch segment yellow. NOTE: untracked-only files
-# don't count (swap to `git status --porcelain` if you want them to).
-DIRTY='#(p="#{pane_current_path}";git -C "$p" diff --quiet HEAD 2>/dev/null;[ $? = 1 ]&&echo 1)'
+# Branch and dirty state are read from the per-pane user options @branch and
+# @dirty, maintained by the status-refresh.sh sweep. They MUST NOT be #(git …)
+# jobs: tmux caches format jobs per client+pane, returns "" on the first
+# expansion, and force-redraws when the job completes — so every cold render
+# (fresh attach, or a window unviewed for >1h whose jobs were evicted) drew the
+# bar once WITHOUT the branch segment and then again with it, flashing the
+# layout and colors on window switches. Options expand synchronously.
+# @branch: branch name (no leaf); short SHA when detached; empty outside a repo.
+BN='#{@branch}'
+# @dirty: "1" when the repo has uncommitted (tracked) changes — turns the
+# branch text yellow. Empty when clean.
+DIRTY='#{@dirty}'
 CWD='#{s|^#{HOME}|~|:pane_current_path}'   # cwd with $HOME collapsed to ~
 Tt='#{w:#{pane_title}}'                     # title width
 Cc='#{w:#{pane_current_command}}'           # command width
