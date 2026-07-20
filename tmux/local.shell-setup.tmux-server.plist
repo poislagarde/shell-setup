@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>local.shell-setup.tmux-server</string>
+	<!-- $HOME isn't expanded by launchd, so go through a shell. The agent
+	     script is the ~/.tmux symlink into the shell-setup repo. -->
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/sh</string>
+		<string>-c</string>
+		<string>exec "$HOME/.tmux/tmux-server-agent.sh"</string>
+	</array>
+	<!-- launchd's default env has neither: PATH must reach Homebrew for the
+	     config's run-shell hooks (tmux, jq, sqlite3), SHELL feeds tmux's
+	     default-shell (panes open /bin/sh without it), LANG keeps the
+	     unicode in status/border formats rendering. -->
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<key>SHELL</key>
+		<string>/bin/zsh</string>
+		<key>LANG</key>
+		<string>en_US.UTF-8</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<!-- The server drives interactive shells — keep it out of the
+	     background/App Nap QoS band. -->
+	<key>ProcessType</key>
+	<string>Interactive</string>
+</dict>
+</plist>

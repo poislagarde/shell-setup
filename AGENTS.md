@@ -79,6 +79,12 @@ config (`tmux source-file ~/.tmux.conf`) and `unbind`ing a stale binding are
 fine. Don't kill real sessions unless the user explicitly asks — and even then,
 check what's running in them first (`list-panes` + child processes).
 
+The default server runs under launchd (`local.shell-setup.tmux-server`, KeepAlive), so
+`kill-server` is a restart: launchd relaunches the server and continuum
+auto-restores every saved session. To actually stop it, use
+`launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server`; re-enable with
+`launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist`.
+
 If real state does get damaged: tmux-resurrect keeps timestamped snapshots in
 `~/.local/share/tmux/resurrect/` — repoint the `last` symlink at a pre-damage
 snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
@@ -93,6 +99,8 @@ snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
 | tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.tmux/assistant-resurrect` (symlink to the repo dir; edit either; one place) |
 | tmux pane border | `tmux/pane-border-format.conf` (generated — edit `tmux/build-pane-border-format.sh` and re-run) | `~/.tmux/pane-border-format.conf` (symlink to the repo file; `source-file`d by `tmux.conf`) |
 | tmux status refresh | `tmux/status-refresh.sh` | `~/.tmux/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
+| tmux server agent | `tmux/tmux-server-agent.sh` | `~/.tmux/tmux-server-agent.sh` (symlink to the repo file; run by the launchd agent) |
+| tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
 | Claude Code | `.claude/` (settings.json, commands, statusline) | `~/.claude/` |
 | Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (copy; Codex must be told to *trust* the hook on first run) |
 | Codex defaults | `.codex/config-defaults.toml` | the top-level `model` and `model_reasoning_effort` keys of `~/.codex/config.toml` (merge those keys only; preserve the rest) |

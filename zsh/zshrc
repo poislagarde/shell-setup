@@ -168,10 +168,11 @@ tm() {
 # same kind to re-adopt; kill sessions you're done with
 # (`tmux kill-session -t name`) or resurrect will persist them forever.
 # Paired with tmux-resurrect/continuum in tmux.conf, this is what makes
-# quitting Ghostty or rebooting the Mac non-destructive — the first shell
-# after a restart boots the tmux server, continuum restores ALL saved
-# sessions (detached), and each Ghostty surface opened after that re-adopts
-# one of them. Guards:
+# quitting Ghostty or rebooting the Mac non-destructive — the launchd agent
+# (local.shell-setup.tmux-server, §17) boots the tmux server at login, continuum
+# restores ALL saved sessions (detached), and each Ghostty surface re-adopts
+# one of them. (Without the agent, the first shell boots the server instead —
+# the cold-boot branches below.) Guards:
 #   -o interactive — defensive; .zshrc shouldn't load otherwise
 #   -z $TMUX       — don't nest inside an existing session
 #   TERM_PROGRAM   — Ghostty only (leaves VS Code's terminal, ssh, etc. alone)
