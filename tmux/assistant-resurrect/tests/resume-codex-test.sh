@@ -36,6 +36,14 @@ printf '\033[?1049hprompt\033[?1049l%s' "$UPDATE_MESSAGE" |
 	exit 1
 }
 
+printf 'Update available! 1.0.0 -> 2.0.0\nUpdating Codex...\n🎉 %s\n' \
+	"$UPDATE_MESSAGE" |
+	"$ASSISTANT_RESURRECT_DIR/detect-codex-update.pl" "$TMP/startup-marker"
+[ -e "$TMP/startup-marker" ] || {
+	echo "startup updater result (no alternate screen) was not detected" >&2
+	exit 1
+}
+
 prepare_case() {
 	local name="$1" dir="$TMP/$1"
 	mkdir -p "$dir/state"

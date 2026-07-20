@@ -10,11 +10,13 @@ resume)
 	printf '%s\n' "$*" >>"$FAKE_CODEX_CALLS_FILE"
 	case "${FAKE_CODEX_MODE:-normal}" in
 	update)
+		# Startup update: prompt, installer, and result all render on the
+		# primary screen — the TUI (alternate screen) never opens.
 		if [ ! -e "$FAKE_CODEX_UPDATED_FILE" ]; then
 			: >"$FAKE_CODEX_UPDATED_FILE"
 			printf '%s\n' 'codex-cli 2.0.0' >"$FAKE_CODEX_VERSION_FILE"
-			printf '\033[?1049hstartup update prompt\033[?1049l'
-			printf '%s\n' 'Update ran successfully! Please restart Codex.'
+			printf '%s\n' 'Update available! 1.0.0 -> 2.0.0'
+			printf '%s\n' '🎉 Update ran successfully! Please restart Codex.'
 		fi
 		;;
 	external-update)
