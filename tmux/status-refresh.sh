@@ -38,8 +38,11 @@ any_working() {
 }
 
 # Triangle over luminance levels 0..3 → a smooth breathe (~3s per cycle at 0.5s).
+# Liveness = the server PID, NOT a `tmux has-session` client round-trip: one
+# transient client failure (e.g. under memory pressure) would read as "server
+# gone" and kill the loop permanently.
 levels=(0 1 2 3 2 1); n=${#levels[@]}; i=0
-while tmux has-session 2>/dev/null; do
+while kill -0 "$pid" 2>/dev/null; do
 	if any_working; then
 		tmux set -g @pulse "${levels[$i]}" 2>/dev/null
 		i=$(( (i + 1) % n ))
