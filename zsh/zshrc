@@ -62,6 +62,29 @@ bindkey '^[[1;11D' zle-noop
 _zsh_cursor_blinking_bar() { print -n '\e[5 q' }
 precmd_functions+=(_zsh_cursor_blinking_bar)
 
+# tmux pane-border git segments: push this pane's @branch/@dirty options on
+# every prompt, so a cd or branch switch updates the border bar instantly.
+# The status-refresh.sh sweep (5s) computes the SAME values for panes that
+# aren't sitting at a zsh prompt — keep the two computations in sync. Values
+# are cached in shell vars and only written on change, so an idle prompt
+# forces no tmux redraws.
+if [[ -n "$TMUX" && -n "$TMUX_PANE" ]]; then
+  _tmux_git_segments_refresh() {
+    local b d=''
+    b=$(git symbolic-ref --short HEAD 2>/dev/null) ||
+      b=$(git rev-parse --short HEAD 2>/dev/null) || b=''
+    if [[ -n "$b" ]]; then
+      git diff --quiet HEAD 2>/dev/null
+      (( $? == 1 )) && d=1
+    fi
+    [[ "$b" == "$_tmux_git_b" && "$d" == "$_tmux_git_d" ]] && return
+    _tmux_git_b=$b _tmux_git_d=$d
+    tmux set -p -t "$TMUX_PANE" @branch "$b" \; \
+         set -p -t "$TMUX_PANE" @dirty "$d" 2>/dev/null
+  }
+  precmd_functions+=(_tmux_git_segments_refresh)
+fi
+
 # Editor
 export EDITOR="zed --wait"
 

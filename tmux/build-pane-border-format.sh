@@ -100,7 +100,8 @@ PB=$(printf '\342\240\200')
 
 # ── primitives ───────────────────────────────────────────────────────────────
 # Branch and dirty state are read from the per-pane user options @branch and
-# @dirty, maintained by the status-refresh.sh sweep. They MUST NOT be #(git …)
+# @dirty, maintained by zshrc's precmd hook (instant) and the status-refresh.sh
+# sweep (5s fallback). They MUST NOT be #(git …)
 # jobs: tmux caches format jobs per client+pane, returns "" on the first
 # expansion, and force-redraws when the job completes — so every cold render
 # (fresh attach, or a window unviewed for >1h whose jobs were evicted) drew the
