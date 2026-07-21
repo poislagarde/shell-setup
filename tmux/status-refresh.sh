@@ -18,7 +18,9 @@
 #
 # 2. Feed the pane-border bar's git segments: every GIT_EVERY seconds, sweep
 #    all panes and store each pane's branch name and dirty flag in the @branch
-#    / @dirty pane options that pane-border-format.conf reads. The options are
+#    / @dirty pane options that pane-border-format.conf reads. This sweep is
+#    the FALLBACK path: zshrc's _tmux_git_segments_refresh precmd hook pushes
+#    the same values instantly at every prompt — keep the two in sync. The options are
 #    set ONLY on change, so a sweep over an unchanged tree forces no redraws.
 #    The border format must NOT compute these with #(git …) jobs itself: tmux
 #    caches format jobs per client+pane, expands to "" on a cold cache (fresh
