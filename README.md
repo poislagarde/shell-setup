@@ -108,6 +108,7 @@ Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix
 | `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
 | Double-click pane border | Rebalance neighboring pane sizes |
+| Right-click pane border / status strip | Pane context menu (paste, split, swap, kill, zoom) — works even when the pane's program captures the mouse |
 | `Ctrl` + left-drag pane | Drag onto another pane to swap them |
 | `Cmd+Opt+←/→/↑/↓` | Move focus between panes (spatial) |
 | `Alt+Shift+Enter` | Zoom / unzoom active pane (fullscreen) |
