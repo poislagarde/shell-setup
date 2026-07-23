@@ -146,12 +146,16 @@ After install, register accounts once: log into Claude Code, then run `cswap --a
 
 ## 9. Append the managed block to ~/.zshrc
 
-The `~/.zshrc` template lives in this repo at `zsh/zshrc`. Rather than
+The `~/.zshrc` content lives in this repo at `zsh/zshrc`. Rather than
 overwriting `~/.zshrc` (which would clobber whatever Oh My Zsh's installer just
-wrote, plus any machine-local additions), append the template as a **managed
-block** delimited by marker comments. On re-run, the old block is stripped and
-the current template re-appended — so running this section multiple times
-leaves the file in the same state as running it once (idempotent).
+wrote, plus any machine-local additions), append a **managed block** delimited
+by marker comments whose sole content is a `source` line pointing at this
+checkout's `zsh/zshrc` — so a later `git pull` of this repo updates the live
+shell with no reinstall. The absolute checkout path is rendered into
+`~/.zshrc` at bootstrap time; it must never be hardcoded in this repo. On
+re-run, the old block is stripped and re-appended — so running this section
+multiple times leaves the file in the same state as running it once
+(idempotent).
 
 Run from the root of this repo:
 
@@ -174,15 +178,16 @@ while [ -s ~/.zshrc ] && [ -z "$(tail -n 1 ~/.zshrc)" ]; do
   sed -i '' -e '$d' ~/.zshrc
 done
 
-# Append the current template, wrapped in markers.
+# Append the managed block: a single source line pointing at this checkout.
 {
   printf '\n# >>> shell-setup managed >>>\n'
-  cat zsh/zshrc
+  printf '# Sourced from the shell-setup checkout so `git pull` there updates this shell.\n'
+  printf 'source "%s/zsh/zshrc"\n' "$PWD"
   printf '# <<< shell-setup managed <<<\n'
 } >> ~/.zshrc
 ```
 
-The managed block sets up Oh My Zsh (theme + shell-setup's required plugins),
+The sourced `zsh/zshrc` sets up Oh My Zsh (theme + shell-setup's required plugins),
 points `NVM_DIR` at `~/.nvm`, wires Homebrew + user site-functions completions
 onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, the
 `claude` alias, and the `tm` session helper (`tm <name>` attaches/creates a
@@ -202,19 +207,20 @@ auto-numbered session — so surfaces get distinct sessions instead of
 mirroring one. Pairs with §17's resurrect/continuum persistence so all
 sessions survive Ghostty quits and reboots.
 
-Because the managed block lives at the end of `~/.zshrc`, its scalar
-assignments (theme, `DISABLE_AUTO_TITLE`, etc.) win over anything earlier in
-the file (zsh reads top-to-bottom, last assignment wins). The `plugins` array
-is treated specially: the block uses `plugins+=(git nvm autojump golang)` plus
-`typeset -U plugins` so any plugins the user enabled earlier in their zshrc
-are preserved and merged with shell-setup's required ones (de-duplicated). The
-re-`source $ZSH/oh-my-zsh.sh` inside the block re-runs OMZ with the merged
-plugin list so the additions actually load.
+Because the managed block lives at the end of `~/.zshrc`, the sourced file's
+scalar assignments (theme, `DISABLE_AUTO_TITLE`, etc.) win over anything
+earlier in the file (zsh reads top-to-bottom, last assignment wins). The
+`plugins` array is treated specially: `zsh/zshrc` uses
+`plugins+=(git nvm autojump golang)` plus `typeset -U plugins` so any plugins
+the user enabled earlier in their zshrc are preserved and merged with
+shell-setup's required ones (de-duplicated). The re-`source $ZSH/oh-my-zsh.sh`
+inside it re-runs OMZ with the merged plugin list so the additions actually
+load.
 
-> **Note:** if you tweak `zsh/zshrc` in the repo, re-run just the three
-> commands above to refresh the managed block in `~/.zshrc`. If you edit the
-> managed block in `~/.zshrc` directly (between the markers), copy the same
-> change back into `zsh/zshrc` so a fresh machine gets it. See `AGENTS.md`.
+> **Note:** edit zsh config only in the repo's `zsh/zshrc` — `~/.zshrc`
+> sources it, so changes take effect on the next shell (or `source ~/.zshrc`).
+> Machine-local additions belong in `~/.zshrc` outside the markers, never
+> between them. See `AGENTS.md`.
 
 ## 10. Install AWS CLI
 
@@ -389,11 +395,13 @@ fi
 # 2. Copy everything else, overwriting on conflict but preserving files in
 #    ~/.claude that aren't in the repo (no --delete). Exclude the bootstrap
 #    command itself — `shell-setup.md` runs one-time from this repo, so it
-#    must not be installed as a global ~/.claude command.
-rsync -av --exclude='settings.json' --exclude='commands/shell-setup.md' .claude/ ~/.claude/
+#    must not be installed as a global ~/.claude command — and the statusline
+#    script, which is symlinked below instead of copied.
+rsync -av --exclude='settings.json' --exclude='commands/shell-setup.md' \
+  --exclude='statusline-command.sh' .claude/ ~/.claude/
 
-# 3. Make the statusline script executable.
-[ -f ~/.claude/statusline-command.sh ] && chmod +x ~/.claude/statusline-command.sh
+# 3. Symlink the statusline script into place (one file, no repo/home drift).
+ln -sf "$PWD/.claude/statusline-command.sh" ~/.claude/statusline-command.sh
 
 # 4. Codex CLI counterpart: install the SessionStart hook (the Codex-side
 #    equivalent of the Claude hook above; both point at the assistant-resurrect
