@@ -1,6 +1,30 @@
 #!/bin/sh
 input=$(cat)
 
+# Refresh the model-specific weekly usage cache in the background, at most once
+# per 180s (via an attempt marker) — this must never block rendering on the
+# network. The oauth token is read from the keychain and never written to disk;
+# a failed/401 fetch leaves the last good cache in place (tmp file + mv).
+CACHE_DIR="$HOME/.claude/cache"
+USAGE_CACHE="$CACHE_DIR/oauth-usage.json"
+USAGE_ATTEMPT="$CACHE_DIR/oauth-usage.attempt"
+mkdir -p "$CACHE_DIR" 2>/dev/null
+attempt_mtime=$(stat -f %m "$USAGE_ATTEMPT" 2>/dev/null)
+[ -z "$attempt_mtime" ] && attempt_mtime=0
+if [ "$(( $(date +%s) - attempt_mtime ))" -ge 180 ]; then
+  touch "$USAGE_ATTEMPT" 2>/dev/null
+  (
+    token=$(security find-generic-password -s "Claude Code-credentials" -a "$USER" -w 2>/dev/null | jq -r '.claudeAiOauth.accessToken // empty')
+    if [ -n "$token" ]; then
+      curl -fsS --max-time 5 https://api.anthropic.com/api/oauth/usage \
+        -H "Authorization: Bearer $token" \
+        -H "anthropic-beta: oauth-2025-04-20" \
+        -o "$USAGE_CACHE.tmp" \
+        && mv "$USAGE_CACHE.tmp" "$USAGE_CACHE"
+    fi
+  ) >/dev/null 2>&1 &
+fi
+
 # Pull every field in one jq pass, newline-separated so empty values keep their
 # slot — read line by line (model display names contain spaces, never newlines).
 {
@@ -22,6 +46,30 @@ $(printf '%s' "$input" | jq -r '
   (.rate_limits.seven_day.resets_at // "")
 ')
 EOF
+
+# Prefer the model-specific weekly bucket (from the cached usage API response,
+# matched by display name) over the payload's all-models seven_day bucket.
+# Falls back to the payload values read above when there's no cache yet, no
+# matching scoped entry, or the cache fails to parse.
+if [ -n "$model" ] && [ -s "$USAGE_CACHE" ]; then
+  scoped_pct=""; scoped_resets=""
+  {
+    read -r scoped_pct
+    read -r scoped_resets
+  } <<EOF
+$(jq -r --arg m "$model" '
+  ($m | ascii_downcase) as $mdl
+  | [.limits[]?
+      | (.scope.model?.display_name? // "") as $n
+      | select($n != "" and ($mdl | startswith($n | ascii_downcase)))]
+  | first
+  | select(. != null)
+  | (.percent // ""),
+    ((.resets_at // "") | if . == "" then "" else (sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdate) end)
+' "$USAGE_CACHE" 2>/dev/null)
+EOF
+  [ -n "$scoped_pct" ] && { week_pct="$scoped_pct"; week_resets="$scoped_resets"; }
+fi
 
 # Colors (24-bit; palette shared with the Codex status line). Claude Code always
 # captures this script's stdout, so we can't gate on a tty — emit color
