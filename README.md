@@ -18,7 +18,7 @@ Claude runs an 18-section checklist top to bottom, pausing for verification betw
 
 - **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `gcloud-cli`, …).
 - **Node** — nvm pinned to `~/.nvm` (survives `brew upgrade`), latest LTS as `default`.
-- **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, keyboard tweaks, and a tmux auto-start that gives each Ghostty surface its own session).
+- **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` that sources this repo's `zsh/zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, keyboard tweaks, and a tmux auto-start that gives each Ghostty surface its own session) — so `git pull` updates the live shell.
 - **AWS** — official CLI installer + interactive SSO profile setup (`prod` / `prod-admin` / `dev`).
 - **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, and tmux configs; the latter two are wired with tmux-resurrect/continuum so sessions, layouts, and even Claude/Codex conversations survive Ghostty quits and reboots.
@@ -47,7 +47,7 @@ tmux/
 ├── tmux-server-agent.sh                 # what the agent runs: foreground server (tmux -D), restarted on death
 └── assistant-resurrect/                 # resurrect hooks: save/resume Claude Code + Codex sessions
 zsh/
-└── zshrc                    # ~/.zshrc template (theme/plugins, PATH, keybinds, awsenv)
+└── zshrc                    # sourced by ~/.zshrc's managed block (theme/plugins, PATH, keybinds, awsenv)
 ```
 
 `settings.local.json` is intentionally excluded — Claude Code treats it as machine-local and the standard global gitignore drops it.

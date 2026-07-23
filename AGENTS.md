@@ -34,10 +34,20 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 > *implements* a tmux chord, not user-facing shortcuts, so they belong in the
 > tmux table (as the chord they produce), not the Ghostty one.
 
-> **Note:** some home files may be **symlinks** back into this repo — in that
-> case editing the repo file *is* editing the home file, so there's only one
-> place to change. Always check first with `ls -l` / `readlink` before editing,
-> since the wiring differs per machine and per file.
+> **Note:** most home files are **symlinks** back into this repo (or source it),
+> so editing the repo file *is* editing the home file — there's only one place
+> to change. Always check first with `ls -l` / `readlink` before editing, since
+> the wiring differs per machine and per file.
+>
+> The wiring rule: link (symlink or a `source` stub) wherever possible, so a
+> `git pull` of this checkout updates the live machine with no reinstall. A
+> home file gets a copy/merge instead only when it accumulates state outside
+> this repo during daily use, or when its consumer can't follow symlinks
+> (launchd plists). Linking makes the checkout path load-bearing — it's baked
+> into every symlink and the `~/.zshrc` stub, so don't move the checkout — and
+> a pull updates files, not running processes: reload as usual. Repo files must
+> never hardcode a machine path; anything path-specific is rendered into the
+> home file at bootstrap time.
 >
 > Example setup:
 >
@@ -45,15 +55,21 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   edit either; one file). If you find a regular file here instead, that's
 >   drift — reconcile any differences into the repo, then re-symlink.
 > - `~/.tmux.conf` → symlink to `tmux/tmux.conf` (created by §17; same rule).
-> - `~/.zshrc` → **regular file**, not symlinked — edit both the home file and
->   the repo template `zsh/zshrc`.
-> - `~/.zprofile` → **regular file**, not symlinked — edit both the home file and
->   the `shell-setup.md` instructions (still inlined there).
-> - `~/.claude/` → **regular directory**, not symlinked — edit both the repo
->   `.claude/` and `~/.claude/`. Exception: `commands/shell-setup.md` (this
+> - `~/.zshrc` → **regular file**: machine-local lines plus a managed block
+>   (created by §9) that just `source`s the repo's `zsh/zshrc` — edit the repo
+>   file only; local additions stay outside the markers, never between them.
+> - `~/.zprofile` → **regular file**, not linked (installer-owned,
+>   machine-specific) — edit both the home file and the `shell-setup.md`
+>   instructions (still inlined there).
+> - `~/.claude/` → **regular directory**, not symlinked. `settings.json` is a
+>   **merge** (Claude Code writes runtime state into the home copy) — edit both.
+>   `~/.claude/statusline-command.sh` is a **symlink** to the repo file (created
+>   by §15; edit either; one file). And `commands/shell-setup.md` (this
 >   bootstrap command) lives **only** in the repo and is run one-time from here
 >   — §15 deliberately excludes it from the `~/.claude/` copy, so it has just
 >   one home: don't recreate it under `~/.claude/commands/`.
+> - `~/.codex/hooks.json` → **copy**, not symlinked (the user may add hooks
+>   there that this repo doesn't track) — edit both.
 
 ## Testing tmux changes
 
@@ -101,9 +117,10 @@ snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
 | tmux status refresh | `tmux/status-refresh.sh` | `~/.tmux/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
 | tmux server agent | `tmux/tmux-server-agent.sh` | `~/.tmux/tmux-server-agent.sh` (symlink to the repo file; run by the launchd agent) |
 | tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
-| Claude Code | `.claude/` (settings.json, commands, statusline) | `~/.claude/` |
-| Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (copy; Codex must be told to *trust* the hook on first run) |
+| Claude Code | `.claude/` (settings.json, commands) | `~/.claude/` |
+| Claude Code statusline | `.claude/statusline-command.sh` | `~/.claude/statusline-command.sh` (symlink to the repo file) |
+| Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (copy — may hold user hooks this repo doesn't track; Codex must be told to *trust* the hook on first run) |
 | Codex defaults | `.codex/config-defaults.toml` | the top-level `model` and `model_reasoning_effort` keys of `~/.codex/config.toml` (merge those keys only; preserve the rest) |
 | Codex TUI | `.codex/config-tui.toml` | the `[tui]` block of `~/.codex/config.toml` (merge that block only; preserve every other section) |
-| zsh (`~/.zshrc`) | `zsh/zshrc` | `~/.zshrc` |
+| zsh (`~/.zshrc`) | `zsh/zshrc` | `~/.zshrc` (managed block `source`s the repo file — edit the repo file only) |
 | zsh (`~/.zprofile`) | described in `.claude/commands/shell-setup.md` | `~/.zprofile` |
