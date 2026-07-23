@@ -118,44 +118,31 @@ keybind = alt+shift+s=csi:27;4;115~
 keybind = shift+enter=text:\x1b\x0d
 
 
-# --- Panel splits ---
-#   ⌃⇧=  → Split Vertically   (side-by-side)
-#   ⌃⇧-  → Split Horizontally (stacked)
-keybind = ctrl+shift+==new_split:right
-keybind = ctrl+shift+-=new_split:down
+# --- Pane management ---
+# Keep the custom Ghostty-native split, focus, and zoom bindings disabled;
+# tmux owns these chords.
+# keybind = ctrl+shift+==new_split:right
+# keybind = ctrl+shift+-=new_split:down
+# keybind = performable:super+alt+left=goto_split:left
+# keybind = performable:super+alt+right=goto_split:right
+# keybind = performable:super+alt+up=goto_split:up
+# keybind = performable:super+alt+down=goto_split:down
+# keybind = performable:alt+shift+enter=toggle_split_zoom
 
 # Ghostty's defaults already cover the rest of the split workflow:
 #   ⌘W       → close_surface            (close current pane)
 #   ⌘] / ⌘[  → goto_split:next/previous
 #   ⌘D / ⌘⇧D → also bound to new_split:right / new_split:down (bonus paths)
 
-# ⌘⌥+arrow → move focus between panes, working in BOTH Ghostty's native splits
-# and tmux. The `performable:` prefix makes Ghostty consume the chord only when
-# the action can run; otherwise it behaves "as if the keybind was not set" and
-# encodes the key through to the running program (modifier 11 — ESC[1;11{...}),
-# where tmux's user-key bindings catch it (see ~/.tmux.conf).
-#
-# Spatial movement so a 2x2 grid navigates geometrically (right really goes
-# right). Ghostty's spatial goto_split does NOT wrap, so at a grid edge with no
-# neighbor the action is non-performable and the chord falls through, encoded as
-# modifier 11 (ESC[1;11{...}). Inside tmux that's intended — tmux catches it.
-# Outside tmux (Ghostty splits) the shell would print a stray escape there, so
-# ~/.zshrc binds those four sequences to a no-op to swallow them silently.
-keybind = performable:super+alt+left=goto_split:left
-keybind = performable:super+alt+right=goto_split:right
-keybind = performable:super+alt+up=goto_split:up
-keybind = performable:super+alt+down=goto_split:down
+# ⌘⌥+arrow → send modifier-11 arrow sequences directly to tmux, whose user-key
+# bindings move focus spatially. Outside tmux, ~/.zshrc swallows these sequences.
+keybind = super+alt+left=csi:1;11D
+keybind = super+alt+right=csi:1;11C
+keybind = super+alt+up=csi:1;11A
+keybind = super+alt+down=csi:1;11B
 
-# ⌥⇧⏎ → toggle "fullscreen" (zoom) on the active pane, working in BOTH
-# Ghostty's native splits and tmux — same `performable:` pattern as the
-# opt+cmd+arrow navigation above. When the active surface is part of a
-# Ghostty split tree, Ghostty zooms it. When there's nothing for Ghostty to
-# zoom (single Ghostty pane running tmux), `toggle_split_zoom` is
-# non-performable and the chord falls through to the running program. Tmux's
-# `extended-keys always` + `terminal-features 'xterm*:extkeys'` enables
-# modifyOtherKeys upstream in Ghostty, so the fall-through is encoded as
-# `\e[27;4;13~` — which tmux matches as M-S-Enter (see ~/.tmux.conf).
-keybind = performable:alt+shift+enter=toggle_split_zoom
+# ⌥⇧⏎ → send the modified Enter sequence directly to tmux for pane zoom.
+keybind = alt+shift+enter=csi:27;4;13~
 
 # ⌘⇧T is bound by default to `undo` (reopen the most recently closed tab/
 # split). Uncomment to rebind to `new_tab` instead:

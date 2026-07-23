@@ -117,8 +117,6 @@ Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix
 | prefix, `x` | Kill current pane |
 | prefix, `Space` | Cycle pane layouts |
 
-> `Cmd+Opt+arrow` and `Alt+Shift+Enter` also drive Ghostty's own splits when you're *not* inside tmux — same keys, both layers.
-
 > The `Ctrl+Alt+…` chords add `Ctrl` to their plain counterparts and launch the `claude` alias (truecolor + `--chrome`) in the new window/pane — which closes when Claude exits. `Ctrl+Alt+p` opens in `$PROJECTS_DIR`, set in `~/.zshrc` (the projects root you mostly work in).
 
 ### Sessions
@@ -180,10 +178,6 @@ These act on Ghostty surfaces directly. Inside tmux, the Alt-based window/pane c
 | Keys | Action |
 | --- | --- |
 | `Alt+Space` | Toggle the quick terminal (global — works from any app) |
-| `Ctrl+Shift+=` | Split right (side-by-side) |
-| `Ctrl+Shift+-` | Split down (stacked) |
-| `Cmd+Opt+←/→/↑/↓` | Move focus between splits (spatial) |
-| `Alt+Shift+Enter` | Toggle split zoom |
 | `Cmd+]` / `Cmd+[` | Next / previous split |
 | `Cmd+W` | Close the split / surface |
 
