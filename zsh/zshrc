@@ -35,10 +35,10 @@ zle -N zle-insert-newline
 bindkey '^[^M' zle-insert-newline
 bindkey '^[[27;2;13~' zle-insert-newline
 
-# Shift+Space → insert a normal space. `extended-keys always` makes tmux
-# re-encode Shift+Space as the CSI 27 form (^[[27;2;32~, 32=space, 2=shift)
-# and forward it to zsh, which otherwise can't decode it and leaks the `2~`
-# tail. Bind it back to inserting a literal space.
+# Shift+Space → insert a normal space. tmux's `bind -n S-Space` already hands
+# panes a plain space; this covers any other path that emits the CSI 27
+# modified-key form (^[[27;2;32~, 32=space, 2=shift), which zsh can't decode
+# and would leak as a stray `2~` tail.
 zle-insert-space() { LBUFFER+=' ' }
 zle -N zle-insert-space
 bindkey '^[[27;2;32~' zle-insert-space

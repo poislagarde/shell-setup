@@ -148,7 +148,13 @@ In a shell (inside or outside tmux):
 | prefix, `[` | Enter copy-mode (arrows/PgUp to scroll, `q` to quit) |
 | prefix, `]` | Paste most recent buffer |
 
-Copy-mode is vi-style: `Space` start selection, `Enter` copy (also to the macOS clipboard), `/` search forward, `?` search back.
+Copy-mode is vi-style: `Space` (or `Shift+Space`) start selection, `Enter` copy (also to the macOS clipboard), `/` search forward, `?` search back.
+
+### Text input
+
+| Keys | Action |
+| --- | --- |
+| `Shift+Space` | Insert a regular space |
 
 ### Session persistence (resurrect + continuum)
 
@@ -200,5 +206,4 @@ The gaps Ghostty doesn't bind out of the box:
 | `Alt+Backspace` | Delete word backward |
 | `Alt+Delete` (`fn+Alt+Backspace`) | Delete word forward |
 | `fn+Backspace` (`⌦`) | Forward-delete a character |
-| `Shift+Space` | Insert a regular space |
 | `Shift+Enter` | Insert a literal newline in shells and Codex-style TUIs |
