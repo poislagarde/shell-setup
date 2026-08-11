@@ -41,12 +41,13 @@ trap 'rmdir "$lock" 2>/dev/null' EXIT   # cleanup on any exit
 trap 'exit 0' INT TERM                  # signals -> exit -> runs the EXIT trap
 
 # Any pane "working"? pane_title has a leading glyph that is NOT the ✳ idle
-# marker (i.e. a braille spinner frame). Same per-pane test as the window-status
+# marker (i.e. a spinner frame — braille or quadrant circle). Same per-pane
+# test as the window-status
 # format's #{P:} loop, kept in sync by copying it verbatim. list-panes -a checks
 # every pane, matching the format's any-pane-in-the-window semantics.
 any_working() {
 	tmux list-panes -a -F \
-'#{?#{&&:#{!=:#{s/^[✳⠀-⣿] //:pane_title},#{pane_title}},#{?#{m:✳ *,#{pane_title}},0,1}},1,}' \
+'#{?#{&&:#{!=:#{s/^[✳⠀-⣿◐-◓] //:pane_title},#{pane_title}},#{?#{m:✳ *,#{pane_title}},0,1}},1,}' \
 		2>/dev/null | grep -q 1
 }
 
