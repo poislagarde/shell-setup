@@ -372,7 +372,7 @@ export PATH="$PATH:$HOME/.local/bin"
 
 Deep-copy this repo's `.claude/` into `~/.claude/` — except this bootstrap command itself (`commands/shell-setup.md`), which is run one-time from this repo (a project-scoped `/shell-setup`) and is never needed as a global command. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
-The merged `settings.json` includes SessionStart/SessionEnd hooks pointing at `~/.tmux/assistant-resurrect/` — the assistant session persistence scripts symlinked there by §17. Until §17 runs, Claude Code skips the missing hook scripts harmlessly.
+The merged `settings.json` includes SessionStart/SessionEnd hooks pointing at `~/.shell-setup/assistant-resurrect/` — the assistant session persistence scripts symlinked there by §17. Until §17 runs, Claude Code skips the missing hook scripts harmlessly.
 
 Run from the root of this repo:
 
@@ -482,15 +482,20 @@ Run from the root of this repo:
 ```bash
 ln -sfn "$(pwd)/tmux/tmux.conf" ~/.tmux.conf
 
+# Everything tmux.conf and the assistant hooks reference by a fixed path lives
+# in ~/.shell-setup/ — this repo's own home directory, not a tool's config dir
+# (see AGENTS.md).
+mkdir -p ~/.shell-setup
+
 # The pane-border-format is generated (tmux/build-pane-border-format.sh) and
-# source-file'd by tmux.conf from a fixed ~/.tmux path — link it before the
-# `tmux source-file` below, which parses (and so needs) it.
-ln -sfn "$(pwd)/tmux/pane-border-format.conf" ~/.tmux/pane-border-format.conf
+# source-file'd by tmux.conf from a fixed ~/.shell-setup path — link it before
+# the `tmux source-file` below, which parses (and so needs) it.
+ln -sfn "$(pwd)/tmux/pane-border-format.conf" ~/.shell-setup/pane-border-format.conf
 
 # Background loop tmux.conf launches (run-shell) to tick the @pulse option while
 # any window is working, animating the window-label "breathe". Linked from a
-# fixed ~/.tmux path; harmless if missing (the run-shell just fails quietly).
-ln -sfn "$(pwd)/tmux/status-refresh.sh" ~/.tmux/status-refresh.sh
+# fixed ~/.shell-setup path; harmless if missing (the run-shell just fails quietly).
+ln -sfn "$(pwd)/tmux/status-refresh.sh" ~/.shell-setup/status-refresh.sh
 
 # Bootstrap TPM (tmux plugin manager) and install the plugins declared in
 # tmux.conf (tmux-resurrect + tmux-continuum). install_plugins needs a running
@@ -503,20 +508,38 @@ tmux source-file ~/.tmux.conf
 
 # Assistant session persistence: symlink the resurrect hook scripts to the
 # fixed path referenced by tmux.conf and ~/.claude/settings.json.
-ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.tmux/assistant-resurrect
+ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.shell-setup/assistant-resurrect
 
 # launchd owns the tmux server: the agent runs `tmux -D` in the foreground so
 # no terminal app's death can take the server down, and KeepAlive restarts it
 # after a kill — config load + continuum then auto-restore every session. The
 # plist must be a copy, not a symlink (launchd is unreliable with symlinked
-# agent plists); the script it runs is a ~/.tmux symlink. If a server booted
-# by a shell already holds the socket, the agent waits and takes over when
+# agent plists); the script it runs is a ~/.shell-setup symlink. If a server
+# booted by a shell already holds the socket, the agent waits and takes over when
 # that server exits. To stop the server for real (KeepAlive fights a plain
 # kill-server): launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server
-ln -sfn "$(pwd)/tmux/tmux-server-agent.sh" ~/.tmux/tmux-server-agent.sh
+ln -sfn "$(pwd)/tmux/tmux-server-agent.sh" ~/.shell-setup/tmux-server-agent.sh
 cp tmux/local.shell-setup.tmux-server.plist ~/Library/LaunchAgents/
 launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1 ||
   launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist
+
+# Machines bootstrapped before these files moved out of ~/.tmux/ keep dead
+# symlinks there. Remove only our four (TPM's plugins/ and resurrect's legacy
+# resurrect/ live in the same directory and must stay), and only if they are
+# still symlinks.
+for stale in assistant-resurrect pane-border-format.conf status-refresh.sh \
+             tmux-server-agent.sh; do
+  [ -L ~/.tmux/"$stale" ] && rm -f ~/.tmux/"$stale"
+done
+```
+
+An already-bootstrapped machine needs the LaunchAgent reloaded for the new
+agent path to take effect, which restarts the tmux server (continuum restores
+every session):
+
+```bash
+launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist
 ```
 
 Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).

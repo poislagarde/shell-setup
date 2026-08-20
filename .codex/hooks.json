@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.tmux/assistant-resurrect/session-track.sh codex"
+            "command": "~/.shell-setup/assistant-resurrect/session-track.sh codex"
           }
         ]
       }
