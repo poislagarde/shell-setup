@@ -121,8 +121,8 @@ curl -fsSL https://chatgpt.com/codex/install.sh | sh
 ```
 
 It installs to `~/.codex/packages/standalone/` with a `~/.local/bin/codex`
-symlink, maintains its own marker-delimited PATH block in `~/.zprofile`
-(leave that block in place — see §14), and self-updates via `codex update`.
+symlink — which §14's PATH line already covers — and self-updates via
+`codex update`.
 The package is self-contained (it bundles its own `rg` search binary). If
 the machine has a Homebrew cask or npm copy, remove it
 (`brew uninstall --cask codex` / `npm uninstall -g @openai/codex`) so PATH
@@ -359,9 +359,13 @@ Verify from a directory of repos: `git mux -n pull` lists the repos and the plan
 
 ## 14. Ensure the ~/.zprofile PATH line
 
-Append this line if it isn't already present — don't overwrite the file:
-the Codex installer (§8) maintains its own `# >>> Codex installer >>>` block
-there, and Homebrew's shellenv line may already be present too.
+This is what puts `~/.local/bin` on PATH for login shells, covering the pipx
+tools plus `claude`, `codex`, and `git-mux`. `~/.zprofile` is installer-owned
+territory — pipx writes its own PATH line there, and other installers may add
+marker-delimited blocks of their own — so append only if the line isn't already
+present, and never overwrite the file. pipx's own line usually has the same
+effect already; if a login shell (`zsh -l`) puts `~/.local/bin` on PATH, skip
+this step rather than adding a duplicate.
 
 ```bash
 # pipx
