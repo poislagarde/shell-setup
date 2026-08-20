@@ -18,10 +18,10 @@
 #                 which session id each running claude/codex process (pid)
 #                 currently has, so save.sh can map a pane to it exactly
 #                 (claude method 1 / codex method 1). Claude registers both
-#                 hooks; Codex fires SessionStart but has no SessionEnd event,
-#                 so it relies on the next SessionStart overwriting the file (and
-#                 the /tmp wipe at reboot). Codex can also still be resolved from
-#                 its own state DB (codex method 3) when no hook file exists.
+#                 hooks; Codex registers only the tracker, so its state file is
+#                 superseded by the next SessionStart (and the /tmp wipe at
+#                 reboot). Codex can also still be resolved from its own state DB
+#                 (codex method 3) when no hook file exists.
 
 # Per-boot scratch dir where the SessionStart hook drops one JSON file per
 # running assistant process (<tool>-<pid>.json). Deliberately ephemeral:

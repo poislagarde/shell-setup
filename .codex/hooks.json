@@ -8,6 +8,74 @@
             "command": "~/.shell-setup/assistant-resurrect/session-track.sh codex"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.shell-setup/assistant-activity/set-state.sh start codex"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.shell-setup/assistant-activity/set-state.sh end"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.shell-setup/assistant-activity/set-state.sh busy"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.shell-setup/assistant-activity/set-state.sh tool-start"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.shell-setup/assistant-activity/set-state.sh tool-end"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.shell-setup/assistant-activity/set-state.sh input"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.shell-setup/assistant-activity/set-state.sh idle"
+          }
+        ]
       }
     ]
   }
