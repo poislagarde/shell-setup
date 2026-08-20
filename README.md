@@ -42,7 +42,7 @@ ghostty/
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, resurrect/continuum persistence)
 ├── build-pane-border-format.sh          # generates the responsive pane-border-format (run after edits)
-├── pane-border-format.conf              # generated; source-file'd by tmux.conf (symlinked to ~/.tmux/)
+├── pane-border-format.conf              # generated; source-file'd by tmux.conf (symlinked to ~/.shell-setup/)
 ├── local.shell-setup.tmux-server.plist  # LaunchAgent: launchd owns the tmux server (copied to ~/Library/LaunchAgents/)
 ├── tmux-server-agent.sh                 # what the agent runs: foreground server (tmux -D), restarted on death
 └── assistant-resurrect/                 # resurrect hooks: save/resume Claude Code + Codex sessions

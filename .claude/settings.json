@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.tmux/assistant-resurrect/session-track.sh claude"
+            "command": "~/.shell-setup/assistant-resurrect/session-track.sh claude"
           }
         ]
       }
@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.tmux/assistant-resurrect/session-cleanup.sh claude"
+            "command": "~/.shell-setup/assistant-resurrect/session-cleanup.sh claude"
           }
         ]
       }

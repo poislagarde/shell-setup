@@ -1,7 +1,7 @@
 #!/bin/sh
 # Generate the responsive `pane-border-format` and write it to
 # pane-border-format.conf (next to this script), which tmux.conf source-files
-# (via the ~/.tmux/pane-border-format.conf symlink). Re-run after editing this
+# (via the ~/.shell-setup/pane-border-format.conf symlink). Re-run after editing this
 # file, then commit the regenerated .conf:
 #
 #     tmux/build-pane-border-format.sh && tmux source-file ~/.tmux.conf
