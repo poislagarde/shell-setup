@@ -119,13 +119,15 @@ snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
 | tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.shell-setup/assistant-resurrect` (symlink to the repo dir; edit either; one place) |
+| tmux assistant-activity | `tmux/assistant-activity/` | `~/.shell-setup/assistant-activity` (symlink to the repo dir; edit either; one place) |
 | tmux pane border | `tmux/pane-border-format.conf` (generated — edit `tmux/build-pane-border-format.sh` and re-run) | `~/.shell-setup/pane-border-format.conf` (symlink to the repo file; `source-file`d by `tmux.conf`) |
 | tmux status refresh | `tmux/status-refresh.sh` | `~/.shell-setup/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
 | tmux server agent | `tmux/tmux-server-agent.sh` | `~/.shell-setup/tmux-server-agent.sh` (symlink to the repo file; run by the launchd agent) |
 | tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
 | Claude Code | `.claude/` (settings.json, commands) | `~/.claude/` |
 | Claude Code statusline | `.claude/statusline-command.sh` | `~/.claude/statusline-command.sh` (symlink to the repo file) |
-| Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (copy — may hold user hooks this repo doesn't track; Codex must be told to *trust* the hook on first run) |
+| Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (copy — may hold user hooks this repo doesn't track; Codex must be told to *trust* each hook on first run and after every change to it) |
+| Codex features | `.codex/config-features.toml` | the `[features].hooks` key of `~/.codex/config.toml` (merge that key only; preserve every other flag) |
 | Codex defaults | `.codex/config-defaults.toml` | the top-level `model` and `model_reasoning_effort` keys of `~/.codex/config.toml` (merge those keys only; preserve the rest) |
 | Codex TUI | `.codex/config-tui.toml` | the `[tui]` block of `~/.codex/config.toml` (merge that block only; preserve every other section) |
 | zsh (`~/.zshrc`) | `zsh/zshrc` | `~/.zshrc` (managed block `source`s the repo file — edit the repo file only) |
