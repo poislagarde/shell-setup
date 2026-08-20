@@ -116,7 +116,6 @@ clear_pane() {
 	tmux set -up -t "$1" @assistant-state \; \
 		set -up -t "$1" @assistant-state-at \; \
 		set -up -t "$1" @assistant-pid \; \
-		set -up -t "$1" @assistant-inflight \; \
 		set -up -t "$1" @assistant-pending 2>/dev/null
 }
 
