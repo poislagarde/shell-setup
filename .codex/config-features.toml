@@ -1,0 +1,7 @@
+# Codex features — merged into the [features] table of ~/.codex/config.toml by
+# /shell-setup §15. Keep every other feature flag machine-local.
+#
+# Without this, ~/.codex/hooks.json is inert. `codex_hooks` is the deprecated
+# spelling of the same key and Codex warns about it on startup.
+[features]
+hooks = true
