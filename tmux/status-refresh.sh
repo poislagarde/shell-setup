@@ -123,6 +123,14 @@ clear_pane() {
 # maximum per window, and store it — only on change, so an unchanged sweep
 # forces no redraw. Sets $activity to the maximum across all windows, which
 # picks the tick rate below.
+#
+# Every window must reach the apply loop, including the ones that resolve to 0:
+# those are exactly the windows whose stale flag needs clearing. Two awk details
+# are load-bearing there. Guard the max with `in` rather than a bare `>`, since a
+# window whose only level is 0 would otherwise leave the element uninitialized;
+# and print `max[w] + 0`, because an empty level field collapses under the read
+# below and shifts the window's current value into $level, where it reads as "no
+# change wanted" and the flag survives forever.
 scan() {
 	local id win state at apid ppid glyph cur level now="" buf="" want
 	local PS_SNAP=""
@@ -181,8 +189,12 @@ scan() {
 		else
 			tmux set -uw -t "$win" @assistant-window 2>/dev/null
 		fi
-	done <<<"$(awk '{ if ($2 > m[$1]) m[$1] = $2; c[$1] = $3 }
-	                END { for (w in m) print w, m[w], c[w] }' <<<"$buf")"
+	done <<<"$(awk '{
+	                  lvl = $2 + 0
+	                  if (!($1 in max) || lvl > max[$1]) max[$1] = lvl
+	                  cur[$1] = $3
+	                }
+	                END { for (w in max) print w, max[w] + 0, cur[w] }' <<<"$buf")"
 }
 
 # Recompute @branch/@dirty for every pane; set only what changed. Branch is
