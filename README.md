@@ -36,7 +36,8 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 .codex/
 ├── config-defaults.toml     # Codex default model and reasoning effort
 ├── config-tui.toml          # Codex TUI statusline: context used + model/reasoning + PR + weekly/5h limits
-└── hooks.json               # Codex SessionStart hook (assistant-resurrect session tracking)
+├── config-features.toml     # Codex [features].hooks — hooks.json is inert without it
+└── hooks.json               # Codex lifecycle hooks (session tracking + activity indicator)
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 tmux/
@@ -45,7 +46,8 @@ tmux/
 ├── pane-border-format.conf              # generated; source-file'd by tmux.conf (symlinked to ~/.shell-setup/)
 ├── local.shell-setup.tmux-server.plist  # LaunchAgent: launchd owns the tmux server (copied to ~/Library/LaunchAgents/)
 ├── tmux-server-agent.sh                 # what the agent runs: foreground server (tmux -D), restarted on death
-└── assistant-resurrect/                 # resurrect hooks: save/resume Claude Code + Codex sessions
+├── assistant-resurrect/                 # resurrect hooks: save/resume Claude Code + Codex sessions
+└── assistant-activity/                  # assistant hooks: window-label activity states + pane auto-focus
 zsh/
 └── zshrc                    # sourced by ~/.zshrc's managed block (theme/plugins, PATH, keybinds, awsenv)
 ```
@@ -166,6 +168,20 @@ Copy-mode is vi-style: `Space` (or `Shift+Space`) start selection, `Enter` copy 
 Auto-saves every 15 min and on every Ghostty quit; auto-restores when the tmux server starts. Claude Code / Codex panes resume their conversations on restore. If Codex updates during a restored launch, the same conversation resumes with the new binary.
 
 The tmux server itself runs under launchd (`local.shell-setup.tmux-server`): it starts at login, lives outside any terminal app's process tree, and is restarted after any kill — where the auto-restore brings every session back. `tmux kill-server` therefore acts as a full restart; to actually stop the server: `launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server`.
+
+### Assistant activity indicator
+
+Window tabs color themselves by what the assistant running in them is doing, so a glance at the status line says which window needs you:
+
+| Tab | Meaning |
+| --- | --- |
+| Grey text (or the plain orange slab, if current) | Idle, or no assistant — deliberately indistinguishable from a normal window |
+| Text breathing green (current window: peach-orange) | Working |
+| Text breathing magenta, twice as fast | Waiting on **you** — a permission prompt, a question, a plan to approve |
+
+Switching to a window also selects the pane that wants you: the pane most recently blocked on input, or failing that the one that most recently finished a turn. The mark is consumed on arrival, so going back to a window later restores whichever pane you last used there.
+
+State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/set-state.sh`, registered in `.claude/settings.json` and `.codex/hooks.json`), which record it in per-pane tmux options. A pane whose assistant reports nothing falls back to the spinner glyph in its title. A "working" claim expires after 5 minutes with no hook event unless the assistant still has a tool running, and any state clears when the assistant process goes away.
 
 ### Misc defaults worth knowing
 

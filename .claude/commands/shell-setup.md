@@ -372,20 +372,35 @@ export PATH="$PATH:$HOME/.local/bin"
 
 Deep-copy this repo's `.claude/` into `~/.claude/` — except this bootstrap command itself (`commands/shell-setup.md`), which is run one-time from this repo (a project-scoped `/shell-setup`) and is never needed as a global command. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
-The merged `settings.json` includes SessionStart/SessionEnd hooks pointing at `~/.shell-setup/assistant-resurrect/` — the assistant session persistence scripts symlinked there by §17. Until §17 runs, Claude Code skips the missing hook scripts harmlessly.
+The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `assistant-resurrect/` for session persistence, and `assistant-activity/` for the window-label activity indicator — both symlinked there by §17. Until §17 runs, Claude Code skips the missing hook scripts harmlessly.
 
 Run from the root of this repo:
 
 ```bash
 mkdir -p ~/.claude
 
-# 1. Deep-merge settings.json: existing ⨯ repo (repo wins on conflict).
-#    `jq -s '.[0] * .[1]'` recursively merges two JSON objects; the right
-#    operand wins on leaf collisions and arrays are replaced (not concatenated).
+# 1. Merge settings.json: existing ⨯ repo (repo wins on conflict) for every key
+#    except hooks. `jq -s '.[0] * .[1]'` recursively merges two objects but
+#    REPLACES arrays, which would delete hooks this repo doesn't track (a local
+#    integration registering its own PostToolUse, say) as soon as the repo
+#    registers the same event. Hooks are upserted per event instead: entries
+#    whose command runs out of ~/.shell-setup are this repo's and get replaced,
+#    all other entries are kept, and events the repo says nothing about are left
+#    alone. Re-running replaces the same entries again, so it stays idempotent.
 if [ -f .claude/settings.json ]; then
   if [ -f ~/.claude/settings.json ]; then
     tmp=$(mktemp)
-    jq -s '.[0] * .[1]' ~/.claude/settings.json .claude/settings.json > "$tmp" \
+    jq -s '
+      def ours: (.command // "") | test("shell-setup");
+      def drop_ours: map(.hooks |= map(select(ours | not)))
+                   | map(select((.hooks | length) > 0));
+      .[0] as $live | .[1] as $repo |
+      ($live * ($repo | del(.hooks)))
+      + { hooks: (($live.hooks // {}) + (($repo.hooks // {}) | with_entries(
+            .key as $event
+            | .value = ((($live.hooks[$event] // []) | drop_ours) + .value)
+          ))) }
+    ' ~/.claude/settings.json .claude/settings.json > "$tmp" \
       && mv "$tmp" ~/.claude/settings.json
   else
     cp .claude/settings.json ~/.claude/settings.json
@@ -403,11 +418,12 @@ rsync -av --exclude='settings.json' --exclude='commands/shell-setup.md' \
 # 3. Symlink the statusline script into place (one file, no repo/home drift).
 ln -sf "$PWD/.claude/statusline-command.sh" ~/.claude/statusline-command.sh
 
-# 4. Codex CLI counterpart: install the SessionStart hook (the Codex-side
-#    equivalent of the Claude hook above; both point at the assistant-resurrect
-#    tracker symlinked by §17). Codex requires you to TRUST a hook before it
-#    runs — on your first `codex` run after this, approve the trust prompt
-#    (or run once with --dangerously-bypass-hook-trust).
+# 4. Codex CLI counterpart: install the hooks (the Codex-side equivalent of the
+#    Claude hooks above; both point at scripts symlinked by §17). Codex requires
+#    you to TRUST each hook before it runs, keyed by a hash of the entry — so
+#    approve the trust prompts on your first `codex` run after this, and again
+#    after any change to this file (or run once with
+#    --dangerously-bypass-hook-trust).
 mkdir -p ~/.codex
 cp .codex/hooks.json ~/.codex/hooks.json
 
@@ -446,6 +462,29 @@ if ! grep -q '^\[tui\]' ~/.codex/config.toml; then
   cat .codex/config-tui.toml >> ~/.codex/config.toml
 else
   echo "~/.codex/config.toml already has a [tui] section — reconcile it with .codex/config-tui.toml by hand."
+fi
+
+# 6. Codex feature flag: hooks.json is inert unless [features].hooks is on.
+#    Set the key inside an existing [features] table (replacing the deprecated
+#    `codex_hooks` spelling of it), or append the tracked block. Every other
+#    feature flag in that table is left as it is.
+if grep -q '^\[features\]' ~/.codex/config.toml; then
+  tmp=$(mktemp)
+  awk '
+    /^\[features\]/ { in_f = 1; print; next }
+    in_f && /^[[:space:]]*\[/ {
+      if (!done) { print "hooks = true"; done = 1 }
+      in_f = 0
+    }
+    in_f && /^[[:space:]]*(codex_)?hooks[[:space:]]*=/ {
+      if (!done) { print "hooks = true"; done = 1 }
+      next
+    }
+    { print }
+    END { if (in_f && !done) print "hooks = true" }
+  ' ~/.codex/config.toml > "$tmp" && mv "$tmp" ~/.codex/config.toml
+else
+  cat .codex/config-features.toml >> ~/.codex/config.toml
 fi
 ```
 
@@ -509,6 +548,11 @@ tmux source-file ~/.tmux.conf
 # Assistant session persistence: symlink the resurrect hook scripts to the
 # fixed path referenced by tmux.conf and ~/.claude/settings.json.
 ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.shell-setup/assistant-resurrect
+
+# Assistant activity indicator: the hooks that report what each assistant is
+# doing (§15 registers them in ~/.claude/settings.json and ~/.codex/hooks.json)
+# and the pane-focus script tmux.conf hooks onto session-window-changed.
+ln -sfn "$(pwd)/tmux/assistant-activity" ~/.shell-setup/assistant-activity
 
 # launchd owns the tmux server: the agent runs `tmux -D` in the foreground so
 # no terminal app's death can take the server down, and KeepAlive restarts it
