@@ -70,6 +70,12 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   one home: don't recreate it under `~/.claude/commands/`.
 > - `~/.codex/hooks.json` → **copy**, not symlinked (the user may add hooks
 >   there that this repo doesn't track) — edit both.
+> - `~/.shell-setup/` → **regular directory of symlinks** into this repo (created
+>   by §17), the home for every script and generated config this repo installs
+>   outside a tool's own config dir. Scripts referenced from a config or a hook
+>   go here, never into a tool's directory (`~/.tmux/` also holds TPM's
+>   `plugins/` and resurrect's legacy `resurrect/`, so a path under it can't
+>   identify a file as ours — which the `settings.json` hook merge relies on).
 
 ## Testing tmux changes
 
@@ -112,10 +118,10 @@ snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
-| tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.tmux/assistant-resurrect` (symlink to the repo dir; edit either; one place) |
-| tmux pane border | `tmux/pane-border-format.conf` (generated — edit `tmux/build-pane-border-format.sh` and re-run) | `~/.tmux/pane-border-format.conf` (symlink to the repo file; `source-file`d by `tmux.conf`) |
-| tmux status refresh | `tmux/status-refresh.sh` | `~/.tmux/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
-| tmux server agent | `tmux/tmux-server-agent.sh` | `~/.tmux/tmux-server-agent.sh` (symlink to the repo file; run by the launchd agent) |
+| tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.shell-setup/assistant-resurrect` (symlink to the repo dir; edit either; one place) |
+| tmux pane border | `tmux/pane-border-format.conf` (generated — edit `tmux/build-pane-border-format.sh` and re-run) | `~/.shell-setup/pane-border-format.conf` (symlink to the repo file; `source-file`d by `tmux.conf`) |
+| tmux status refresh | `tmux/status-refresh.sh` | `~/.shell-setup/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
+| tmux server agent | `tmux/tmux-server-agent.sh` | `~/.shell-setup/tmux-server-agent.sh` (symlink to the repo file; run by the launchd agent) |
 | tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
 | Claude Code | `.claude/` (settings.json, commands) | `~/.claude/` |
 | Claude Code statusline | `.claude/statusline-command.sh` | `~/.claude/statusline-command.sh` (symlink to the repo file) |

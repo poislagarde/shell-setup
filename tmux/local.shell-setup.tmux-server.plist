@@ -5,12 +5,12 @@
 	<key>Label</key>
 	<string>local.shell-setup.tmux-server</string>
 	<!-- $HOME isn't expanded by launchd, so go through a shell. The agent
-	     script is the ~/.tmux symlink into the shell-setup repo. -->
+	     script is the ~/.shell-setup symlink into the shell-setup repo. -->
 	<key>ProgramArguments</key>
 	<array>
 		<string>/bin/sh</string>
 		<string>-c</string>
-		<string>exec "$HOME/.tmux/tmux-server-agent.sh"</string>
+		<string>exec "$HOME/.shell-setup/tmux-server-agent.sh"</string>
 	</array>
 	<!-- launchd's default env has neither: PATH must reach Homebrew for the
 	     config's run-shell hooks (tmux, jq, sqlite3), SHELL feeds tmux's
