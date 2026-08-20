@@ -5,7 +5,6 @@
 #   @assistant-state     busy | input | idle
 #   @assistant-state-at  epoch of the last write — busy TTL, and focus ordering
 #   @assistant-pid       the assistant process: liveness, and finding its tools
-#   @assistant-inflight  1 while a tool call is running
 #   @assistant-pending   input | done — an unconsumed "look at this pane" mark
 #
 # status-refresh.sh aggregates these into the @assistant-window option the
@@ -20,8 +19,8 @@
 # `tmux set`), no jq, and no reading state back. Never print to stdout —
 # SessionStart stdout is injected into the conversation as context.
 #
-# Usage: set-state.sh start <claude|codex> | tool-start | tool-end | busy
-#                     | input | idle | end
+# Usage: set-state.sh start <claude|codex> | tool-start | busy | input
+#                     | idle | end
 set -u
 
 [ -n "${TMUX_PANE:-}" ] || exit 0
@@ -73,20 +72,9 @@ start)
 	tmux set -p -t "$p" @assistant-state idle \; \
 		set -p -t "$p" @assistant-state-at "$now" \; \
 		set -p -t "$p" @assistant-pid "$(assistant_pid "${2:-}")" \; \
-		set -up -t "$p" @assistant-inflight \; \
 		set -up -t "$p" @assistant-pending 2>/dev/null
 	;;
-tool-start)
-	tmux set -p -t "$p" @assistant-state busy \; \
-		set -p -t "$p" @assistant-state-at "$now" \; \
-		set -p -t "$p" @assistant-inflight 1 2>/dev/null
-	;;
-tool-end)
-	tmux set -p -t "$p" @assistant-state busy \; \
-		set -p -t "$p" @assistant-state-at "$now" \; \
-		set -up -t "$p" @assistant-inflight 2>/dev/null
-	;;
-busy)
+tool-start | busy)
 	tmux set -p -t "$p" @assistant-state busy \; \
 		set -p -t "$p" @assistant-state-at "$now" 2>/dev/null
 	;;
@@ -98,14 +86,12 @@ input)
 idle)
 	tmux set -p -t "$p" @assistant-state idle \; \
 		set -p -t "$p" @assistant-state-at "$now" \; \
-		set -up -t "$p" @assistant-inflight \; \
 		set -p -t "$p" @assistant-pending done 2>/dev/null
 	;;
 end)
 	tmux set -up -t "$p" @assistant-state \; \
 		set -up -t "$p" @assistant-state-at \; \
 		set -up -t "$p" @assistant-pid \; \
-		set -up -t "$p" @assistant-inflight \; \
 		set -up -t "$p" @assistant-pending 2>/dev/null
 	;;
 esac

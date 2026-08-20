@@ -92,7 +92,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.shell-setup/assistant-activity/set-state.sh tool-end"
+            "command": "~/.shell-setup/assistant-activity/set-state.sh busy"
           }
         ]
       }
@@ -102,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.shell-setup/assistant-activity/set-state.sh tool-end"
+            "command": "~/.shell-setup/assistant-activity/set-state.sh busy"
           }
         ]
       }
@@ -122,7 +122,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.shell-setup/assistant-activity/set-state.sh tool-end"
+            "command": "~/.shell-setup/assistant-activity/set-state.sh busy"
           }
         ]
       }
