@@ -68,8 +68,9 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   bootstrap command) lives **only** in the repo and is run one-time from here
 >   — §15 deliberately excludes it from the `~/.claude/` copy, so it has just
 >   one home: don't recreate it under `~/.claude/commands/`.
-> - `~/.codex/hooks.json` → **copy**, not symlinked (the user may add hooks
->   there that this repo doesn't track) — edit both.
+> - `~/.codex/hooks.json` → **merge**, not symlinked (the user may add hooks
+>   there that this repo doesn't track, so §15 upserts only the entries whose
+>   command lives under `~/.shell-setup` and leaves the rest alone) — edit both.
 > - `~/.shell-setup/` → **regular directory of symlinks** into this repo (created
 >   by §17), the home for every script and generated config this repo installs
 >   outside a tool's own config dir. Scripts referenced from a config or a hook
@@ -126,7 +127,7 @@ snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
 | tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
 | Claude Code | `.claude/` (settings.json, commands) | `~/.claude/` |
 | Claude Code statusline | `.claude/statusline-command.sh` | `~/.claude/statusline-command.sh` (symlink to the repo file) |
-| Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (copy — may hold user hooks this repo doesn't track; Codex must be told to *trust* each hook on first run and after every change to it) |
+| Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (merge — may hold user hooks this repo doesn't track, so only the `~/.shell-setup` entries are upserted; Codex must be told to *trust* each hook on first run and after every change to it) |
 | Codex features | `.codex/config-features.toml` | the `[features].hooks` key of `~/.codex/config.toml` (merge that key only; preserve every other flag) |
 | Codex defaults | `.codex/config-defaults.toml` | the top-level `model` and `model_reasoning_effort` keys of `~/.codex/config.toml` (merge those keys only; preserve the rest) |
 | Codex TUI | `.codex/config-tui.toml` | the `[tui]` block of `~/.codex/config.toml` (merge that block only; preserve every other section) |

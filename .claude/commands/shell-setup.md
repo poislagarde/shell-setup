@@ -377,35 +377,36 @@ The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `ass
 Run from the root of this repo:
 
 ```bash
-mkdir -p ~/.claude
+mkdir -p ~/.claude ~/.codex
 
-# 1. Merge settings.json: existing ⨯ repo (repo wins on conflict) for every key
-#    except hooks. `jq -s '.[0] * .[1]'` recursively merges two objects but
-#    REPLACES arrays, which would delete hooks this repo doesn't track (a local
-#    integration registering its own PostToolUse, say) as soon as the repo
-#    registers the same event. Hooks are upserted per event instead: entries
-#    whose command runs out of ~/.shell-setup are this repo's and get replaced,
-#    all other entries are kept, and events the repo says nothing about are left
-#    alone. Re-running replaces the same entries again, so it stays idempotent.
-if [ -f .claude/settings.json ]; then
-  if [ -f ~/.claude/settings.json ]; then
-    tmp=$(mktemp)
-    jq -s '
-      def ours: (.command // "") | test("shell-setup");
-      def drop_ours: map(.hooks |= map(select(ours | not)))
-                   | map(select((.hooks | length) > 0));
-      .[0] as $live | .[1] as $repo |
-      ($live * ($repo | del(.hooks)))
-      + { hooks: (($live.hooks // {}) + (($repo.hooks // {}) | with_entries(
-            .key as $event
-            | .value = ((($live.hooks[$event] // []) | drop_ours) + .value)
-          ))) }
-    ' ~/.claude/settings.json .claude/settings.json > "$tmp" \
-      && mv "$tmp" ~/.claude/settings.json
-  else
-    cp .claude/settings.json ~/.claude/settings.json
-  fi
-fi
+# Both assistants' hook files may hold hooks this repo doesn't track (a local
+# integration registering its own PostToolUse, say), so neither may be copied
+# over wholesale — and `jq -s '.[0] * .[1]'` is no better, since it merges
+# objects recursively but REPLACES arrays, dropping those hooks the moment this
+# repo registers the same event. Upsert per event instead: entries whose command
+# runs out of ~/.shell-setup are this repo's and get replaced, all other entries
+# are kept, and events the repo says nothing about are left alone. Every other
+# key merges with the repo winning. Re-running replaces the same entries again,
+# so it stays idempotent.
+merge_hooks() {   # merge_hooks <live file> <repo file>
+  [ -f "$2" ] || return 0
+  if [ ! -f "$1" ]; then cp "$2" "$1"; return 0; fi
+  tmp=$(mktemp)
+  jq -s '
+    def ours: (.command // "") | test("shell-setup");
+    def drop_ours: map(.hooks |= map(select(ours | not)))
+                 | map(select((.hooks | length) > 0));
+    .[0] as $live | .[1] as $repo |
+    ($live * ($repo | del(.hooks)))
+    + { hooks: (($live.hooks // {}) + (($repo.hooks // {}) | with_entries(
+          .key as $event
+          | .value = ((($live.hooks[$event] // []) | drop_ours) + .value)
+        ))) }
+  ' "$1" "$2" > "$tmp" && mv "$tmp" "$1"
+}
+
+# 1. Claude Code settings.
+merge_hooks ~/.claude/settings.json .claude/settings.json
 
 # 2. Copy everything else, overwriting on conflict but preserving files in
 #    ~/.claude that aren't in the repo (no --delete). Exclude the bootstrap
@@ -424,8 +425,7 @@ ln -sf "$PWD/.claude/statusline-command.sh" ~/.claude/statusline-command.sh
 #    approve the trust prompts on your first `codex` run after this, and again
 #    after any change to this file (or run once with
 #    --dangerously-bypass-hook-trust).
-mkdir -p ~/.codex
-cp .codex/hooks.json ~/.codex/hooks.json
+merge_hooks ~/.codex/hooks.json .codex/hooks.json
 
 # 5. Codex settings: merge the tracked top-level defaults and [tui] block into
 #    ~/.codex/config.toml. Preserve all other machine-local settings.
@@ -566,20 +566,11 @@ ln -sfn "$(pwd)/tmux/tmux-server-agent.sh" ~/.shell-setup/tmux-server-agent.sh
 cp tmux/local.shell-setup.tmux-server.plist ~/Library/LaunchAgents/
 launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1 ||
   launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist
-
-# Machines bootstrapped before these files moved out of ~/.tmux/ keep dead
-# symlinks there. Remove only our four (TPM's plugins/ and resurrect's legacy
-# resurrect/ live in the same directory and must stay), and only if they are
-# still symlinks.
-for stale in assistant-resurrect pane-border-format.conf status-refresh.sh \
-             tmux-server-agent.sh; do
-  [ -L ~/.tmux/"$stale" ] && rm -f ~/.tmux/"$stale"
-done
 ```
 
-An already-bootstrapped machine needs the LaunchAgent reloaded for the new
-agent path to take effect, which restarts the tmux server (continuum restores
-every session):
+The plist is a copy, so editing `tmux/local.shell-setup.tmux-server.plist` needs
+the `cp` above plus a reload for launchd to see it. The reload restarts the tmux
+server, which continuum then repopulates from its last save:
 
 ```bash
 launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server
