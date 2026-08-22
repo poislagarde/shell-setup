@@ -925,6 +925,30 @@ test_clean_recovery_skips_barrier_and_validation_creates_state() {
 	stop_server "$CURRENT_SOCKET"
 }
 
+test_split_pane_record_is_rejoined() {
+	local layout base committed
+	make_context split-record
+	start_server "$CURRENT_SOCKET"
+	layout=$TEST_ROOT/split-source.txt
+	write_exact_layout_for_server "$CURRENT_SOCKET" "$layout"
+	# Resurrect's ps capture prints one line per matching process, so a pane
+	# whose shell has two children arrives with its record split in two.
+	awk '!done && /^pane\t/ { printf "%s\n%s\n", $0, "bash resume-codex.sh 019f"; done = 1; next }
+	     { print }' "$layout" >"$layout.split"
+	mv -f "$layout.split" "$layout"
+	grep -q '^bash resume-codex.sh 019f$' "$layout" || fail 'the fixture did not split a pane record'
+	export FAKE_LAYOUT_SOURCE=$layout
+	run_persistence save --seed --quiet || fail 'a split pane record failed the save'
+	base=$(readlink "$CURRENT_RESURRECT_DIR/last")
+	committed=$CURRENT_RESURRECT_DIR/$base
+	if grep -q '^bash resume-codex.sh 019f$' "$committed"; then
+		fail 'the committed layout kept the split pane record'
+	fi
+	grep -q 'bash resume-codex.sh 019f$' "$committed" || \
+		fail 'the split command was dropped instead of rejoined'
+	stop_server "$CURRENT_SOCKET"
+}
+
 test_retention_counts_complete_generations() {
 	local base generation i complete_count pane_count assistant_count legacy_count protected_legacy
 	make_context retention
@@ -1014,7 +1038,7 @@ test_retention_counts_complete_generations() {
 	stop_server "$CURRENT_SOCKET"
 }
 
-printf '1..13\n'
+printf '1..14\n'
 run_test 'config uses the coordinator without Continuum' test_config_wiring
 run_test 'loaded config keeps guarded bindings and renders warnings' \
 	test_loaded_config_bindings_and_warning
@@ -1038,6 +1062,8 @@ run_test 'assistant-map failure preserves the prior coherent generation' \
 	test_assistant_map_failure_preserves_current_generation
 run_test 'clean recovery skips durability work and validation creates state' \
 	test_clean_recovery_skips_barrier_and_validation_creates_state
+run_test 'a split pane record is rejoined instead of failing the save' \
+	test_split_pane_record_is_rejoined
 run_test 'retention bounds managed generations and ages legacy layouts' \
 	test_retention_counts_complete_generations
 
