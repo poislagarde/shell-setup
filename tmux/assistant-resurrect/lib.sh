@@ -6,10 +6,10 @@
 # processes it doesn't whitelist — so an assistant pane comes back as a bare
 # shell and the conversation is lost. These scripts close that gap:
 #
-#   save.sh     — resurrect post-save hook: map each pane to the assistant
+#   save.sh     — coordinator save helper: map each pane to the assistant
 #                 session ID running in it, write a JSON sidecar next to
 #                 resurrect's own save files.
-#   restore.sh  — resurrect post-restore hook: read the sidecar and type
+#   restore.sh  — coordinator restore helper: read the staged sidecar and type
 #                 `claude --resume <id>` / `resume-codex.sh <id>` into the
 #                 restored panes. The Codex launcher retries the UUID after a
 #                 successful startup update.
@@ -43,6 +43,10 @@ assistant_state_dir() {
 # resurrect's own dir-exists check and silently migrate its save location.
 resurrect_data_dir() {
 	local dir
+	if [ -n "${TMUX_PERSISTENCE_RESURRECT_DIR:-}" ]; then
+		printf '%s\n' "$TMUX_PERSISTENCE_RESURRECT_DIR"
+		return
+	fi
 	dir=$(tmux show-option -gqv @resurrect-dir 2>/dev/null || true)
 	if [ -z "$dir" ]; then
 		if [ -d "$HOME/.tmux/resurrect" ]; then
@@ -51,13 +55,16 @@ resurrect_data_dir() {
 			dir="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect"
 		fi
 	fi
-	echo "$dir" | sed "s,^~,$HOME,; s,\$HOME,$HOME,g"
+	echo "$dir" | sed "s,^~,$HOME,; s,\$HOME,$HOME,g; s,\$HOSTNAME,$(hostname),g"
 }
 
 sidecar_file() { echo "$(resurrect_data_dir)/assistant-sessions.json"; }
 
 log() {
-	echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" >>"$(resurrect_data_dir)/assistant-resurrect.log"
+	# Diagnostics must never decide whether a valid session map is committed or
+	# whether an otherwise successful restore completes.
+	{ echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" >>"$(resurrect_data_dir)/assistant-resurrect.log"; } \
+		2>/dev/null || true
 }
 
 # Map a process's command line to a supported assistant, by the basename of

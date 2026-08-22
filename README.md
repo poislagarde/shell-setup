@@ -18,10 +18,10 @@ Claude runs an 18-section checklist top to bottom, pausing for verification betw
 
 - **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `gcloud-cli`, …).
 - **Node** — nvm pinned to `~/.nvm` (survives `brew upgrade`), latest LTS as `default`.
-- **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` that sources this repo's `zsh/zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, keyboard tweaks, and a tmux auto-start that gives each Ghostty surface its own session) — so `git pull` updates the live shell.
+- **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` that sources this repo's `zsh/zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, keyboard tweaks, and guarded tmux auto-attach that gives each Ghostty surface its own session) — so `git pull` updates the live shell.
 - **AWS** — official CLI installer + interactive SSO profile setup (`prod` / `prod-admin` / `dev`).
 - **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
-- **Dotfiles** — Claude Code (`.claude/`), Ghostty, and tmux configs; the latter two are wired with tmux-resurrect/continuum so sessions, layouts, and even Claude/Codex conversations survive Ghostty quits and reboots.
+- **Dotfiles** — Claude Code (`.claude/`), Ghostty, and tmux configs; tmux-resurrect plus a guarded persistence coordinator keep sessions, layouts, scrollback, and Claude/Codex conversations across Ghostty quits and reboots.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -41,12 +41,16 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 tmux/
-├── tmux.conf                            # tmux config (mouse support, resurrect/continuum persistence)
+├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)
 ├── build-pane-border-format.sh          # generates the responsive pane-border-format (run after edits)
 ├── pane-border-format.conf              # generated; source-file'd by tmux.conf (symlinked to ~/.shell-setup/)
 ├── local.shell-setup.tmux-server.plist  # LaunchAgent: launchd owns the tmux server (copied to ~/Library/LaunchAgents/)
-├── tmux-server-agent.sh                 # what the agent runs: foreground server (tmux -D), restarted on death
-├── assistant-resurrect/                 # resurrect hooks: save/resume Claude Code + Codex sessions
+├── tmux-server-agent.sh                 # launchd supervisor for the server, startup restore, and save timer
+├── tmux-persistence.sh                  # serialized generations, restore verification, readiness, and retention
+├── tests/
+│   ├── tmux-persistence-test.sh         # isolated coordinator integration suite
+│   └── tmux-resurrect-contract-test.sh  # contract against the installed Resurrect plugin
+├── assistant-resurrect/                 # coordinator helpers: save/resume Claude Code + Codex sessions
 └── assistant-activity/                  # assistant hooks: window-label activity states + pane auto-focus
 zsh/
 └── zshrc                    # sourced by ~/.zshrc's managed block (theme/plugins, PATH, keybinds, awsenv)
@@ -158,16 +162,22 @@ Copy-mode is vi-style: `Space` (or `Shift+Space`) start selection, `Enter` copy 
 | --- | --- |
 | `Shift+Space` | Insert a regular space |
 
-### Session persistence (resurrect + continuum)
+### Session persistence
 
 | Keys | Action |
 | --- | --- |
 | prefix, `Ctrl-s` | Save environment now |
 | prefix, `Ctrl-r` | Restore last saved environment |
 
-Auto-saves every 15 min and on every Ghostty quit; auto-restores when the tmux server starts. Claude Code / Codex panes resume their conversations on restore. If Codex updates during a restored launch, the same conversation resumes with the new binary.
+The launchd-owned server auto-saves every 15 minutes and on every Ghostty detach. Each new save publishes one timestamped layout, pane-content archive, and assistant-session map under `~/.local/share/tmux/resurrect/`; the newest 96 complete generations are retained. Legacy unkeyed layouts older than 30 days are pruned after the newest five, except any current or transaction-protected target. Startup uses a complete managed generation and enables later saves only after exact session/window/pane identity verifies. Pane cwd differences remain visible diagnostics without disabling saves. Claude Code / Codex panes then resume their conversations. If Codex updates during a restored launch, the same conversation resumes with the new binary.
 
-The tmux server itself runs under launchd (`local.shell-setup.tmux-server`): it starts at login, lives outside any terminal app's process tree, and is restarted after any kill — where the auto-restore brings every session back. `tmux kill-server` therefore acts as a full restart; to actually stop the server: `launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server`.
+The tmux server itself runs under launchd (`local.shell-setup.tmux-server`): it starts at login, lives outside any terminal app's process tree, and is restarted after any kill. Ghostty shells wait up to 10 seconds for an attachable server, then up to 60 seconds to reserve a session when a persistence operation holds the lock. They fall back to a plain shell when either bounded wait expires, the agent is unavailable, or persistence needs review. A completed degraded restore remains attachable while its save gate stays closed. `tmux kill-server` therefore acts as a full restart; to actually stop the server: `launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server`.
+
+Run `~/.shell-setup/tmux-persistence.sh status` for persistence health. A red status warning means saves are not silently advancing. For `needs-review`, choose another snapshot or run `restore --accept-risk`; for `degraded`, inspect `~/.local/state/tmux-persistence/last-restore.diff`, then run `acknowledge` to accept the live state and re-enable saves. A save failure keeps the prior generation current and remains visible until a later save succeeds; details are in `~/.local/state/tmux-persistence/persistence.log`.
+
+To restore an older managed generation, repoint `last` at its `tmux_resurrect_*.txt` file and use `prefix + Ctrl-r`; the matching pane archive and assistant map are staged automatically. Unkeyed snapshots predating the coordinator are not restorable, because their singleton sidecars cannot be paired with a generation; they are pruned by age instead.
+
+After changing the coordinator or its tmux wiring, run `tmux/tests/tmux-persistence-test.sh` and `tmux/tests/tmux-resurrect-contract-test.sh`. Both use private tmux sockets; the contract test reports `SKIP` when Resurrect is not installed.
 
 ### Assistant activity indicator
 

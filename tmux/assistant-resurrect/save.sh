@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# tmux-resurrect post-save hook (@resurrect-hook-post-save-all): map every
-# pane running Claude Code or Codex CLI to its session ID and write the
+# Persistence-coordinator save helper: map every pane running Claude Code or
+# Codex CLI to its session ID and write the
 # result as a JSON sidecar (assistant-sessions.json) next to resurrect's own
 # save files. restore.sh reads it back after resurrect rebuilds the layout.
 #
-# Runs on every resurrect save — continuum's 15-min timer, the
-# client-detached quit-save, and manual prefix+Ctrl-s — so it must stay fast:
+# Runs inside every coordinated periodic, detach, and manual save, so it must stay fast:
 # one ps snapshot, one tmux list-panes, and at most one sqlite query per
 # codex pane (only when the SessionStart hook left no state file).
 set -euo pipefail

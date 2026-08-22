@@ -33,6 +33,7 @@ brew install \
   bfg \
   gh \
   go \
+  jq \
   libpq \
   nvm \
   pipx \
@@ -196,7 +197,7 @@ session; plain `tm` is a numbered picker marking sessions attached/detached
 Cmd+Backspace semantics), Shift+Enter as Codex-compatible Esc+Enter,
 Shift+Space via the Ghostty/tmux CSI 27 plumbing, Cmd+Opt+arrow edge-fallthrough no-ops, and a
 precmd that re-asserts a blinking thin-bar cursor inside tmux. It ends with a
-tmux auto-start for interactive Ghostty shells: the quick terminal (detected
+guarded tmux auto-attach for interactive Ghostty shells: the quick terminal (detected
 via `GHOSTTY_QUICK_TERMINAL=1`, Ghostty ≥1.3; splits inside it inherit the
 var only on builds newer than 1.3.1) owns
 the `quick`/`quick-N` session namespace — each quick-terminal surface adopts
@@ -204,7 +205,7 @@ the lowest-numbered detached `quick*` session or mints the next free
 `quick-N`; regular windows/tabs/panes do the same outside the namespace —
 adopt the first detached non-quick session, else create `main`, else a fresh
 auto-numbered session — so surfaces get distinct sessions instead of
-mirroring one. Pairs with §17's resurrect/continuum persistence so all
+mirroring one. Pairs with §17's guarded Resurrect persistence so all
 sessions survive Ghostty quits and reboots.
 
 Because the managed block lives at the end of `~/.zshrc`, the sourced file's
@@ -518,12 +519,65 @@ Reload a running Ghostty with `⌘⇧,` to pick up the new config.
 Symlink this repo's tmux config at `~/.tmux.conf` — a **symlink, not a
 copy**, same reasoning as the Ghostty config in §16. Enables mouse support
 (scroll + click-to-select-pane) and session persistence across reboots
-(tmux-resurrect + tmux-continuum via TPM).
+(tmux-resurrect plus the repo-owned persistence coordinator).
 
-Run from the root of this repo:
+Run from the root of this repo. The block inspects any live default server
+before changing tmux wiring. An uncoordinated server requires explicit
+topology approval and a second run.
 
 ```bash
-ln -sfn "$(pwd)/tmux/tmux.conf" ~/.tmux.conf
+# Preflight the live server before replacing its config, hooks, helpers, or
+# scheduler. `-N` guarantees these checks cannot start a server.
+_tmux_default() {
+  env -u TMUX -u TMUX_PANE -u TMUX_TMPDIR tmux -N -L default "$@"
+}
+_tmux_inventory() {
+  local rows
+  rows=$(
+    _tmux_default list-sessions -F 'S|#{session_id}|#{session_name}|#{session_windows}|#{session_attached}' &&
+    _tmux_default list-windows -a -F 'W|#{session_id}|#{window_id}|#{window_index}|#{window_name}|#{window_layout}' &&
+    _tmux_default list-panes -a -F 'P|#{window_id}|#{pane_id}|#{pane_index}|#{pane_current_path}|#{pane_current_command}'
+  ) || return 1
+  printf '%s\n' "$rows" | LC_ALL=C sort
+}
+_tmux_make_review_token() {
+  local pid=$1 inventory=$2 digest
+  digest=$(printf '%s\n' "$inventory" | /usr/bin/shasum -a 256 | awk '{print $1}') || return 1
+  [ -n "$digest" ] || return 1
+  printf '%s:%s\n' "$pid" "$digest"
+}
+_tmux_validated_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
+_tmux_initial_phase=
+_tmux_reviewed_inventory=
+_tmux_review_token=
+if [ -n "$_tmux_validated_pid" ]; then
+  [ -z "${TMUX:-}" ] || {
+    echo "Transfer tmux ownership from a plain non-tmux shell; no tmux files were changed." >&2
+    exit 1
+  }
+  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
+    echo "Detach every tmux client before transfer; no tmux files were changed." >&2
+    exit 1
+  }
+  _tmux_initial_phase=$(_tmux_default show-option -gqv @shell-setup-persistence-state 2>/dev/null || true)
+  _tmux_reviewed_inventory=$(_tmux_inventory) || {
+    echo "Could not inspect the live tmux topology; no tmux files were changed." >&2
+    exit 1
+  }
+  _tmux_review_token=$(_tmux_make_review_token "$_tmux_validated_pid" "$_tmux_reviewed_inventory") || exit 1
+  if [ "$_tmux_initial_phase" != ready ] && \
+     [ "${TMUX_PERSISTENCE_MIGRATION_APPROVAL:-}" != "$_tmux_review_token" ]; then
+    echo "Live uncoordinated tmux topology:" >&2
+    printf '%s\n' "$_tmux_reviewed_inventory" >&2
+    printf 'windows=%s panes=%s\n' \
+      "$(_tmux_default list-windows -a -F '#{session_name}:#{window_index}' | wc -l | tr -d ' ')" \
+      "$(_tmux_default list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}' | wc -l | tr -d ' ')" >&2
+    printf "After confirmation, run: export TMUX_PERSISTENCE_MIGRATION_APPROVAL='%s'\n" \
+      "$_tmux_review_token" >&2
+    echo "Then rerun §17 from the same plain, detached shell." >&2
+    exit 1
+  fi
+fi
 
 # Everything tmux.conf and the assistant hooks reference by a fixed path lives
 # in ~/.shell-setup/ — this repo's own home directory, not a tool's config dir
@@ -540,14 +594,21 @@ ln -sfn "$(pwd)/tmux/pane-border-format.conf" ~/.shell-setup/pane-border-format.
 # fixed ~/.shell-setup path; harmless if missing (the run-shell just fails quietly).
 ln -sfn "$(pwd)/tmux/status-refresh.sh" ~/.shell-setup/status-refresh.sh
 
-# Bootstrap TPM (tmux plugin manager) and install the plugins declared in
-# tmux.conf (tmux-resurrect + tmux-continuum). install_plugins needs a running
-# tmux server that has already sourced the config (TPM's `run` line exports
-# TMUX_PLUGIN_MANAGER_PATH into it) — hence the start-server + source first.
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-tmux start-server
-tmux source-file ~/.tmux.conf
-~/.tmux/plugins/tpm/bin/install_plugins
+# Persistence coordinator: the only path used for periodic, detach, and manual
+# saves; startup restore; readiness; verification; and retained sidecars.
+command -v python3 >/dev/null || {
+  echo "python3 is required for durable tmux save barriers." >&2
+  exit 1
+}
+command -v jq >/dev/null || {
+  echo "jq is required for assistant-session persistence." >&2
+  exit 1
+}
+command -v sqlite3 >/dev/null || {
+  echo "sqlite3 is required for Codex session discovery." >&2
+  exit 1
+}
+ln -sfn "$(pwd)/tmux/tmux-persistence.sh" ~/.shell-setup/tmux-persistence.sh
 
 # Assistant session persistence: symlink the resurrect hook scripts to the
 # fixed path referenced by tmux.conf and ~/.claude/settings.json.
@@ -558,34 +619,186 @@ ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.shell-setup/assistant-resurrect
 # and the pane-focus script tmux.conf hooks onto session-window-changed.
 ln -sfn "$(pwd)/tmux/assistant-activity" ~/.shell-setup/assistant-activity
 
-# launchd owns the tmux server: the agent runs `tmux -D` in the foreground so
-# no terminal app's death can take the server down, and KeepAlive restarts it
-# after a kill — config load + continuum then auto-restore every session. The
-# plist must be a copy, not a symlink (launchd is unreliable with symlinked
-# agent plists); the script it runs is a ~/.shell-setup symlink. If a server
-# booted by a shell already holds the socket, the agent waits and takes over when
-# that server exits. To stop the server for real (KeepAlive fights a plain
-# kill-server): launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server
+# Install TPM and Resurrect without starting the default tmux server. The
+# launchd agent below must remain the sole automatic server owner.
+mkdir -p ~/.tmux/plugins
+if [ ! -d ~/.tmux/plugins/tpm/.git ]; then
+  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || exit 1
+fi
+if [ ! -d ~/.tmux/plugins/tmux-resurrect/.git ]; then
+  git clone https://github.com/tmux-plugins/tmux-resurrect ~/.tmux/plugins/tmux-resurrect || exit 1
+fi
+# launchd owns both `tmux -D` and the save scheduler. The supervisor restores
+# and verifies before Ghostty clients may attach. It waits without mutating a
+# foreign server if one already owns the default socket.
 ln -sfn "$(pwd)/tmux/tmux-server-agent.sh" ~/.shell-setup/tmux-server-agent.sh
 cp tmux/local.shell-setup.tmux-server.plist ~/Library/LaunchAgents/
-launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1 ||
-  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist
+
+# Activate the coordinated hooks only after the preflight and any required
+# migration approval. Seed an uncoordinated topology in the same uninterrupted
+# handoff; an already coordinated server takes an ordinary save.
+_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
+if [ -n "$_tmux_validated_pid" ]; then
+  [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
+    echo "tmux changed after preflight; refusing activation." >&2
+    exit 1
+  }
+  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
+    echo "A tmux client attached after preflight; refusing activation." >&2
+    exit 1
+  }
+  if [ "$_tmux_initial_phase" != ready ]; then
+    _tmux_activation_inventory=$(_tmux_inventory) || exit 1
+    _tmux_activation_token=$(_tmux_make_review_token "$_tmux_current_pid" "$_tmux_activation_inventory") || exit 1
+    [ "${TMUX_PERSISTENCE_MIGRATION_APPROVAL:-}" = "$_tmux_review_token" ] && \
+      [ "$_tmux_activation_token" = "$_tmux_review_token" ] || {
+      echo "The approved tmux topology changed before activation; review it again." >&2
+      exit 1
+    }
+  fi
+elif [ -n "$_tmux_current_pid" ]; then
+  echo "A tmux server appeared after preflight; refusing activation." >&2
+  exit 1
+fi
+ln -sfn "$(pwd)/tmux/tmux.conf" ~/.tmux.conf
+if [ -n "$_tmux_validated_pid" ]; then
+  _tmux_default source-file ~/.tmux.conf || {
+    echo "tmux config reload failed; leaving the live server running." >&2
+    exit 1
+  }
+  if [ "$_tmux_initial_phase" = ready ]; then
+    ~/.shell-setup/tmux-persistence.sh save || {
+      echo "Coordinated tmux save failed; leaving the live server running." >&2
+      exit 1
+    }
+  else
+    ~/.shell-setup/tmux-persistence.sh save --seed || {
+      echo "Approved migration seed failed; leaving the live server running." >&2
+      exit 1
+    }
+  fi
+  ~/.shell-setup/tmux-persistence.sh validate-current || {
+    echo "The managed generation is incomplete or differs from live tmux; leaving the server running." >&2
+    exit 1
+  }
+fi
+
+# Pin the validated server through the handoff. Never kill a process that
+# appeared after validation, and never replace a server while clients exist.
+_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
+if [ -n "$_tmux_validated_pid" ]; then
+  [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
+    echo "tmux changed after validation; refusing ownership transfer." >&2
+    exit 1
+  }
+  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
+    echo "A tmux client attached after validation; refusing ownership transfer." >&2
+    exit 1
+  }
+elif [ -n "$_tmux_current_pid" ]; then
+  echo "A tmux server appeared after the initial check; refusing ownership transfer." >&2
+  exit 1
+fi
+
+if launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1; then
+  launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server || exit 1
+fi
+# Stop a manually owned default server only after its managed generation has
+# validated and only from the plain shell required above.
+_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
+if [ -n "$_tmux_current_pid" ]; then
+  [ -n "$_tmux_validated_pid" ] && [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
+    echo "An unvalidated tmux server owns the socket; refusing to kill it." >&2
+    exit 1
+  }
+  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
+    echo "A tmux client is attached; refusing to kill the server." >&2
+    exit 1
+  }
+  _tmux_default kill-server || exit 1
+fi
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist || exit 1
+~/.shell-setup/tmux-persistence.sh wait-ready || exit 1
+~/.shell-setup/tmux-persistence.sh status
+# Retire the unused plugin only after its coordinated replacement is healthy.
+if [ -d ~/.tmux/plugins/tmux-continuum ]; then
+  mkdir -p "$HOME/.Trash" || exit 1
+  mv ~/.tmux/plugins/tmux-continuum \
+    "$HOME/.Trash/tmux-continuum.$(date +%Y%m%dT%H%M%S)" || exit 1
+fi
+unset TMUX_PERSISTENCE_MIGRATION_APPROVAL
+unset _tmux_validated_pid _tmux_current_pid _tmux_initial_phase
+unset _tmux_reviewed_inventory _tmux_review_token
+unset _tmux_activation_inventory _tmux_activation_token
+unset -f _tmux_default _tmux_inventory _tmux_make_review_token
 ```
 
+When the block stops on a live server that predates the coordinator, report
+the displayed session, window, and pane inventory and wait for confirmation.
+Only after the user confirms that topology may be adopted, export
+the exact `TMUX_PERSISTENCE_MIGRATION_APPROVAL` token printed by the preflight
+and rerun all of §17 from the same plain, detached shell. The token binds the
+approval to that server PID and topology. The second run rechecks both before
+activating the new config, then publishes and validates the migration seed and
+transfers ownership without another pause.
+
 The plist is a copy, so editing `tmux/local.shell-setup.tmux-server.plist` needs
-the `cp` above plus a reload for launchd to see it. The reload restarts the tmux
-server, which continuum then repopulates from its last save:
+the `cp` above plus a reload for launchd to see it. From a plain non-tmux
+shell, save first, then reload:
 
 ```bash
-launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist
+[ -z "${TMUX:-}" ] || {
+  echo "Run this ownership transfer from a plain non-tmux shell." >&2
+  exit 1
+}
+_tmux_default() {
+  env -u TMUX -u TMUX_PANE -u TMUX_TMPDIR tmux -N -L default "$@"
+}
+_tmux_validated_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
+[ -n "$_tmux_validated_pid" ] || {
+  echo "No tmux server is available to save; refusing ownership transfer." >&2
+  exit 1
+}
+[ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
+  echo "Detach every tmux client before transferring server ownership." >&2
+  exit 1
+}
+~/.shell-setup/tmux-persistence.sh save || exit 1
+~/.shell-setup/tmux-persistence.sh validate-current || exit 1
+_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
+[ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
+  echo "tmux changed after validation; refusing ownership transfer." >&2
+  exit 1
+}
+if launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1; then
+  launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server || exit 1
+fi
+_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
+if [ -n "$_tmux_current_pid" ]; then
+  [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
+    echo "An unvalidated tmux server owns the socket; refusing to kill it." >&2
+    exit 1
+  }
+  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
+    echo "A tmux client is attached; refusing to kill the server." >&2
+    exit 1
+  }
+  _tmux_default kill-server || exit 1
+fi
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist || exit 1
+~/.shell-setup/tmux-persistence.sh wait-ready || exit 1
+~/.shell-setup/tmux-persistence.sh status
+unset _tmux_validated_pid _tmux_current_pid
+unset -f _tmux_default
 ```
 
 Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).
 
-Session persistence: continuum auto-saves the environment (sessions, windows, panes, layouts, per-pane cwd, visible pane contents) to `~/.local/share/tmux/resurrect/` every 15 minutes, a `client-detached` hook additionally saves the moment Ghostty quits (including the automatic quit during macOS shutdown), and the environment auto-restores when the tmux server starts. The launchd agent above makes that last step self-healing: the server runs under launchd rather than any terminal's process tree, starts at login, and is restarted after any kill — where the auto-restore brings every session back. Combined with the zshrc auto-start (§9: quick-terminal surfaces own the `quick`/`quick-N` session namespace, regular surfaces adopt/create the rest), quitting Ghostty or rebooting restores every session — each surface opened after a restart re-attaches one. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
+Session persistence: the coordinator serializes every save under a full-duration kernel lock and publishes a timestamped layout, pane-content archive, and assistant-session map as one generation in `~/.local/share/tmux/resurrect/`. It saves every 15 minutes and on client detach, retains the newest 96 complete generations, ages unkeyed legacy layouts after 30 days while preserving the newest five, and repairs interrupted publications. Saves remain paused until startup restore verifies exact session/window/pane identity; pane cwd differences are recorded as non-gating diagnostics. Ghostty waits up to 10 seconds for an attachable server and, when a persistence operation holds the lock, up to another 60 seconds to reserve a session; expiry falls back to a plain shell. A completed degraded restore remains attachable while saves stay paused. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
 
-Panes whose command starts with `npm start` are relaunched verbatim on restore (`@resurrect-processes`, additive to resurrect's default whitelist of vim/less/top/…). On top of the layout, panes running **Claude Code or Codex CLI get their conversations resumed**: `tmux/assistant-resurrect/` (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) hooks resurrect's save to record each pane's assistant session ID (both assistants via one `session-track.sh <tool>` SessionStart hook — registered in `.claude/settings.json` for Claude and `.codex/hooks.json` for Codex, see §15), and hooks resurrect's restore to relaunch that ID in the restored pane. Codex uses `resume-codex.sh <id>` so a successful startup update retries the same ID with the new binary. When no hook record exists, save falls back per assistant: Claude to the newest transcript for the cwd (same semantics as `claude --continue`), Codex to its `~/.codex/state_*.sqlite` thread DB (opened `immutable` since the running Codex app-server holds the file).
+Health and recovery: `~/.shell-setup/tmux-persistence.sh status` reports the current gate and log path. A red tmux status warning means saves are paused or the last save failed. For an intentional topology collapse, use `~/.shell-setup/tmux-persistence.sh restore --accept-risk`; after inspecting a degraded live restore, use `~/.shell-setup/tmux-persistence.sh acknowledge`. To roll back, repoint `~/.local/share/tmux/resurrect/last` at an older managed `tmux_resurrect_*.txt` and restore normally; its keyed sidecars are staged automatically. Unkeyed layouts predating the coordinator are not restorable and are pruned by age.
+
+Panes whose command starts with `npm start` are relaunched verbatim on restore (`@resurrect-processes`, additive to resurrect's default whitelist of vim/less/top/…). On top of the layout, panes running **Claude Code or Codex CLI get their conversations resumed**: the coordinator invokes `tmux/assistant-resurrect/` (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) to record each pane's assistant session ID and relaunch that ID in the restored pane. SessionStart tracking uses one `session-track.sh <tool>` hook registered in `.claude/settings.json` for Claude and `.codex/hooks.json` for Codex (see §15). Codex uses `resume-codex.sh <id>` so a successful startup update retries the same ID with the new binary. When no hook record exists, save falls back per assistant: Claude to the newest transcript for the cwd (same semantics as `claude --continue`), Codex to its `~/.codex/state_*.sqlite` thread DB (opened `immutable` since the running Codex app-server holds the file).
 
 ## 18. Post-Setup Verification
 
@@ -610,12 +823,17 @@ Confirm `claude` resolves to the native install (`which claude` →
 an npm global. Likewise `codex` → `~/.local/bin/codex` (a symlink into
 `~/.codex/packages/standalone/`), not a Homebrew cask or npm global.
 
-Confirm `~/.tmux.conf` and `~/.config/ghostty/config` are **symlinks into
-this repo** (`ls -l` shows `->`), not copies — a copy silently drifts from
-the repo on the next edit.
+Confirm `~/.tmux.conf`, `~/.config/ghostty/config`, and
+`~/.shell-setup/tmux-persistence.sh` are **symlinks into this repo** (`ls -l`
+shows `->`), not copies — a copy silently drifts from the repo on the next edit.
 
 Confirm the tmux server agent is loaded and running:
 
 ```bash
 launchctl print gui/$(id -u)/local.shell-setup.tmux-server | grep -E "state|pid"
+command -v python3
+command -v jq
+command -v sqlite3
+~/.shell-setup/tmux-persistence.sh wait-ready
+~/.shell-setup/tmux-persistence.sh status
 ```

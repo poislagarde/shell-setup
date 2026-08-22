@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# tmux-resurrect post-restore hook (@resurrect-hook-post-restore-all): read
-# the assistant-sessions.json sidecar written by save.sh and relaunch each
-# saved assistant in its restored pane.
+# Persistence-coordinator restore helper: read the staged
+# assistant-sessions.json sidecar written by save.sh and relaunch each saved
+# assistant in its restored pane.
 #
 # The relaunch is typed into the pane's shell with send-keys (the same
 # mechanism resurrect uses for its own process restores), NOT exec'd

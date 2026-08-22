@@ -196,12 +196,12 @@ tm() {
 # tab/pane only detaches its session, ready for the next surface of the
 # same kind to re-adopt; kill sessions you're done with
 # (`tmux kill-session -t name`) or resurrect will persist them forever.
-# Paired with tmux-resurrect/continuum in tmux.conf, this is what makes
-# quitting Ghostty or rebooting the Mac non-destructive — the launchd agent
-# (local.shell-setup.tmux-server, §17) boots the tmux server at login, continuum
-# restores ALL saved sessions (detached), and each Ghostty surface re-adopts
-# one of them. (Without the agent, the first shell boots the server instead —
-# the cold-boot branches below.) Guards:
+# Paired with tmux-resurrect and the persistence coordinator in tmux.conf,
+# this makes quitting Ghostty or rebooting non-destructive. The launchd agent
+# boots and restores the server; each Ghostty surface waits up to 10 seconds
+# for verified readiness, then up to 60 seconds to reserve a session if a save
+# is finishing. A failed or deliberately booted-out agent leaves a usable plain
+# shell. Guards:
 #   -o interactive — defensive; .zshrc shouldn't load otherwise
 #   -z $TMUX       — don't nest inside an existing session
 #   TERM_PROGRAM   — Ghostty only (leaves VS Code's terminal, ssh, etc. alone)
@@ -213,41 +213,38 @@ tm() {
 # (#{session_attached} is the attached-client COUNT, hence ==0) sessions in
 # or out of the quick namespace; the m/r flag is an anchored regex match, so
 # a session named "quicknotes" counts as regular, not quick. -F prints just
-# the name, robust to names with spaces. Session targets use tmux's `=name`
+# the name, robust to names with spaces. The coordinator reserves or creates
+# one session under a bounded lock, so Ghostty surfaces released together cannot
+# attach to the same detached session. A completed degraded restore remains
+# attachable while its save gate stays closed. Session targets use tmux's `=name`
 # exact-match prefix and MUST stay quoted: a bare `=word` triggers zsh's
-# =-expansion (command-path lookup) and errors out.
+# =-expansion (command-path lookup) and errors out. The automatic attach uses
+# explicit canonical `-N -L default` selector, so inherited socket variables
+# cannot redirect it and it cannot start a competing server if launchd dies.
 if [[ -o interactive && -z "$TMUX" && "$TERM_PROGRAM" == "ghostty" ]]; then
-  if [[ -n "$GHOSTTY_QUICK_TERMINAL" ]]; then
-    _tmux_detached=$(tmux list-sessions \
-      -f '#{&&:#{==:#{session_attached},0},#{m/r:^quick(-[0-9]+)?$,#{session_name}}}' \
-      -F '#{session_name}' 2>/dev/null | sort -V | head -n 1)
-    if [[ -n "$_tmux_detached" ]]; then
-      tmux attach-session -t "=$_tmux_detached"
-    elif ! tmux has-session -t '=quick' 2>/dev/null; then
-      # Also the cold-boot path: this boots the server, continuum restores
-      # all saved sessions, and -A attaches the restored "quick".
-      tmux new-session -A -s quick
+  _tmux_persistence="$HOME/.shell-setup/tmux-persistence.sh"
+  if [[ ! -x "$_tmux_persistence" ]]; then
+    echo "tmux persistence helper is unavailable; continuing in a plain shell." >&2
+  elif "$_tmux_persistence" client-ready; then
+    [[ -n "$GHOSTTY_QUICK_TERMINAL" ]] && _tmux_kind=quick || _tmux_kind=regular
+    if _tmux_claim=$("$_tmux_persistence" claim "$_tmux_kind" "$$"); then
+      IFS=$'\t' read -r _tmux_target _tmux_token <<<"$_tmux_claim"
+      env -u TMUX -u TMUX_PANE -u TMUX_TMPDIR \
+        tmux -N -L default attach-session -t "=$_tmux_target"
+      _tmux_attach_status=$?
+      "$_tmux_persistence" release-claim "$_tmux_target" "$_tmux_token" >/dev/null 2>&1 || true
+      if (( _tmux_attach_status != 0 )); then
+        echo "tmux became unavailable; continuing in a plain shell." >&2
+      fi
     else
-      _tmux_n=2
-      while tmux has-session -t "=quick-$_tmux_n" 2>/dev/null; do
-        (( _tmux_n++ ))
-      done
-      tmux new-session -s "quick-$_tmux_n"
+      _tmux_claim_status=$?
+      if (( _tmux_claim_status == 75 )); then
+        echo "tmux persistence stayed busy through the bounded reservation wait; continuing in a plain shell." >&2
+      else
+        echo "no tmux session could be reserved; continuing in a plain shell." >&2
+      fi
     fi
-    unset _tmux_detached _tmux_n
-  else
-    _tmux_detached=$(tmux list-sessions \
-      -f '#{&&:#{==:#{session_attached},0},#{?#{m/r:^quick(-[0-9]+)?$,#{session_name}},0,1}}' \
-      -F '#{session_name}' 2>/dev/null | head -n 1)
-    if [[ -n "$_tmux_detached" ]]; then
-      tmux attach-session -t "=$_tmux_detached"
-    elif ! tmux has-session -t '=main' 2>/dev/null; then
-      # Also the cold-boot path: this boots the server, continuum restores
-      # all saved sessions, and -A attaches the restored "main".
-      tmux new-session -A -s main
-    else
-      tmux new-session
-    fi
-    unset _tmux_detached
+    unset _tmux_kind _tmux_claim _tmux_claim_status _tmux_target _tmux_token _tmux_attach_status
   fi
+  unset _tmux_persistence
 fi
