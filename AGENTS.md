@@ -96,6 +96,16 @@ tmux -L cc-test ...                                       # more test commands
 tmux -L cc-test kill-server                               # clean up everything
 ```
 
+After changing the persistence coordinator, its hooks, or its launchd wiring,
+run both isolated suites:
+
+```bash
+tmux/tests/tmux-persistence-test.sh
+tmux/tests/tmux-resurrect-contract-test.sh
+```
+
+The contract suite reports `SKIP` when the installed Resurrect plugin is absent.
+
 Against the default server, stick to read-only commands (`list-sessions`,
 `list-panes`, `list-keys`, `display-message -p`, `show-options`). Reloading
 config (`tmux source-file ~/.tmux.conf`) and `unbind`ing a stale binding are
@@ -103,15 +113,28 @@ fine. Don't kill real sessions unless the user explicitly asks — and even then
 check what's running in them first (`list-panes` + child processes).
 
 The default server runs under launchd (`local.shell-setup.tmux-server`, KeepAlive), so
-`kill-server` is a restart: launchd relaunches the server and continuum
-auto-restores every saved session. To actually stop it, use
+`kill-server` is a restart: launchd relaunches the server and the persistence
+coordinator restores the latest verified generation. To actually stop it, use
 `launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server`; re-enable with
 `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist`.
 
 If real state does get damaged: tmux-resurrect keeps timestamped snapshots in
 `~/.local/share/tmux/resurrect/` — repoint the `last` symlink at a pre-damage
-snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
-`scripts/restore.sh`).
+snapshot and run the guarded restore (`prefix + Ctrl-r` or
+`~/.shell-setup/tmux-persistence.sh restore`). Managed snapshots stage their
+matching pane-content and assistant-session companions automatically. Unkeyed
+snapshots predating the coordinator are not restorable — they have no
+companions that can be paired safely — so they are sent to review and pruned
+by age. Never invoke the plugin's upstream `scripts/restore.sh` directly; that
+bypasses locking, companion staging, and restore verification.
+
+For a red persistence warning, run
+`~/.shell-setup/tmux-persistence.sh status`. A `needs-review` state requires
+choosing another snapshot or `restore --accept-risk`; a `degraded` state
+requires inspecting `~/.local/state/tmux-persistence/last-restore.diff` before
+`~/.shell-setup/tmux-persistence.sh acknowledge`. Completed degraded restores
+remain attachable, but saves stay paused. A save failure leaves the prior
+generation current; inspect the reported log and retry the save.
 
 ### Where each file maps
 
@@ -123,6 +146,7 @@ snapshot and run resurrect's restore (`prefix + Ctrl-r` or the plugin's
 | tmux assistant-activity | `tmux/assistant-activity/` | `~/.shell-setup/assistant-activity` (symlink to the repo dir; edit either; one place) |
 | tmux pane border | `tmux/pane-border-format.conf` (generated — edit `tmux/build-pane-border-format.sh` and re-run) | `~/.shell-setup/pane-border-format.conf` (symlink to the repo file; `source-file`d by `tmux.conf`) |
 | tmux status refresh | `tmux/status-refresh.sh` | `~/.shell-setup/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
+| tmux persistence | `tmux/tmux-persistence.sh` | `~/.shell-setup/tmux-persistence.sh` (symlink to the repo file; used by tmux hooks, keybindings, zsh readiness, and the launchd agent) |
 | tmux server agent | `tmux/tmux-server-agent.sh` | `~/.shell-setup/tmux-server-agent.sh` (symlink to the repo file; run by the launchd agent) |
 | tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
 | Claude Code | `.claude/` (settings.json, commands) | `~/.claude/` |

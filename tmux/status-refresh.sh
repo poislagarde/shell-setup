@@ -20,10 +20,7 @@
 #    sidesteps both problems.
 #
 #    We only tick — and so only force redraws — while at least one window is
-#    working or waiting. While idle we just poll cheaply and force nothing, so
-#    the #(continuum_save.sh) on status-right keeps running only at the 15s
-#    status-interval. It runs more often only during active agent work, when the
-#    machine is busy anyway and the extra ~40ms/s is in the noise.
+#    working or waiting. While idle we just poll cheaply and force nothing.
 #
 # 3. Feed the pane-border bar's git segments: every GIT_EVERY seconds, sweep
 #    all panes and store each pane's branch name and dirty flag in the @branch
