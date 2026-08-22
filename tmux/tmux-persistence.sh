@@ -1084,12 +1084,38 @@ save_command() {
 	save_locked "$seed" "$quiet"
 }
 
+# Resurrect interpolates a per-pane command captured from ps into each pane
+# record, and that capture prints one line per matching process: a pane whose
+# shell has more than one child, or whose pid is a digit-prefix of another
+# process's parent pid, arrives with its record split across lines. Only a pane
+# record ends in free text, so a line carrying no record type of its own is the
+# tail of the pane line above it.
+normalize_layout() {
+	awk '
+		/^[[:space:]]*$/ { next }
+		/^(pane|window|state|grouped_session)\t/ {
+			if (held != "") print held
+			held = $0
+			next
+		}
+		{
+			if (held ~ /^pane\t/) { held = held " " $0; next }
+			if (held != "") { print held; held = "" }
+			print
+		}
+		END { if (held != "") print held }
+	' "$1"
+}
+
 post_save_layout_hook() {
-	local source=${1:-} destination=${TMUX_PERSISTENCE_STAGED_LAYOUT:-}
+	local source=${1:-} destination=${TMUX_PERSISTENCE_STAGED_LAYOUT:-} tmp
 	[ "${TMUX_PERSISTENCE_LOCK_HELD:-}" = 1 ] || return 1
 	assert_managed_socket || return 1
-	[ -n "$source" ] && [ -n "$destination" ] && layout_valid "$source" || return 1
-	atomic_copy "$source" "$destination" && layout_valid "$destination" || return 1
+	[ -n "$source" ] && [ -n "$destination" ] && [ -f "$source" ] || return 1
+	tmp=$destination.tmp.$$
+	normalize_layout "$source" >"$tmp" || { rm -f "$tmp"; return 1; }
+	layout_valid "$tmp" || { rm -f "$tmp"; return 1; }
+	mv -f "$tmp" "$destination" || { rm -f "$tmp"; return 1; }
 	printf '%s\n' "$source" >"$destination.source"
 }
 
