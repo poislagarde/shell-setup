@@ -106,6 +106,9 @@ tmux/tests/tmux-resurrect-contract-test.sh
 
 The contract suite reports `SKIP` when the installed Resurrect plugin is absent.
 
+After changing `tmux/status-refresh.sh` or the activity hooks, run
+`tmux/tests/status-refresh-test.sh` — also confined to a private socket.
+
 Against the default server, stick to read-only commands (`list-sessions`,
 `list-panes`, `list-keys`, `display-message -p`, `show-options`). Reloading
 config (`tmux source-file ~/.tmux.conf`) and `unbind`ing a stale binding are

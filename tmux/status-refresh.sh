@@ -8,7 +8,8 @@
 #    assistant-activity hooks write; a pane whose assistant reports no state at
 #    all falls back to the pane title's spinner glyph, which is all a session
 #    predating the hooks — or one whose build stopped emitting glyphs — can
-#    offer. Doing the aggregation here keeps the formats a plain three-way
+#    offer. That glyph also overrules an "input" mark that outlived its
+#    prompt. Doing the aggregation here keeps the formats a plain three-way
 #    color choice instead of a per-pane loop repeated in every color slot.
 #
 # 2. Animate the breathe by ticking @pulse (working) and @pulse2 (waiting on
@@ -150,7 +151,21 @@ scan() {
 				clear_pane "$id"
 				level=0
 			elif [ "$state" = input ]; then
-				level=2
+				# A turning spinner in the title means the assistant is
+				# working, not blocked on you — Codex fires PermissionRequest
+				# for decisions it resolves itself and has no hook for the
+				# resolution, so the mark outlives the prompt. Demote the
+				# record itself, not just this frame, so the busy TTL governs
+				# it from here even if the turn ends with no Stop hook.
+				if [ "$glyph" = 1 ]; then
+					[ -n "$now" ] || now=$(date +%s)
+					tmux set -p -t "$id" @assistant-state busy \; \
+						set -p -t "$id" @assistant-state-at "$now" \; \
+						set -up -t "$id" @assistant-pending 2>/dev/null
+					level=1
+				else
+					level=2
+				fi
 			else
 				[ -n "$now" ] || now=$(date +%s)
 				if [ $((now - ${at:-0})) -ge "$BUSY_TTL" ] && ! tool_running "$apid"; then
