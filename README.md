@@ -191,7 +191,7 @@ Window tabs color themselves by what the assistant running in them is doing, so 
 
 Switching to a window also selects the pane that wants you: the pane most recently blocked on input, or failing that the one that most recently finished a turn. The mark is consumed on arrival, so going back to a window later restores whichever pane you last used there.
 
-State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/set-state.sh`, registered in `.claude/settings.json` and `.codex/hooks.json`), which record it in per-pane tmux options. A pane whose assistant reports nothing falls back to the spinner glyph in its title. A "working" claim expires after 5 minutes with no hook event unless the assistant still has a tool running, and any state clears when the assistant process goes away.
+State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/set-state.sh`, registered in `.claude/settings.json` and `.codex/hooks.json`), which record it in per-pane tmux options. A pane whose assistant reports nothing falls back to the spinner glyph in its title, and that glyph also overrules a "waiting on you" mark the assistant never resolved — Codex reports the request but not its outcome. A "working" claim expires after 5 minutes with no hook event unless the assistant still has a tool running, and any state clears when the assistant process goes away. `tmux/tests/status-refresh-test.sh` covers the aggregation on a private socket.
 
 ### Misc defaults worth knowing
 
