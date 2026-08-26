@@ -113,7 +113,10 @@ Against the default server, stick to read-only commands (`list-sessions`,
 `list-panes`, `list-keys`, `display-message -p`, `show-options`). Reloading
 config (`tmux source-file ~/.tmux.conf`) and `unbind`ing a stale binding are
 fine. Don't kill real sessions unless the user explicitly asks — and even then,
-check what's running in them first (`list-panes` + child processes).
+check what's running in them first (`list-panes` + child processes). Target a
+numerically-named session by its id (`-t '$5'`), never by name (`-t '=5'`):
+the name form resolves to the current session, so the check inspects the
+wrong session's panes.
 
 The default server runs under launchd (`local.shell-setup.tmux-server`, KeepAlive), so
 `kill-server` is a restart: launchd relaunches the server and the persistence
