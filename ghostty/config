@@ -41,6 +41,13 @@ quick-terminal-space-behavior = move
 # content/processes come from tmux-resurrect.
 window-save-state = always
 
+# No blank window at launch — ⌥Space is the way in. A startup window's shell
+# has no GHOSTTY_QUICK_TERMINAL, so it claims a *regular* tmux session and the
+# quick session holding your work stays detached behind it. macOS keeps Ghostty
+# running with no windows (quit-after-last-window-closed defaults to false), so
+# the global hotkey and ⌘N still work, and saved windows still restore.
+initial-window = false
+
 
 # --- Appearance ---
 # Semi-transparent background (~10% transparency). Ghostty's scale is the
