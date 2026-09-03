@@ -43,9 +43,9 @@ zle-insert-space() { LBUFFER+=' ' }
 zle -N zle-insert-space
 bindkey '^[[27;2;32~' zle-insert-space
 
-# Cmd+Opt+arrow → tmux pane navigation. Ghostty sends these modifier-11
-# sequences (^[[1;11{A,B,C,D}) directly; bind them to a no-op outside tmux so
-# nothing prints. Inside tmux they never reach zsh because tmux catches them.
+# Cmd+Opt+arrow → herdr/tmux pane navigation. Ghostty sends these modifier-11
+# sequences (^[[1;11{A,B,C,D}) directly; bind them to a no-op in a bare shell so
+# nothing prints. Inside herdr or tmux the multiplexer catches them first.
 zle-noop() { }
 zle -N zle-noop
 bindkey '^[[1;11A' zle-noop
@@ -174,77 +174,3 @@ tm() {
   done
   return 1  # reached on EOF (Ctrl+D) — nothing picked
 }
-
-# Ghostty shells live inside tmux. Two attach policies, split on the
-# GHOSTTY_QUICK_TERMINAL=1 env var (Ghostty ≥1.3 sets it in quick-terminal
-# shells; splits created inside the quick terminal inherit it only on builds
-# NEWER than 1.3.1 — the newSplit() override landed on main after the 1.3.1
-# release, so on 1.3.1 a Ghostty split in the quick terminal lacks the var
-# and joins the regular namespace below; use tmux splits there instead,
-# which also survive quits — Ghostty doesn't save quick-terminal layout):
-#   - Quick terminal → owns the "quick" namespace: quick, quick-2, quick-3,
-#     … Each quick-terminal surface adopts the lowest-numbered detached
-#     quick* session (sort -V orders "quick" before "quick-2" before
-#     "quick-10"), so the first summon always gets the scratchpad back and
-#     a Ghostty split inside the quick terminal gets its own quick-N
-#     instead of mirroring the first pane. No detached one → create "quick"
-#     if it's missing, else mint the next free quick-N.
-#   - Regular windows/tabs/panes → same dance outside the quick namespace:
-#     adopt the first detached non-quick* session; otherwise create "main"
-#     if it's missing, else a fresh auto-numbered session.
-# Surfaces therefore never mirror — each gets its own session. Closing a
-# tab/pane only detaches its session, ready for the next surface of the
-# same kind to re-adopt; kill sessions you're done with
-# (`tmux kill-session -t name`) or resurrect will persist them forever.
-# Paired with tmux-resurrect and the persistence coordinator in tmux.conf,
-# this makes quitting Ghostty or rebooting non-destructive. The launchd agent
-# boots and restores the server; each Ghostty surface waits up to 10 seconds
-# for verified readiness, then up to 60 seconds to reserve a session if a save
-# is finishing. A failed or deliberately booted-out agent leaves a usable plain
-# shell. Guards:
-#   -o interactive — defensive; .zshrc shouldn't load otherwise
-#   -z $TMUX       — don't nest inside an existing session
-#   TERM_PROGRAM   — Ghostty only (leaves VS Code's terminal, ssh, etc. alone)
-# Deliberately NOT `exec`: detaching (prefix+d) falls back to this plain zsh
-# instead of closing the surface — that's also the escape hatch when you want
-# a vanilla non-tmux shell. From there `tmux attach -t name` mirrors a
-# session onto a second surface on purpose, which the auto-attach never
-# does. The list-sessions -f filters (need tmux ≥3.2) match detached
-# (#{session_attached} is the attached-client COUNT, hence ==0) sessions in
-# or out of the quick namespace; the m/r flag is an anchored regex match, so
-# a session named "quicknotes" counts as regular, not quick. -F prints just
-# the name, robust to names with spaces. The coordinator reserves or creates
-# one session under a bounded lock, so Ghostty surfaces released together cannot
-# attach to the same detached session. A completed degraded restore remains
-# attachable while its save gate stays closed. Session targets use tmux's `=name`
-# exact-match prefix and MUST stay quoted: a bare `=word` triggers zsh's
-# =-expansion (command-path lookup) and errors out. The automatic attach uses
-# explicit canonical `-N -L default` selector, so inherited socket variables
-# cannot redirect it and it cannot start a competing server if launchd dies.
-if [[ -o interactive && -z "$TMUX" && "$TERM_PROGRAM" == "ghostty" ]]; then
-  _tmux_persistence="$HOME/.shell-setup/tmux-persistence.sh"
-  if [[ ! -x "$_tmux_persistence" ]]; then
-    echo "tmux persistence helper is unavailable; continuing in a plain shell." >&2
-  elif "$_tmux_persistence" client-ready; then
-    [[ -n "$GHOSTTY_QUICK_TERMINAL" ]] && _tmux_kind=quick || _tmux_kind=regular
-    if _tmux_claim=$("$_tmux_persistence" claim "$_tmux_kind" "$$"); then
-      IFS=$'\t' read -r _tmux_target _tmux_token <<<"$_tmux_claim"
-      env -u TMUX -u TMUX_PANE -u TMUX_TMPDIR \
-        tmux -N -L default attach-session -t "=$_tmux_target"
-      _tmux_attach_status=$?
-      "$_tmux_persistence" release-claim "$_tmux_target" "$_tmux_token" >/dev/null 2>&1 || true
-      if (( _tmux_attach_status != 0 )); then
-        echo "tmux became unavailable; continuing in a plain shell." >&2
-      fi
-    else
-      _tmux_claim_status=$?
-      if (( _tmux_claim_status == 75 )); then
-        echo "tmux persistence stayed busy through the bounded reservation wait; continuing in a plain shell." >&2
-      else
-        echo "no tmux session could be reserved; continuing in a plain shell." >&2
-      fi
-    fi
-    unset _tmux_kind _tmux_claim _tmux_claim_status _tmux_target _tmux_token _tmux_attach_status
-  fi
-  unset _tmux_persistence
-fi

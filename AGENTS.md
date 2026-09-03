@@ -25,14 +25,17 @@ home copy means the change is lost on the next bootstrap. Always do both, then
 tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 ~/.tmux.conf`, `source ~/.zshrc`).
 
-> **Keep the README keybind cheatsheets in sync.** `README.md` has "tmux
-> keybinds" and "Ghostty keybinds" tables. Whenever you add, remove, or change a
-> binding in `tmux/tmux.conf` (`bind` / `bind -n` lines) or `ghostty/config`
-> (`keybind = …` lines), update the matching README table in the same change —
-> it's a third place the edit has to land. Skip the pure CSI-forwarding Ghostty
-> keybinds (e.g. `keybind = alt+shift+s=csi:27;4;115~`): those are plumbing that
-> *implements* a tmux chord, not user-facing shortcuts, so they belong in the
-> tmux table (as the chord they produce), not the Ghostty one.
+> **Keep the README keybind cheatsheets in sync.** `README.md` has "herdr
+> keybinds", "tmux keybinds" and "Ghostty keybinds" tables. Whenever you add,
+> remove, or change a binding in `herdr/config.toml` (`[keys]` /
+> `[[keys.command]]`), `tmux/tmux.conf` (`bind` / `bind -n` lines) or
+> `ghostty/config` (`keybind = …` lines), update the matching README table in
+> the same change — it's a third place the edit has to land. Skip the pure
+> CSI-forwarding Ghostty keybinds (e.g. `keybind = super+alt+left=csi:1;11D`):
+> those are plumbing that *implements* a herdr/tmux chord, not user-facing
+> shortcuts, so they belong in those tables (as the chord they produce), not the
+> Ghostty one. herdr's input parser does not decode `csi:27;<mod>;<key>~`
+> forwarders, so don't add any.
 
 > **Note:** most home files are **symlinks** back into this repo (or source it),
 > so editing the repo file *is* editing the home file — there's only one place
@@ -82,11 +85,11 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 
 **Never run mutating tmux commands (`new-session`, `kill-session`, `kill-server`,
 `send-keys`, …) against the default server.** The user's entire working
-environment lives in it — the zshrc auto-attach puts every Ghostty surface in
-tmux, so session names used in tests can collide with real ones. (This has
-happened: a test `new-session -s quick` failed with "duplicate session" because
-the real quick-terminal session had that name, and the cleanup `kill-session`
-destroyed the user's whole environment, including the running assistant panes.)
+environment lives in it, so session names used in tests can collide with real
+ones. (This has happened: a test `new-session -s quick` failed with "duplicate
+session" because the real quick-terminal session had that name, and the cleanup
+`kill-session` destroyed the user's whole environment, including the running
+assistant panes.)
 
 Run experiments on a throwaway server on a separate socket instead:
 
@@ -147,6 +150,8 @@ generation current; inspect the reported log and retry the save.
 | Tool | Repo file | Home file |
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
+| herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |
+| herdr Claude launcher | `herdr/claude-pane.sh` | `~/.shell-setup/claude-pane.sh` (symlink to the repo file; run by the `[[keys.command]]` bindings) |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
 | tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.shell-setup/assistant-resurrect` (symlink to the repo dir; edit either; one place) |
 | tmux assistant-activity | `tmux/assistant-activity/` | `~/.shell-setup/assistant-activity` (symlink to the repo dir; edit either; one place) |

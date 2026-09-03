@@ -31,14 +31,11 @@ quick-terminal-autohide = false
 # Follow the active macOS Space instead of staying pinned: move | remain | move-and-attach
 quick-terminal-space-behavior = move
 
-
 # --- Window restore ---
 # Save window state (positions, sizes, tabs, splits, and — via shell
 # integration — working directories) on every exit, not just forced
 # terminations, and restore it on launch. macOS only. Restored surfaces get
-# fresh shells; the zshrc tmux auto-attach then re-adopts the restored
-# (detached) tmux sessions one per surface, so layout comes from Ghostty and
-# content/processes come from tmux-resurrect.
+# fresh shells.
 window-save-state = always
 
 # No blank window at launch — ⌥Space is the way in. A startup window's shell
@@ -48,11 +45,10 @@ window-save-state = always
 # the global hotkey and ⌘N still work, and saved windows still restore.
 initial-window = false
 
-
 # --- Appearance ---
-# Semi-transparent background (~10% transparency). Ghostty's scale is the
+# Slightly translucent background (~5% transparency). Ghostty's scale is the
 # inverse: 1.0 = opaque, 0.0 = invisible.
-background-opacity = 0.9
+background-opacity = 0.95
 
 # Do NOT set `font-family` here. The tmux pane-border glyphs (branch U+E725,
 # folder U+F07C) come from Symbols Nerd Font Mono (installed by /shell-setup via
@@ -70,13 +66,11 @@ font-size = 12
 font-thicken = true
 window-colorspace = srgb
 
-
 # --- Mouse behavior ---
 # Deliberately NOT setting mouse-shift-capture: Shift must stay Ghostty's
 # mouse-reporting bypass so Cmd+Shift+click opens links while tmux owns the
 # mouse. The tmux pane/window drag-swaps use Ctrl instead (C- bindings),
 # which the mouse protocol forwards to tmux on its own.
-
 
 # --- Keyboard behavior ---
 # Treat the Option key as Alt so `alt+*` keybinds (and Meta-prefixed shell
@@ -90,46 +84,15 @@ macos-option-as-alt = true
 # type `"`). tmux normalizes Shift+Space to a plain space instead — see the
 # `bind -n S-Space` line in ~/.tmux.conf.
 
-# Send physical ANSI backquote chords directly to tmux as modified-key
-# sequences, bypassing the macOS dead-key text path.
-keybind = alt+Backquote=csi:27;3;96~
-keybind = alt+shift+Backquote=csi:27;4;96~
-
-# Send Alt+Shift+= and Alt+Shift+- as CSI 27 modified-key sequences so tmux
-# matches them as M-S-= / M-S-- (used for split-window). Default forwarding
-# gives ^[+ / ^[_, which tmux's extended-keys mode doesn't reliably map back
-# to the M-S- form the bindings expect.
-keybind = alt+shift+==csi:27;4;61~
-keybind = alt+shift+-=csi:27;4;45~
-
-# Ctrl+Alt(+Shift) variants → forward as CSI 27 sequences so tmux matches them
-# as C-M-= / C-M-S-= / C-M-S-- / C-M-p — the "open Claude Code" window/split
-# binds (see ~/.tmux.conf). Modifier math for CSI 27;<mod>;<code>~ is
-# mod = 1 + Shift(1) + Alt(2) + Ctrl(4): Ctrl+Alt = 7, Ctrl+Alt+Shift = 8.
-# Codes: '=' 61, '-' 45, 'p' 112. Same explicit-forwarding reason as the
-# alt+shift chords above — default forwarding wouldn't map back to the C-M- form.
-keybind = ctrl+alt+==csi:27;7;61~
-keybind = ctrl+alt+shift+==csi:27;8;61~
-keybind = ctrl+alt+shift+-=csi:27;8;45~
-keybind = ctrl+alt+p=csi:27;7;112~
-
-# Alt+Shift+S → CSI 27 modified-key sequence (code 115 = 's', modifier 4 =
-# Shift+Alt) so tmux matches it as M-S-s for the session picker (choose-tree,
-# see ~/.tmux.conf). Without this explicit forwarding the chord doesn't reach
-# tmux in the M-S- form the binding expects — same fix as the = / - chords
-# above, just for a letter.
-keybind = alt+shift+s=csi:27;4;115~
-
 # Shift+Enter — send the same ESC+Enter byte sequence as Alt+Enter. Codex TUI
 # treats that as "insert newline" (it ignores the CSI 27 modified-key
 # encoding, so don't switch to that form). zsh binds this sequence back to a
 # literal newline too, so shells get the same multi-line editing behavior.
 keybind = shift+enter=text:\x1b\x0d
 
-
 # --- Pane management ---
 # Keep the custom Ghostty-native split, focus, and zoom bindings disabled;
-# tmux owns these chords.
+# herdr/tmux own these chords.
 # keybind = ctrl+shift+==new_split:right
 # keybind = ctrl+shift+-=new_split:down
 # keybind = performable:super+alt+left=goto_split:left
@@ -143,20 +106,16 @@ keybind = shift+enter=text:\x1b\x0d
 #   ⌘] / ⌘[  → goto_split:next/previous
 #   ⌘D / ⌘⇧D → also bound to new_split:right / new_split:down (bonus paths)
 
-# ⌘⌥+arrow → send modifier-11 arrow sequences directly to tmux, whose user-key
-# bindings move focus spatially. Outside tmux, ~/.zshrc swallows these sequences.
+# ⌘⌥+arrow → send modifier-11 arrow sequences; herdr and tmux both bind them to
+# spatial pane focus. In a bare shell, ~/.zshrc swallows these sequences.
 keybind = super+alt+left=csi:1;11D
 keybind = super+alt+right=csi:1;11C
 keybind = super+alt+up=csi:1;11A
 keybind = super+alt+down=csi:1;11B
 
-# ⌥⇧⏎ → send the modified Enter sequence directly to tmux for pane zoom.
-keybind = alt+shift+enter=csi:27;4;13~
-
 # ⌘⇧T is bound by default to `undo` (reopen the most recently closed tab/
 # split). Uncomment to rebind to `new_tab` instead:
 # keybind = super+shift+t=new_tab
-
 
 # --- Natural Text Editing ---
 # Ghostty already binds most of these by default; the ones below cover the
