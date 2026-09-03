@@ -192,21 +192,12 @@ The sourced `zsh/zshrc` sets up Oh My Zsh (theme + shell-setup's required plugin
 points `NVM_DIR` at `~/.nvm`, wires Homebrew + user site-functions completions
 onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, the
 `claude` alias, and the `tm` session helper (`tm <name>` attaches/creates a
-session; plain `tm` is a numbered picker marking sessions attached/detached
-— inside tmux, Alt+Shift+S opens the equivalent choose-tree, see §17). Keyboard tweaks: `^U` → `backward-kill-line` (macOS
-Cmd+Backspace semantics), Shift+Enter as Codex-compatible Esc+Enter,
-Shift+Space via the Ghostty/tmux CSI 27 plumbing, Cmd+Opt+arrow edge-fallthrough no-ops, and a
-precmd that re-asserts a blinking thin-bar cursor inside tmux. It ends with a
-guarded tmux auto-attach for interactive Ghostty shells: the quick terminal (detected
-via `GHOSTTY_QUICK_TERMINAL=1`, Ghostty ≥1.3; splits inside it inherit the
-var only on builds newer than 1.3.1) owns
-the `quick`/`quick-N` session namespace — each quick-terminal surface adopts
-the lowest-numbered detached `quick*` session or mints the next free
-`quick-N`; regular windows/tabs/panes do the same outside the namespace —
-adopt the first detached non-quick session, else create `main`, else a fresh
-auto-numbered session — so surfaces get distinct sessions instead of
-mirroring one. Pairs with §17's guarded Resurrect persistence so all
-sessions survive Ghostty quits and reboots.
+tmux session; plain `tm` is a numbered picker marking sessions attached/detached).
+Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics),
+Shift+Enter as Codex-compatible Esc+Enter, Shift+Space via the CSI 27 plumbing,
+Cmd+Opt+arrow no-ops for bare shells, and a precmd that re-asserts a blinking
+thin-bar cursor inside tmux. tmux does not auto-start: Ghostty shells stay plain
+until `herdr` or `tm` is run.
 
 Because the managed block lives at the end of `~/.zshrc`, the sourced file's
 scalar assignments (theme, `DISABLE_AUTO_TITLE`, etc.) win over anything
@@ -800,7 +791,26 @@ Health and recovery: `~/.shell-setup/tmux-persistence.sh status` reports the cur
 
 Panes whose command starts with `npm start` are relaunched verbatim on restore (`@resurrect-processes`, additive to resurrect's default whitelist of vim/less/top/…). On top of the layout, panes running **Claude Code or Codex CLI get their conversations resumed**: the coordinator invokes `tmux/assistant-resurrect/` (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) to record each pane's assistant session ID and relaunch that ID in the restored pane. SessionStart tracking uses one `session-track.sh <tool>` hook registered in `.claude/settings.json` for Claude and `.codex/hooks.json` for Codex (see §15). Codex uses `resume-codex.sh <id>` so a successful startup update retries the same ID with the new binary. When no hook record exists, save falls back per assistant: Claude to the newest transcript for the cwd (same semantics as `claude --continue`), Codex to its `~/.codex/state_*.sqlite` thread DB (opened `immutable` since the running Codex app-server holds the file).
 
-## 18. Post-Setup Verification
+## 18. Restore herdr Configuration
+
+Install herdr with its native installer (`~/.local/bin/herdr`, updated with
+`herdr update`), then symlink the config and the Claude launcher — symlinks,
+not copies, same reasoning as §16. The keybinds mirror the tmux chords so the
+same muscle memory works in both.
+
+```bash
+command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh
+mkdir -p ~/.config/herdr ~/.shell-setup
+ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
+ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
+herdr config check
+herdr status server >/dev/null 2>&1 && herdr server reload-config
+```
+
+The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
+file, reconcile its differences into the repo first, then re-symlink.
+
+## 19. Post-Setup Verification
 
 Run these checks and report results:
 
@@ -823,8 +833,8 @@ Confirm `claude` resolves to the native install (`which claude` →
 an npm global. Likewise `codex` → `~/.local/bin/codex` (a symlink into
 `~/.codex/packages/standalone/`), not a Homebrew cask or npm global.
 
-Confirm `~/.tmux.conf`, `~/.config/ghostty/config`, and
-`~/.shell-setup/tmux-persistence.sh` are **symlinks into this repo** (`ls -l`
+Confirm `~/.tmux.conf`, `~/.config/ghostty/config`, `~/.config/herdr/config.toml`,
+and `~/.shell-setup/tmux-persistence.sh` are **symlinks into this repo** (`ls -l`
 shows `->`), not copies — a copy silently drifts from the repo on the next edit.
 
 Confirm the tmux server agent is loaded and running:

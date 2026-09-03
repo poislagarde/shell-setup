@@ -14,14 +14,14 @@ The command lives at [`.claude/commands/shell-setup.md`](.claude/commands/shell-
 
 ## What it does
 
-Claude runs an 18-section checklist top to bottom, pausing for verification between sections. At a high level:
+Claude runs a 19-section checklist top to bottom, pausing for verification between sections. At a high level:
 
 - **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `gcloud-cli`, …).
 - **Node** — nvm pinned to `~/.nvm` (survives `brew upgrade`), latest LTS as `default`.
-- **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` that sources this repo's `zsh/zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, keyboard tweaks, and guarded tmux auto-attach that gives each Ghostty surface its own session) — so `git pull` updates the live shell.
+- **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` that sources this repo's `zsh/zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, and keyboard tweaks) — so `git pull` updates the live shell. tmux no longer auto-starts; `tm` attaches on demand.
 - **AWS** — official CLI installer + interactive SSO profile setup (`prod` / `prod-admin` / `dev`).
 - **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
-- **Dotfiles** — Claude Code (`.claude/`), Ghostty, and tmux configs; tmux-resurrect plus a guarded persistence coordinator keep sessions, layouts, scrollback, and Claude/Codex conversations across Ghostty quits and reboots.
+- **Dotfiles** — Claude Code (`.claude/`), Ghostty, herdr, and tmux configs; tmux-resurrect plus a guarded persistence coordinator keep sessions, layouts, scrollback, and Claude/Codex conversations across Ghostty quits and reboots.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -40,6 +40,9 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 └── hooks.json               # Codex lifecycle hooks (session tracking + activity indicator)
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
+herdr/
+├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
+└── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)
 ├── build-pane-border-format.sh          # generates the responsive pane-border-format (run after edits)
@@ -87,6 +90,8 @@ What the setup puts on your PATH, plus the shell helpers and aliases it defines 
 Also installed but used indirectly, not via their own command: **sanesidebuttons** (background app, runs at login — maps the mouse's side buttons to back/forward) and **session-manager-plugin** (lets the AWS CLI open a shell into EC2 without SSH: `aws ssm start-session --target <instance-id>`).
 
 ## tmux keybinds
+
+> Ghostty encodes the shifted Alt chords itself (no `csi:` forwarders, herdr needs them gone), so tmux binds both forms it may receive. If a chord fails, run `cat -v` in the pane, press it, and rebind what shows.
 
 Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** — Ghostty forwards Alt / Cmd+Opt keys into tmux, so they fire only when tmux owns the keyboard.
 
@@ -201,9 +206,51 @@ State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/
 | prefix, `:` | tmux command prompt |
 | prefix, `c` | New window (default; `Alt+=` is the custom shortcut) |
 
+## herdr keybinds
+
+herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but no longer auto-starts. The chords below mirror the tmux ones so muscle memory carries over, and herdr's own defaults stay active alongside (`prefix+?` lists everything). Prefix is `Ctrl+B`.
+
+### Tabs (tmux windows)
+
+| Keys | Action |
+| --- | --- |
+| `Alt+=` / prefix, `c` | New tab |
+| `Ctrl+Alt+=` | New tab running **Claude Code** (at `$HOME`) |
+| `Ctrl+Alt+p` | New tab running **Claude Code** in `$PROJECTS_DIR` |
+| `Alt+` `` ` `` / prefix, `n` | Next tab |
+| `Alt+Shift+` `` ` `` / prefix, `p` | Previous tab |
+| `Alt+1` … `Alt+9` / prefix, `1` … `9` | Jump to tab 1–9 |
+| prefix, `,` | Rename tab |
+| prefix, `&` | Close tab |
+
+### Panes (splits)
+
+| Keys | Action |
+| --- | --- |
+| `Alt+Shift+=` / prefix, `v` | Split right (side-by-side) |
+| `Alt+Shift+-` / prefix, `-` | Split down (stacked) |
+| `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
+| `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
+| `Cmd+Opt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
+| `Alt+Shift+Enter` / prefix, `z` | Zoom / unzoom active pane |
+| prefix, `x` | Close pane |
+| prefix, `[` | Copy mode (`q` to quit) |
+
+### Spaces (tmux sessions)
+
+| Keys | Action |
+| --- | --- |
+| `Alt+Shift+S` / prefix, `s` / prefix, `w` | **Space picker** |
+| `Hyper+1` … `Hyper+9` / prefix, `Shift+1` … `Shift+9` | Jump to space 1–9 (Hyper = Caps Lock via Karabiner = `Shift+Ctrl+Opt+Cmd`) |
+| `Hyper+]` / prefix, `)` | Next space |
+| `Hyper+[` / prefix, `(` | Previous space |
+| prefix, `$` | Rename space |
+| prefix, `d` / prefix, `q` | Detach (everything keeps running) |
+| prefix, `Shift+S` | herdr settings (moved off prefix, `s`) |
+
 ## Ghostty keybinds
 
-These act on Ghostty surfaces directly. Inside tmux, the Alt-based window/pane chords above take over (Ghostty forwards them); the Cmd-based ones below stay with Ghostty.
+These act on Ghostty surfaces directly. Inside herdr or tmux, the Alt-based tab/pane chords above take over; the Cmd-based ones below stay with Ghostty.
 
 ### Quick terminal & splits
 
