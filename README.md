@@ -138,7 +138,7 @@ tmux stays installed but nothing auto-attaches: start or join a session with `tm
 | Keys | Action |
 | --- | --- |
 | `Alt+Shift+S` | **Session picker** — `choose-tree`, each marked (attached)/(detached) |
-| `Backspace` (in picker) | Kill the highlighted session (asks y/n) |
+| `Backspace` (in any of the three pickers) | Kill the highlighted session (asks y/n) |
 | prefix, `s` | Session/window tree (default picker) |
 | prefix, `w` | Window picker across sessions |
 | prefix, `$` | Rename current session |
