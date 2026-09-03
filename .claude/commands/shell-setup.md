@@ -812,7 +812,7 @@ file, reconcile its differences into the repo first, then re-symlink.
 
 ## 19. Restore the Karabiner Hyper Key
 
-Caps Lock acts as Hyper (shift+ctrl+option+cmd) for the herdr space chords.
+Caps Lock acts as Hyper (shift+ctrl+option+cmd), a spare modifier for app chords.
 Karabiner-Elements is installed from its own installer (https://karabiner-elements.pqrs.org)
 and needs its Input Monitoring / driver approvals once in System Settings.
 `karabiner.json` holds other rules and device state, so the Hyper rule is
