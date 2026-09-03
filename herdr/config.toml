@@ -13,27 +13,29 @@ delivery = "system"
 name = "tokyo-night"
 auto_switch = false
 
-# Keybinds mirror the tmux chords in tmux/tmux.conf; each array keeps herdr's
-# default first. Shifted punctuation is bound in both forms the terminal may
+# Keybinds mirror tmux/tmux.conf with tmux windows <> herdr spaces and tmux
+# panes <> herdr tabs; each array keeps herdr's default first. tmux reads Cmd
+# as Meta, so Cmd and Alt chords land on the same tmux binding. Shifted punctuation is bound in both forms the terminal may
 # send (shift+key under the kitty keyboard protocol, the shifted character
 # otherwise). Keep the README "herdr keybinds" table in sync.
 [keys]
 settings = "prefix+shift+s"
 detach = ["prefix+q", "prefix+d"]
 workspace_picker = ["prefix+w", "prefix+s", "alt+shift+s"]
-# Hyper = Caps Lock via Karabiner = shift+ctrl+option+cmd.
-switch_workspace = ["prefix+shift+1..9", "ctrl+alt+shift+cmd+1..9"]
-next_workspace = ["prefix+)", "ctrl+alt+shift+cmd+]"]
-previous_workspace = ["prefix+(", "ctrl+alt+shift+cmd+["]
+new_workspace = ["prefix+shift+n", "alt+="]
+switch_workspace = ["prefix+shift+1..9", "alt+1..9"]
+next_workspace = ["prefix+)", "alt+]"]
+previous_workspace = ["prefix+(", "alt+["]
 rename_workspace = ["prefix+shift+w", "prefix+$"]
-new_tab = ["prefix+c", "alt+="]
-next_tab = ["prefix+n", "alt+backtick"]
-previous_tab = ["prefix+p", "alt+shift+backtick", "alt+~"]
-switch_tab = ["prefix+1..9", "alt+1..9"]
+# Cmd+Shift chords reach herdr through Ghostty forwarders (see ghostty/config).
+new_tab = ["prefix+c", "alt+shift+=", "alt+plus"]
+next_tab = ["prefix+n", "alt+shift+]", "alt+}", "cmd+shift+]", "cmd+}"]
+previous_tab = ["prefix+p", "alt+shift+[", "alt+{", "cmd+shift+[", "cmd+{"]
+switch_tab = ["prefix+1..9", "alt+shift+1..9"]
 rename_tab = ["prefix+shift+t", "prefix+comma"]
 close_tab = ["prefix+shift+x", "prefix+ampersand"]
-split_vertical = ["prefix+v", "alt+shift+=", "alt+plus"]
-split_horizontal = ["prefix+minus", "alt+shift+minus", "alt+_"]
+split_vertical = ["prefix+v", "cmd+shift+="]
+split_horizontal = ["prefix+minus", "cmd+shift+-"]
 zoom = ["prefix+z", "alt+shift+enter"]
 focus_pane_left = ["prefix+h", "cmd+alt+left"]
 focus_pane_down = ["prefix+j", "cmd+alt+down"]
@@ -46,14 +48,14 @@ focus_pane_right = ["prefix+l", "cmd+alt+right"]
 [[keys.command]]
 key = "ctrl+alt+="
 type = "shell"
-description = "new tab running Claude Code at $HOME"
-command = "~/.shell-setup/claude-pane.sh tab"
+description = "new space running Claude Code at $HOME"
+command = "~/.shell-setup/claude-pane.sh space"
 
 [[keys.command]]
 key = "ctrl+alt+p"
 type = "shell"
-description = "new tab running Claude Code in $PROJECTS_DIR"
-command = "~/.shell-setup/claude-pane.sh tab 'cd \"$PROJECTS_DIR\" && claude'"
+description = "new space running Claude Code in $PROJECTS_DIR"
+command = "~/.shell-setup/claude-pane.sh space claude \"${PROJECTS_DIR:-$HOME/darwin-ai/darwin-platform}\""
 
 [[keys.command]]
 key = "ctrl+alt+shift+="

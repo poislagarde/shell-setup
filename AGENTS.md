@@ -151,6 +151,7 @@ generation current; inspect the reported log and retry the save.
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |
+| Karabiner | `karabiner/hyper.json` | the Hyper rule inside `~/.config/karabiner/karabiner.json` (merge via `karabiner/merge-hyper.sh` — the file holds other rules and device state; Karabiner reloads it on change) |
 | herdr Claude launcher | `herdr/claude-pane.sh` | `~/.shell-setup/claude-pane.sh` (symlink to the repo file; run by the `[[keys.command]]` bindings) |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
 | tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.shell-setup/assistant-resurrect` (symlink to the repo dir; edit either; one place) |

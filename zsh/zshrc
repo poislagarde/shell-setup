@@ -52,6 +52,12 @@ bindkey '^[[1;11A' zle-noop
 bindkey '^[[1;11B' zle-noop
 bindkey '^[[1;11C' zle-noop
 bindkey '^[[1;11D' zle-noop
+# Same for the Cmd+Shift chords Ghostty forwards as CSI u for herdr/tmux
+# (= - [ ] with modifier 10): swallow them in a bare shell instead of leaking.
+bindkey '^[[61;10u' zle-noop
+bindkey '^[[45;10u' zle-noop
+bindkey '^[[91;10u' zle-noop
+bindkey '^[[93;10u' zle-noop
 
 # Cursor: blinking thin bar at the prompt. Outside tmux, Ghostty's default
 # already gives us this. Inside tmux, tmux owns cursor rendering and defaults
