@@ -14,7 +14,7 @@ The command lives at [`.claude/commands/shell-setup.md`](.claude/commands/shell-
 
 ## What it does
 
-Claude runs a 19-section checklist top to bottom, pausing for verification between sections. At a high level:
+Claude runs a 20-section checklist top to bottom, pausing for verification between sections. At a high level:
 
 - **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `gcloud-cli`, …).
 - **Node** — nvm pinned to `~/.nvm` (survives `brew upgrade`), latest LTS as `default`.
@@ -40,6 +40,9 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 └── hooks.json               # Codex lifecycle hooks (session tracking + activity indicator)
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
+karabiner/
+├── hyper.json               # Karabiner rule: Caps Lock → Hyper (merged into ~/.config/karabiner/karabiner.json)
+└── merge-hyper.sh           # idempotent upsert of that rule into the selected profile
 herdr/
 ├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
@@ -102,9 +105,9 @@ Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix
 | `Alt+=` | New window |
 | `Ctrl+Alt+=` | New window running **Claude Code** (at `$HOME`) |
 | `Ctrl+Alt+p` | New window running **Claude Code** in `$PROJECTS_DIR` |
-| `Alt+` `` ` `` | Next window |
-| `Alt+Shift+` `` ` `` | Previous window |
-| `Alt+1` … `Alt+9` | Jump to window 1–9 |
+| `Alt+]` | Next window |
+| `Alt+[` | Previous window |
+| `Alt+1` … `Alt+9` | Jump to window 1–9 (`Cmd+N` does the same: tmux reads Cmd as Alt) |
 | `Alt+0` | Jump to window 10 |
 | `Ctrl` + left-drag window tab | Move the dragged window; intervening tabs shift |
 | prefix, `,` | Rename current window |
@@ -114,14 +117,16 @@ Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix
 
 | Keys | Action |
 | --- | --- |
-| `Alt+Shift+=` | Split right (side-by-side), then rebalance pane sizes |
-| `Alt+Shift+-` | Split down (stacked), then rebalance pane sizes |
+| `Cmd+Shift+=` | Split right (side-by-side), then rebalance pane sizes |
+| `Cmd+Shift+-` | Split down (stacked), then rebalance pane sizes |
 | `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
 | Double-click pane border | Rebalance neighboring pane sizes |
 | Right-click pane border / status strip | Pane context menu (paste, split, swap, kill, zoom) — works even when the pane's program captures the mouse |
 | `Ctrl` + left-drag pane | Drag onto another pane to swap them |
 | `Cmd+Opt+←/→/↑/↓` | Move focus between panes (spatial) |
+| `Alt+Shift+1` … `Alt+Shift+9` | Jump to pane 1–9 (mirrors herdr tab N) |
+| `Alt+Shift+]` / `Alt+Shift+[` | Next / previous pane (mirrors herdr tab cycling; `Cmd+Shift` does the same) |
 | `Alt+Shift+Enter` | Zoom / unzoom active pane (fullscreen) |
 | prefix, `z` | Zoom / unzoom (default alias) |
 | prefix, `{` / `}` | Swap pane with previous / next |
@@ -208,18 +213,16 @@ State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but no longer auto-starts. The chords below mirror the tmux ones so muscle memory carries over, and herdr's own defaults stay active alongside (`prefix+?` lists everything). Prefix is `Ctrl+B`.
+herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but no longer auto-starts. The chords mirror the tmux ones with **tmux windows ↔ herdr spaces** and **tmux panes ↔ herdr tabs**, so muscle memory carries over; herdr's own defaults stay active alongside (`prefix+?` lists everything). Prefix is `Ctrl+B`. tmux reads Cmd as Alt, so a Cmd chord inside tmux lands on the matching Alt binding.
 
-### Tabs (tmux windows)
+### Tabs (tmux panes)
 
 | Keys | Action |
 | --- | --- |
-| `Alt+=` / prefix, `c` | New tab |
-| `Ctrl+Alt+=` | New tab running **Claude Code** (at `$HOME`) |
-| `Ctrl+Alt+p` | New tab running **Claude Code** in `$PROJECTS_DIR` |
-| `Alt+` `` ` `` / prefix, `n` | Next tab |
-| `Alt+Shift+` `` ` `` / prefix, `p` | Previous tab |
-| `Alt+1` … `Alt+9` / prefix, `1` … `9` | Jump to tab 1–9 |
+| `Alt+Shift+=` / prefix, `c` | New tab |
+| `Alt+Shift+]` / `Cmd+Shift+]` / prefix, `n` | Next tab |
+| `Alt+Shift+[` / `Cmd+Shift+[` / prefix, `p` | Previous tab |
+| `Alt+Shift+1` … `Alt+Shift+9` / prefix, `1` … `9` | Jump to tab 1–9 |
 | prefix, `,` | Rename tab |
 | prefix, `&` | Close tab |
 
@@ -227,8 +230,8 @@ herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but n
 
 | Keys | Action |
 | --- | --- |
-| `Alt+Shift+=` / prefix, `v` | Split right (side-by-side) |
-| `Alt+Shift+-` / prefix, `-` | Split down (stacked) |
+| `Cmd+Shift+=` / prefix, `v` | Split right (side-by-side) |
+| `Cmd+Shift+-` / prefix, `-` | Split down (stacked) |
 | `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
 | `Cmd+Opt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
@@ -236,14 +239,17 @@ herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but n
 | prefix, `x` | Close pane |
 | prefix, `[` | Copy mode (`q` to quit) |
 
-### Spaces (tmux sessions)
+### Spaces (tmux windows)
 
 | Keys | Action |
 | --- | --- |
+| `Alt+=` / prefix, `Shift+N` | New space |
+| `Ctrl+Alt+=` | New space running **Claude Code** (at `$HOME`) |
+| `Ctrl+Alt+p` | New space running **Claude Code** in `$PROJECTS_DIR` |
+| `Alt+1` … `Alt+9` / prefix, `Shift+1` … `Shift+9` | Jump to space 1–9 |
+| `Alt+]` / prefix, `)` | Next space |
+| `Alt+[` / prefix, `(` | Previous space |
 | `Alt+Shift+S` / prefix, `s` / prefix, `w` | **Space picker** |
-| `Hyper+1` … `Hyper+9` / prefix, `Shift+1` … `Shift+9` | Jump to space 1–9 (Hyper = Caps Lock via Karabiner = `Shift+Ctrl+Opt+Cmd`) |
-| `Hyper+]` / prefix, `)` | Next space |
-| `Hyper+[` / prefix, `(` | Previous space |
 | prefix, `$` | Rename space |
 | prefix, `d` / prefix, `q` | Detach (everything keeps running) |
 | prefix, `Shift+S` | herdr settings (moved off prefix, `s`) |
@@ -258,6 +264,7 @@ These act on Ghostty surfaces directly. Inside herdr or tmux, the Alt-based tab/
 | --- | --- |
 | `Alt+Space` | Toggle the quick terminal (global — works from any app) |
 | `Cmd+]` / `Cmd+[` | Next / previous split |
+| `Cmd+Shift+[` / `]`, `Cmd+Shift+=` / `-` | Forwarded to the terminal — herdr tab cycling and splits, tmux pane cycling and splits |
 | `Cmd+W` | Close the split / surface |
 
 ### Screen / scrollback

@@ -810,7 +810,21 @@ herdr status server >/dev/null 2>&1 && herdr server reload-config
 The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
 file, reconcile its differences into the repo first, then re-symlink.
 
-## 19. Post-Setup Verification
+## 19. Restore the Karabiner Hyper Key
+
+Caps Lock acts as Hyper (shift+ctrl+option+cmd) for the herdr space chords.
+Karabiner-Elements is installed from its own installer (https://karabiner-elements.pqrs.org)
+and needs its Input Monitoring / driver approvals once in System Settings.
+`karabiner.json` holds other rules and device state, so the Hyper rule is
+merged, not symlinked:
+
+```bash
+[ -f ~/.config/karabiner/karabiner.json ] && karabiner/merge-hyper.sh
+```
+
+Karabiner picks the change up on save.
+
+## 20. Post-Setup Verification
 
 Run these checks and report results:
 

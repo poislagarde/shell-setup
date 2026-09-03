@@ -113,6 +113,15 @@ keybind = super+alt+right=csi:1;11C
 keybind = super+alt+up=csi:1;11A
 keybind = super+alt+down=csi:1;11B
 
+# herdr cycles tabs with ⌘⇧[ / ⌘⇧] and splits with ⌘⇧= / ⌘⇧-; tmux reads the
+# same chords as M-S-… (Cmd is Meta to it) for pane cycling and splits. Forward
+# them as CSI u (key;modifiers, 10 = Cmd+Shift), which both decode; this
+# replaces Ghostty's own tab bindings on the bracket chords.
+keybind = super+shift+[=csi:91;10u
+keybind = super+shift+]=csi:93;10u
+keybind = super+shift+==csi:61;10u
+keybind = super+shift+-=csi:45;10u
+
 # ⌘⇧T is bound by default to `undo` (reopen the most recently closed tab/
 # split). Uncomment to rebind to `new_tab` instead:
 # keybind = super+shift+t=new_tab
