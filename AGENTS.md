@@ -25,12 +25,17 @@ home copy means the change is lost on the next bootstrap. Always do both, then
 tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 ~/.tmux.conf`, `source ~/.zshrc`).
 
-> **Keep the README keybind cheatsheets in sync.** `README.md` has "herdr
-> keybinds", "tmux keybinds" and "Ghostty keybinds" tables. Whenever you add,
-> remove, or change a binding in `herdr/config.toml` (`[keys]` /
-> `[[keys.command]]`), `tmux/tmux.conf` (`bind` / `bind -n` lines) or
-> `ghostty/config` (`keybind = …` lines), update the matching README table in
-> the same change — it's a third place the edit has to land. Skip the pure
+> **Keep the README keybind cheatsheets in sync — without being asked.**
+> `README.md` has "herdr keybinds", "tmux keybinds" and "Ghostty keybinds"
+> tables, and they are the user's only cheatsheet. Whenever you add, remove, or
+> change a binding in `herdr/config.toml` (`[keys]` / `[[keys.command]]`),
+> `tmux/tmux.conf` (`bind` / `bind -n` lines) or `ghostty/config`
+> (`keybind = …` lines), update the matching README table in the same change —
+> it's a third place the edit has to land. Every chord bound in a config,
+> including each alternate in an array binding, gets a table row; then re-read
+> the surrounding prose of that section (intro paragraphs, notes, blockquotes)
+> and fix anything the change made untrue. Before committing a keybind change,
+> diff the tables against the configs one more time. Skip the pure
 > CSI-forwarding Ghostty keybinds (e.g. `keybind = super+alt+left=csi:1;11D`):
 > those are plumbing that *implements* a herdr/tmux chord, not user-facing
 > shortcuts, so they belong in those tables (as the chord they produce), not the

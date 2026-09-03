@@ -94,9 +94,7 @@ Also installed but used indirectly, not via their own command: **sanesidebuttons
 
 ## tmux keybinds
 
-> Ghostty encodes the shifted Alt chords itself (no `csi:` forwarders, herdr needs them gone), so tmux binds both forms it may receive. If a chord fails, run `cat -v` in the pane, press it, and rebind what shows.
-
-Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** — Ghostty forwards Alt / Cmd+Opt keys into tmux, so they fire only when tmux owns the keyboard.
+tmux stays installed but nothing auto-attaches: start or join a session with `tm` (below). Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** and mirror the herdr ones (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**); they fire only when tmux owns the keyboard. tmux reads Cmd as Alt, so a Cmd chord lands on the matching Alt binding. If a chord fails, run `cat -v` in the pane, press it, and rebind what shows.
 
 ### Windows (tabs)
 
@@ -140,6 +138,7 @@ Every Ghostty surface runs inside tmux, so this is where you mostly live. Prefix
 | Keys | Action |
 | --- | --- |
 | `Alt+Shift+S` | **Session picker** — `choose-tree`, each marked (attached)/(detached) |
+| `Backspace` (in picker) | Kill the highlighted session (asks y/n) |
 | prefix, `s` | Session/window tree (default picker) |
 | prefix, `w` | Window picker across sessions |
 | prefix, `$` | Rename current session |
@@ -153,7 +152,7 @@ In a shell (inside or outside tmux):
 | `tm <name>` | Attach to — or create — session `<name>` |
 | `tmux kill-session -t <name>` | Kill a session (stops resurrect persisting it) |
 
-> Session names are special: **`quick`** / `quick-N` are owned by the Ghostty quick terminal; regular windows/tabs auto-adopt any other detached session or create `main`.
+> Sessions outlive the shell that created them; the launchd server keeps them (see Session persistence).
 
 ### Screen / scrollback
 
@@ -223,8 +222,8 @@ herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but n
 | `Alt+Shift+]` / `Cmd+Shift+]` / prefix, `n` | Next tab |
 | `Alt+Shift+[` / `Cmd+Shift+[` / prefix, `p` | Previous tab |
 | `Alt+Shift+1` … `Alt+Shift+9` / prefix, `1` … `9` | Jump to tab 1–9 |
-| prefix, `,` | Rename tab |
-| prefix, `&` | Close tab |
+| prefix, `,` / prefix, `Shift+T` | Rename tab |
+| prefix, `&` / prefix, `Shift+X` | Close tab |
 
 ### Panes (splits)
 
@@ -236,8 +235,13 @@ herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but n
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
 | `Cmd+Opt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
 | `Alt+Shift+Enter` / prefix, `z` | Zoom / unzoom active pane |
+| prefix, `Tab` / prefix, `Shift+Tab` | Next / previous pane |
+| prefix, `Shift+H`/`J`/`K`/`L` | Swap pane left/down/up/right |
+| prefix, `r` | Resize mode (arrows, `Esc` to leave) |
+| prefix, `Shift+P` | Rename pane |
 | prefix, `x` | Close pane |
 | prefix, `[` | Copy mode (`q` to quit) |
+| prefix, `e` | Open scrollback in `$EDITOR` |
 
 ### Spaces (tmux windows)
 
@@ -250,9 +254,22 @@ herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but n
 | `Alt+]` / prefix, `)` | Next space |
 | `Alt+[` / prefix, `(` | Previous space |
 | `Alt+Shift+S` / prefix, `s` / prefix, `w` | **Space picker** |
-| prefix, `$` | Rename space |
+| prefix, `$` / prefix, `Shift+W` | Rename space |
+| prefix, `Shift+D` | Close space |
+| prefix, `Shift+G` | New space on a new git worktree |
 | prefix, `d` / prefix, `q` | Detach (everything keeps running) |
+| prefix, `b` | Toggle sidebar |
+| prefix, `Shift+R` | Reload `config.toml` |
 | prefix, `Shift+S` | herdr settings (moved off prefix, `s`) |
+| prefix, `?` | List all key bindings |
+
+### Agents
+
+| Keys | Action |
+| --- | --- |
+| `Alt+Tab` | Next agent (agent-panel order: attention-needing first) |
+| `Alt+Shift+Tab` | Previous agent |
+| prefix, `o` | Jump to the agent behind the visible notification |
 
 ## Ghostty keybinds
 
@@ -263,6 +280,7 @@ These act on Ghostty surfaces directly. Inside herdr or tmux, the Alt-based tab/
 | Keys | Action |
 | --- | --- |
 | `Alt+Space` | Toggle the quick terminal (global — works from any app) |
+| `Cmd+D` / `Cmd+Shift+D` | New native split right / down |
 | `Cmd+]` / `Cmd+[` | Next / previous split |
 | `Cmd+Shift+[` / `]`, `Cmd+Shift+=` / `-` | Forwarded to the terminal — herdr tab cycling and splits, tmux pane cycling and splits |
 | `Cmd+W` | Close the split / surface |
