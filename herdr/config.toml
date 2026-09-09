@@ -41,10 +41,28 @@ focus_pane_left = ["prefix+h", "cmd+alt+left"]
 focus_pane_down = ["prefix+j", "cmd+alt+down"]
 focus_pane_up = ["prefix+k", "cmd+alt+up"]
 focus_pane_right = ["prefix+l", "cmd+alt+right"]
-last_pane = "alt+backtick"
 # Agents cycle in agent-panel order (priority sort: attention-needing first).
 next_agent = "alt+tab"
 previous_agent = "alt+shift+tab"
+
+# Workspace history is independent of pane/tab focus within a space.
+[[keys.command]]
+key = "alt+backtick"
+type = "plugin_action"
+description = "back through space history"
+command = "poislagarde.last-workspace.back"
+
+[[keys.command]]
+key = "alt+shift+backtick"
+type = "plugin_action"
+description = "forward through space history"
+command = "poislagarde.last-workspace.forward"
+
+[[keys.command]]
+key = "alt+~"
+type = "plugin_action"
+description = "forward through space history"
+command = "poislagarde.last-workspace.forward"
 
 # Claude Code launchers (tmux: C-M-=, C-M-p, C-M-S-=, C-M-S--). The new pane
 # gets a normal shell and the command is typed into it, so the zshrc `claude`

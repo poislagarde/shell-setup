@@ -164,6 +164,7 @@ generation current; inspect the reported log and retry the save.
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |
+| herdr space history | `herdr/last-workspace.ref` | `poislagarde.last-workspace` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | Karabiner | `karabiner/hyper.json` | the Hyper rule inside `~/.config/karabiner/karabiner.json` (merge via `karabiner/merge-hyper.sh` — the file holds other rules and device state; Karabiner reloads it on change) |
 | herdr Claude launcher | `herdr/claude-pane.sh` | `~/.shell-setup/claude-pane.sh` (symlink to the repo file; run by the `[[keys.command]]` bindings) |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
