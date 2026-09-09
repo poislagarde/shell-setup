@@ -45,6 +45,7 @@ karabiner/
 └── merge-hyper.sh           # idempotent upsert of that rule into the selected profile
 herdr/
 ├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
+├── last-workspace.ref        # pinned commit of the workspace-history plugin
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)
@@ -234,7 +235,6 @@ herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never t
 | `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
 | `Cmd+Opt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
-| `Alt+Backtick` | Return to the last focused pane, across spaces and tabs |
 | `Alt+Shift+Enter` / prefix, `z` | Zoom / unzoom active pane |
 | prefix, `Tab` / prefix, `Shift+Tab` | Next / previous pane |
 | prefix, `Shift+H`/`J`/`K`/`L` | Swap pane left/down/up/right |
@@ -254,6 +254,9 @@ herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never t
 | `Alt+1` … `Alt+9` / prefix, `Shift+1` … `Shift+9` | Jump to space 1–9 |
 | `Alt+]` / prefix, `)` | Next space |
 | `Alt+[` / prefix, `(` | Previous space |
+| `Alt+Backtick` | Back through space history |
+| `Alt+Shift+Backtick` | Forward through space history |
+| `Alt+~` | Forward through space history (shifted-character alternate) |
 | `Alt+Shift+S` / prefix, `s` / prefix, `w` | **Space picker** |
 | prefix, `$` / prefix, `Shift+W` | Rename space |
 | prefix, `Shift+D` | Close space |
@@ -263,6 +266,12 @@ herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never t
 | prefix, `Shift+R` | Reload `config.toml` |
 | prefix, `Shift+S` | herdr settings (moved off prefix, `s`) |
 | prefix, `?` | List all key bindings |
+
+Space history uses [herdr-last-workspace](https://github.com/poislagarde/herdr-last-workspace),
+installed at the commit in `herdr/last-workspace.ref` by bootstrap §18. It keeps
+up to 256 visits per herdr session. Pane and tab changes within a space leave
+the history alone. Going back and then choosing another space starts a new
+branch; closed spaces are skipped. History begins when the plugin is installed.
 
 ### Agents
 

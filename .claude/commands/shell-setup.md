@@ -38,6 +38,7 @@ brew install \
   nvm \
   pipx \
   railway \
+  rust \
   tmux \
   yt-dlp
 ```
@@ -805,12 +806,24 @@ command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh
 mkdir -p ~/.config/herdr ~/.shell-setup
 ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
 ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
+herdr plugin install poislagarde/herdr-last-workspace \
+  --ref "$(cat herdr/last-workspace.ref)" --yes
 herdr config check
-herdr status server >/dev/null 2>&1 && herdr server reload-config
+if herdr status server >/dev/null 2>&1; then
+  herdr server reload-config
+  herdr plugin action invoke poislagarde.last-workspace.init
+fi
 ```
 
 The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
 file, reconcile its differences into the repo first, then re-symlink.
+
+The space-history plugin builds with Rust/Cargo (§3). Its source commit is
+pinned in `herdr/last-workspace.ref`; update that file after validating a new
+plugin revision, then repeat the install command above. `Alt+Backtick` goes
+back through space history; `Alt+Shift+Backtick` goes forward. The plugin tracks
+workspace changes independently of pane/tab focus and keeps history per herdr
+session. `init` records the current space without changing focus.
 
 ## 19. Restore the Karabiner Hyper Key
 
