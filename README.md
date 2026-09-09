@@ -94,7 +94,7 @@ Also installed but used indirectly, not via their own command: **sanesidebuttons
 
 ## tmux keybinds
 
-tmux stays installed but nothing auto-attaches: start or join a session with `tm` (below). Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** and mirror the herdr ones (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**); they fire only when tmux owns the keyboard. tmux reads Cmd as Alt, so a Cmd chord lands on the matching Alt binding. If a chord fails, run `cat -v` in the pane, press it, and rebind what shows.
+tmux is an alternative to herdr: use one or the other, never together or nested. Nothing auto-attaches; start or join a tmux session with `tm` (below). Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** and share muscle memory with herdr (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**). The two multiplexers' bindings are independent. tmux reads Cmd as Alt, so a Cmd chord lands on the matching Alt binding. If a chord fails, run `cat -v` in the pane, press it, and rebind what shows.
 
 ### Windows (tabs)
 
@@ -212,7 +212,7 @@ State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but no longer auto-starts. The chords mirror the tmux ones with **tmux windows ↔ herdr spaces** and **tmux panes ↔ herdr tabs**, so muscle memory carries over; herdr's own defaults stay active alongside (`prefix+?` lists everything). Prefix is `Ctrl+B`. tmux reads Cmd as Alt, so a Cmd chord inside tmux lands on the matching Alt binding.
+herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never together or nested. Some chords share muscle memory with tmux (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**), but tmux bindings place no restrictions on herdr bindings. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts. herdr's own defaults stay active alongside the custom bindings (`prefix+?` lists everything). Prefix is `Ctrl+B`.
 
 ### Tabs (tmux panes)
 
@@ -234,6 +234,7 @@ herdr (`herdr/config.toml`) is the daily multiplexer; tmux stays installed but n
 | `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
 | `Cmd+Opt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
+| `Alt+Backtick` | Return to the last focused pane, across spaces and tabs |
 | `Alt+Shift+Enter` / prefix, `z` | Zoom / unzoom active pane |
 | prefix, `Tab` / prefix, `Shift+Tab` | Next / previous pane |
 | prefix, `Shift+H`/`J`/`K`/`L` | Swap pane left/down/up/right |
