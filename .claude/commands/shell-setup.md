@@ -806,8 +806,11 @@ command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh
 mkdir -p ~/.config/herdr ~/.shell-setup
 ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
 ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
+python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required"'
 herdr plugin install poislagarde/herdr-last-workspace \
   --ref "$(cat herdr/last-workspace.ref)" --yes
+herdr plugin install poislagarde/herdr-worktree-cleanup \
+  --ref "$(cat herdr/worktree-cleanup.ref)" --yes
 herdr config check
 if herdr status server >/dev/null 2>&1; then
   herdr server reload-config
@@ -824,6 +827,18 @@ plugin revision, then repeat the install command above. `Alt+Backtick` goes
 back through space history; `Alt+Shift+Backtick` goes forward. The plugin tracks
 workspace changes independently of pane/tab focus and keeps history per herdr
 session. `init` records the current space without changing focus.
+
+The worktree-cleanup plugin needs Python 3.9+, Git, and authenticated `gh`
+(`gh auth status`). Its source commit is pinned in `herdr/worktree-cleanup.ref`.
+It checks the linked worktree when its space closes, including its last shell
+exiting, and removes the checkout only when clean, associated with closed or
+merged GitHub PRs with none open, and its local tip is recoverable from GitHub.
+Other local herdr spaces and panes must no longer use it. Local branches remain;
+failed checks keep the checkout. Inspect decisions with
+`herdr plugin log list --plugin poislagarde.worktree-cleanup`. To use notifications
+instead of removal, set `{"mode":"notify"}` in `config.json` under
+`herdr plugin config-dir poislagarde.worktree-cleanup`. Disable automatic checks
+with `herdr plugin disable poislagarde.worktree-cleanup`.
 
 ## 19. Restore the Karabiner Hyper Key
 
