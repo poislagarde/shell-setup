@@ -46,6 +46,7 @@ karabiner/
 herdr/
 ├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
 ├── last-workspace.ref        # pinned commit of the workspace-history plugin
+├── worktree-cleanup.ref      # pinned commit of the automatic worktree-cleanup plugin
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)
@@ -272,6 +273,16 @@ installed at the commit in `herdr/last-workspace.ref` by bootstrap §18. It keep
 up to 256 visits per herdr session. Pane and tab changes within a space leave
 the history alone. Going back and then choosing another space starts a new
 branch; closed spaces are skipped. History begins when the plugin is installed.
+
+Worktree cleanup uses [herdr-worktree-cleanup](https://github.com/poislagarde/herdr-worktree-cleanup),
+installed at the commit in `herdr/worktree-cleanup.ref` by bootstrap §18. Closing
+a linked worktree's last tab (including exiting its last shell) checks that it is
+clean, has closed or merged GitHub PRs with none open, and has no unpushed commits.
+Eligible checkouts are removed automatically; local branches remain. Worktrees
+still used by another local herdr space or pane are kept. Missing information or
+failed checks keep the checkout. Inspect decisions with
+`herdr plugin log list --plugin poislagarde.worktree-cleanup`; use
+`herdr plugin disable poislagarde.worktree-cleanup` to stop automatic checks.
 
 ### Agents
 
