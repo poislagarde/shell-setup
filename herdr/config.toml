@@ -7,7 +7,7 @@ onboarding = false
 agent_panel_sort = "priority"
 
 [ui.toast]
-delivery = "system"
+delivery = "terminal"
 
 [theme]
 name = "tokyo-night"
