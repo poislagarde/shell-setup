@@ -795,8 +795,10 @@ Panes whose command starts with `npm start` are relaunched verbatim on restore (
 
 Install herdr with its native installer (`~/.local/bin/herdr`, updated with
 `herdr update`), then symlink the config and the Claude launcher — symlinks,
-not copies, same reasoning as §16. The keybinds mirror the tmux chords so the
-same muscle memory works in both.
+not copies, same reasoning as §16. Use herdr or tmux, never together or nested.
+Shared keybinds are a muscle-memory convenience; each multiplexer can bind
+chords independently. Check conflicts against the chosen multiplexer, Ghostty,
+and OS-level shortcuts.
 
 ```bash
 command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh

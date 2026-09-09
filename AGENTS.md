@@ -10,6 +10,14 @@ native installer, not npm"); a parenthetical recounting what went wrong with
 the other option is not. If a *why* is genuinely needed to stop a future edit
 from undoing the decision, keep it to one short clause.
 
+## Multiplexer keybindings
+
+herdr and tmux are alternative environments: the user runs one or the other,
+never together or nested. Check keybinding conflicts against the chosen
+multiplexer, Ghostty, and OS-level shortcuts. A binding in tmux does not reserve
+that chord in herdr, or vice versa. Matching chords between them is optional
+muscle-memory convenience, not a compatibility requirement.
+
 ## Applying shell-setup changes
 
 When the user asks to change their shell setup in this directory, the change must
