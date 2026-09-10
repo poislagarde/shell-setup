@@ -809,6 +809,8 @@ ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
 python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required"'
 herdr plugin install poislagarde/herdr-branch-labels \
   --ref "$(cat herdr/branch-labels.ref)" --yes
+branch_labels_config_dir="$(herdr plugin config-dir poislagarde.branch-labels)"
+ln -sfn "$(pwd)/herdr/branch-labels.json" "$branch_labels_config_dir/config.json"
 herdr plugin install poislagarde/herdr-last-workspace \
   --ref "$(cat herdr/last-workspace.ref)" --yes
 herdr plugin install poislagarde/herdr-worktree-cleanup \
@@ -825,12 +827,14 @@ The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
 file, reconcile its differences into the repo first, then re-symlink.
 
 The branch-labels plugin needs Python 3.9+ and Git. Its source commit is pinned
-in `herdr/branch-labels.ref`. It formats sidebar branch text with a configurable
-regex; the default strips `type/YYYY-MM-DD-`.
-Configure `pattern` and `replacement` in `config.json` under
-`herdr plugin config-dir poislagarde.branch-labels`, then invoke its `refresh`
-action. See the [plugin guide](https://github.com/poislagarde/herdr-branch-labels)
-for regex examples and refresh rules.
+in `herdr/branch-labels.ref`. Symlink `herdr/branch-labels.json` into the plugin's
+configuration directory as `config.json`; reconcile an existing regular file
+into the repo before replacing it. This checkout's rule strips
+`type/YYYY-MM-DD-`; the standalone plugin leaves branch names unchanged until
+a regex is configured. Edit `pattern` and `replacement` in the repo JSON, then
+invoke `herdr plugin action invoke poislagarde.branch-labels.refresh`. See the
+[plugin guide](https://github.com/poislagarde/herdr-branch-labels) for regex
+examples and refresh rules.
 
 The space-history plugin builds with Rust/Cargo (§3). Its source commit is
 pinned in `herdr/last-workspace.ref`; update that file after validating a new
