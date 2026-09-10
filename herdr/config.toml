@@ -51,6 +51,12 @@ focus_pane_right = ["prefix+l", "cmd+alt+right"]
 next_agent = "alt+tab"
 previous_agent = "alt+shift+tab"
 
+[[keys.command]]
+key = "prefix+alt+g"
+type = "plugin_action"
+description = "new worktree from GitHub PR"
+command = "poislagarde.pr-worktree.open"
+
 # Workspace history is independent of pane/tab focus within a space.
 [[keys.command]]
 key = "alt+backtick"
