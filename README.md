@@ -45,6 +45,7 @@ karabiner/
 └── merge-hyper.sh           # idempotent upsert of that rule into the selected profile
 herdr/
 ├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
+├── branch-labels.json       # personal sidebar regex (symlinked into the plugin's config directory)
 ├── branch-labels.ref        # pinned commit of the regex-based sidebar-label plugin
 ├── last-workspace.ref        # pinned commit of the workspace-history plugin
 ├── worktree-cleanup.ref      # pinned commit of the automatic worktree-cleanup plugin
@@ -270,10 +271,13 @@ herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never t
 | prefix, `?` | List all key bindings |
 
 Sidebar branch labels use [herdr-branch-labels](https://github.com/poislagarde/herdr-branch-labels),
-installed at the commit in `herdr/branch-labels.ref` by bootstrap §18. Its configurable regex strips
-`type/YYYY-MM-DD-` by default, preserving custom space names. Labels refresh on
-server startup, space/worktree lifecycle events, and space or pane focus. After
-a branch switch in the focused pane, change focus or run
+installed at the commit in `herdr/branch-labels.ref` by bootstrap §18.
+`herdr/branch-labels.json` supplies this checkout's `type/YYYY-MM-DD-` stripping
+rule and is symlinked into the plugin's configuration directory as `config.json`.
+The standalone plugin leaves branch names unchanged until configured. Custom
+space names are preserved. Labels refresh on server startup, space/worktree
+lifecycle events, and space or pane focus. After editing the regex or switching
+branches in the focused pane, change focus or run
 `herdr plugin action invoke poislagarde.branch-labels.refresh`.
 
 Space history uses [herdr-last-workspace](https://github.com/poislagarde/herdr-last-workspace),
