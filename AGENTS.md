@@ -164,6 +164,7 @@ generation current; inspect the reported log and retry the save.
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |
+| herdr branch labels | `herdr/branch-labels.ref` | `poislagarde.branch-labels` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | herdr space history | `herdr/last-workspace.ref` | `poislagarde.last-workspace` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | herdr worktree cleanup | `herdr/worktree-cleanup.ref` | `poislagarde.worktree-cleanup` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | Karabiner | `karabiner/hyper.json` | the Hyper rule inside `~/.config/karabiner/karabiner.json` (merge via `karabiner/merge-hyper.sh` — the file holds other rules and device state; Karabiner reloads it on change) |

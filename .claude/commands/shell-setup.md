@@ -807,6 +807,8 @@ mkdir -p ~/.config/herdr ~/.shell-setup
 ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
 ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
 python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required"'
+herdr plugin install poislagarde/herdr-branch-labels \
+  --ref "$(cat herdr/branch-labels.ref)" --yes
 herdr plugin install poislagarde/herdr-last-workspace \
   --ref "$(cat herdr/last-workspace.ref)" --yes
 herdr plugin install poislagarde/herdr-worktree-cleanup \
@@ -815,11 +817,20 @@ herdr config check
 if herdr status server >/dev/null 2>&1; then
   herdr server reload-config
   herdr plugin action invoke poislagarde.last-workspace.init
+  herdr plugin action invoke poislagarde.branch-labels.refresh
 fi
 ```
 
 The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
 file, reconcile its differences into the repo first, then re-symlink.
+
+The branch-labels plugin needs Python 3.9+ and Git. Its source commit is pinned
+in `herdr/branch-labels.ref`. It formats sidebar branch text with a configurable
+regex; the default strips `type/YYYY-MM-DD-`.
+Configure `pattern` and `replacement` in `config.json` under
+`herdr plugin config-dir poislagarde.branch-labels`, then invoke its `refresh`
+action. See the [plugin guide](https://github.com/poislagarde/herdr-branch-labels)
+for regex examples and refresh rules.
 
 The space-history plugin builds with Rust/Cargo (§3). Its source commit is
 pinned in `herdr/last-workspace.ref`; update that file after validating a new

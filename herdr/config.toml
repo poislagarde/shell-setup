@@ -9,6 +9,12 @@ agent_panel_sort = "priority"
 [ui.toast]
 delivery = "terminal"
 
+[ui.sidebar.spaces]
+rows = [
+  ["state_icon", { token = "$short_space", bold = true }],
+  [{ token = "$short_branch", dim = true }, "git_status"],
+]
+
 [theme]
 name = "tokyo-night"
 auto_switch = false
