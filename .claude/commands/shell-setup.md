@@ -806,13 +806,13 @@ command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh
 mkdir -p ~/.config/herdr ~/.shell-setup
 ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
 ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
-python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required"'
 herdr plugin install poislagarde/herdr-branch-labels \
   --ref "$(cat herdr/branch-labels.ref)" --yes
 branch_labels_config_dir="$(herdr plugin config-dir poislagarde.branch-labels)"
 ln -sfn "$(pwd)/herdr/branch-labels.json" "$branch_labels_config_dir/config.json"
 herdr plugin install poislagarde/herdr-last-workspace \
   --ref "$(cat herdr/last-workspace.ref)" --yes
+python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required for worktree-cleanup"'
 herdr plugin install poislagarde/herdr-worktree-cleanup \
   --ref "$(cat herdr/worktree-cleanup.ref)" --yes
 herdr config check
@@ -826,13 +826,14 @@ fi
 The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
 file, reconcile its differences into the repo first, then re-symlink.
 
-The branch-labels plugin needs Python 3.9+ and Git. Its source commit is pinned
-in `herdr/branch-labels.ref`. Symlink `herdr/branch-labels.json` into the plugin's
-configuration directory as `config.json`; reconcile an existing regular file
-into the repo before replacing it. This checkout's rule strips
+The branch-labels plugin builds with Rust/Cargo (§3) and needs Git. Its source
+commit is pinned in `herdr/branch-labels.ref`. Symlink `herdr/branch-labels.json`
+into the plugin's configuration directory as `config.json`; reconcile an
+existing regular file into the repo before replacing it. This checkout's rule strips
 `type/YYYY-MM-DD-`; the standalone plugin leaves branch names unchanged until
-a regex is configured. Edit `pattern` and `replacement` in the repo JSON, then
-invoke `herdr plugin action invoke poislagarde.branch-labels.refresh`. See the
+a regex is configured. Edit `pattern` and `replacement` in the repo JSON using
+`fancy-regex` syntax and `$1` or `${name}` capture replacements, then invoke
+`herdr plugin action invoke poislagarde.branch-labels.refresh`. See the
 [plugin guide](https://github.com/poislagarde/herdr-branch-labels) for regex
 examples and refresh rules.
 
