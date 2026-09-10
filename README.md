@@ -275,7 +275,8 @@ installed at the commit in `herdr/branch-labels.ref` by bootstrap §18.
 `herdr/branch-labels.json` supplies this checkout's `type/YYYY-MM-DD-` stripping
 rule and is symlinked into the plugin's configuration directory as `config.json`.
 The standalone plugin leaves branch names unchanged until configured. Custom
-space names are preserved. Labels refresh on server startup, space/worktree
+space names are preserved. Patterns use `fancy-regex` syntax; replacements use
+`$1` or `${name}` for captures. Labels refresh on server startup, space/worktree
 lifecycle events, and space or pane focus. After editing the regex or switching
 branches in the focused pane, change focus or run
 `herdr plugin action invoke poislagarde.branch-labels.refresh`.
