@@ -812,9 +812,16 @@ branch_labels_config_dir="$(herdr plugin config-dir poislagarde.branch-labels)"
 ln -sfn "$(pwd)/herdr/branch-labels.json" "$branch_labels_config_dir/config.json"
 herdr plugin install poislagarde/herdr-last-workspace \
   --ref "$(cat herdr/last-workspace.ref)" --yes
-python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required for worktree-cleanup"'
+python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required for the worktree plugins"'
 herdr plugin install poislagarde/herdr-worktree-cleanup \
   --ref "$(cat herdr/worktree-cleanup.ref)" --yes
+if herdr plugin install poislagarde/herdr-pr-worktree \
+  --ref "$(cat herdr/pr-worktree.ref)" --yes; then
+  if [ -L "$HOME/.shell-setup/pr-worktree.py" ] && \
+    [ "$(readlink "$HOME/.shell-setup/pr-worktree.py")" = "$(pwd)/herdr/pr-worktree.py" ]; then
+    rm "$HOME/.shell-setup/pr-worktree.py"
+  fi
+fi
 herdr config check
 if herdr status server >/dev/null 2>&1; then
   herdr server reload-config
@@ -825,6 +832,17 @@ fi
 
 The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
 file, reconcile its differences into the repo first, then re-symlink.
+
+The PR worktree plugin needs Python 3.9+, Git, and authenticated `gh`
+(`gh auth status`). Its source commit is pinned in `herdr/pr-worktree.ref`.
+From any space, press `Ctrl+B`, then `Alt+G`, paste a GitHub PR URL, and press
+Enter, or run `herdr plugin action invoke poislagarde.pr-worktree.open`.
+The plugin finds a matching repository in the current directory or another open
+space in this herdr session, then opens the PR branch beneath that repository's
+space. The repository needs a GitHub remote matching the URL; open it in a space
+first if it is not already available. Existing worktrees are reused as-is,
+preserving local commits and uncommitted changes. If the branch has different
+commits and no worktree, update or rename it before retrying.
 
 The branch-labels plugin builds with Rust/Cargo (§3) and needs Git. Its source
 commit is pinned in `herdr/branch-labels.ref`. Symlink `herdr/branch-labels.json`

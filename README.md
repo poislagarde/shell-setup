@@ -49,6 +49,7 @@ herdr/
 ├── branch-labels.ref        # pinned commit of the regex-based sidebar-label plugin
 ├── last-workspace.ref        # pinned commit of the workspace-history plugin
 ├── worktree-cleanup.ref      # pinned commit of the automatic worktree-cleanup plugin
+├── pr-worktree.ref          # pinned commit of the GitHub PR worktree plugin
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)
@@ -264,11 +265,29 @@ herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never t
 | prefix, `$` / prefix, `Shift+W` | Rename space |
 | prefix, `Shift+D` | Close space |
 | prefix, `Shift+G` | New space on a new git worktree |
+| prefix, `Alt+G` | New worktree space from a GitHub PR URL |
 | prefix, `d` / prefix, `q` | Detach (everything keeps running) |
 | prefix, `b` | Toggle sidebar |
 | prefix, `Shift+R` | Reload `config.toml` |
 | prefix, `Shift+S` | herdr settings (moved off prefix, `s`) |
 | prefix, `?` | List all key bindings |
+
+PR worktrees use [herdr-pr-worktree](https://github.com/poislagarde/herdr-pr-worktree),
+installed at the commit in `herdr/pr-worktree.ref` by bootstrap §18. From any
+space, press `Ctrl+B`, then `Alt+G`, paste the PR's GitHub URL, and press Enter.
+You can also run `herdr plugin action invoke poislagarde.pr-worktree.open`.
+The plugin finds a matching repository in the current directory or another open
+space in this herdr session, then opens the PR branch beneath that repository's
+space. The current directory's repository is preferred; otherwise the first
+matching open repository is used. New worktrees use the fetched PR head,
+including fork PRs. Existing worktrees are reused as-is, preserving local commits
+and uncommitted changes. If the branch has different commits and no worktree,
+update or rename it before retrying. Existing upstream settings are preserved;
+new branches have no upstream.
+
+Requires Python 3.9+, Git, and authenticated `gh` (`gh auth status`). The
+repository needs a remote matching the URL's GitHub repository. If no matching
+repository is open, open it in a space first.
 
 Sidebar branch labels use [herdr-branch-labels](https://github.com/poislagarde/herdr-branch-labels),
 installed at the commit in `herdr/branch-labels.ref` by bootstrap §18.
