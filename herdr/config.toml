@@ -9,6 +9,9 @@ agent_panel_sort = "priority"
 [ui.toast]
 delivery = "terminal"
 
+[ui.toast.clipboard]
+enabled = false
+
 [ui.sidebar.spaces]
 rows = [
   ["state_icon", { token = "$short_space", bold = true }],
