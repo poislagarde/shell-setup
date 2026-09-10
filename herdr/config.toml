@@ -16,7 +16,7 @@ rows = [
 ]
 
 [theme]
-name = "tokyo-night"
+name = "solarized"
 auto_switch = false
 
 # Keybinds mirror tmux/tmux.conf with tmux windows <> herdr spaces and tmux
