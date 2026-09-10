@@ -44,6 +44,7 @@ karabiner/
 ├── hyper.json               # Karabiner rule: Caps Lock → Hyper (merged into ~/.config/karabiner/karabiner.json)
 └── merge-hyper.sh           # idempotent upsert of that rule into the selected profile
 herdr/
+├── PLUGIN-LANGUAGE.md       # workload-based criteria for choosing a plugin's language
 ├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
 ├── branch-labels.json       # personal sidebar regex (symlinked into the plugin's config directory)
 ├── branch-labels.ref        # pinned commit of the regex-based sidebar-label plugin
@@ -323,6 +324,13 @@ failed checks keep the checkout. Inspect decisions with
 | `Alt+Tab` | Next agent (agent-panel order: attention-needing first) |
 | `Alt+Shift+Tab` | Previous agent |
 | prefix, `o` | Jump to the agent behind the visible notification |
+
+## herdr plugin development
+
+Choose each plugin's language from its workload and maintenance cost. Use the
+[plugin language criteria](herdr/PLUGIN-LANGUAGE.md) for new plugins and ports:
+Rust where recurring execution or resource costs matter, and simple scripting
+for occasional tool orchestration. Python is a deliberate choice, not a default.
 
 ## Ghostty keybinds
 

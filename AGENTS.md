@@ -18,6 +18,17 @@ multiplexer, Ghostty, and OS-level shortcuts. A binding in tmux does not reserve
 that chord in herdr, or vice versa. Matching chords between them is optional
 muscle-memory convenience, not a compatibility requirement.
 
+## Language choice for herdr plugins
+
+Before creating a herdr plugin or proposing a language port, follow
+[the plugin language criteria](herdr/PLUGIN-LANGUAGE.md), including when the
+plugin will live in a separate repository. Choose from the workload and total
+implementation cost; do not default to Python or assume Rust is worthwhile for
+every background process. Record the operating model and brief rationale in
+the plugin's README, and link the
+[published policy](https://github.com/poislagarde/shell-setup/blob/main/herdr/PLUGIN-LANGUAGE.md)
+from a new standalone plugin's agent instructions.
+
 ## Applying shell-setup changes
 
 When the user asks to change their shell setup in this directory, the change must
