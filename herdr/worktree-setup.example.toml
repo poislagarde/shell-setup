@@ -4,4 +4,4 @@
 
 # [[project]]
 # path = "/path/to/repo"
-# steps = ['bash "$HERDR_MAIN_REPO/tools/worktree-setup.sh"']
+# steps = ['node "$HERDR_MAIN_REPO/tools/worktree-setup.mjs" --source "$HERDR_MAIN_REPO" --target "$HERDR_WORKTREE"']

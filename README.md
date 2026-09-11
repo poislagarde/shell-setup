@@ -304,9 +304,11 @@ Bootstrap seeds local `config.toml` in `herdr plugin config-dir tdi.worktree-set
 from `herdr/worktree-setup.example.toml` only if no config exists. Store private
 project paths and setup commands in that regular local file, outside this public
 repository. Configure a main-checkout path and commands to run inside its new
-worktrees; `$HERDR_MAIN_REPO` points to the primary checkout. Config changes apply
-to the next worktree creation. The plugin needs Node 18+ and npm to install;
-configured scripts may require their own runtimes.
+worktrees. Keep setup scripts independent of Herdr: the configured command passes
+`$HERDR_MAIN_REPO` as `--source` and `$HERDR_WORKTREE` as `--target`, as shown in
+the example config. Config changes apply to the next worktree creation. The
+plugin needs Node 18+ and npm to install; configured scripts may require their
+own runtimes.
 Inspect failures with `herdr plugin log list --plugin tdi.worktree-setup`; output is also
 saved as `setup-*.log` in the plugin's state directory.
 

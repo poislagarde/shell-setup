@@ -887,9 +887,11 @@ Its source commit is pinned in `herdr/worktree-setup.ref`. Bootstrap seeds
 `herdr/worktree-setup.example.toml` only when no local config exists. Keep this
 config as a regular local file: repository paths and commands must stay outside
 this public repository. Set each project's `path` to its main checkout, using
-`~` for the home directory. Steps run inside the new worktree and can invoke a
-script from `$HERDR_MAIN_REPO`. Configuration changes apply to the next
-`worktree.created` event.
+`~` for the home directory. Steps run inside the new worktree. Keep setup scripts
+independent of Herdr by passing `$HERDR_MAIN_REPO` as `--source` and
+`$HERDR_WORKTREE` as `--target` in the configured command. The example config
+invokes a Node script from the main checkout with those arguments. Configuration
+changes apply to the next `worktree.created` event.
 Inspect runs with `herdr plugin log list --plugin tdi.worktree-setup`; complete
 output is also kept in the plugin's state directory as `setup-*.log`.
 
