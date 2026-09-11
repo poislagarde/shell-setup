@@ -867,8 +867,12 @@ The worktree-cleanup plugin needs Python 3.9+, Git, and authenticated `gh`
 It checks the linked worktree when its space closes, including its last shell
 exiting, and removes the checkout only when clean, associated with closed or
 merged GitHub PRs with none open, and its local tip is recoverable from GitHub.
-Other local herdr spaces and panes must no longer use it. Local branches remain;
-failed checks keep the checkout. Inspect decisions with
+Other local herdr spaces and panes must no longer use it. Cleanup also deletes
+the local branch after rechecking eligibility, its tip, and use by other worktrees;
+failed checks before removal keep the checkout. Removal includes ignored virtual
+environments, dependencies, and caches; configure patterns through Git's ignore
+files. Worktree deletion runs without a timeout. Removal failures produce a
+warning identifying the incomplete step. Inspect decisions with
 `herdr plugin log list --plugin poislagarde.worktree-cleanup`. To use notifications
 instead of removal, set `{"mode":"notify"}` in `config.json` under
 `herdr plugin config-dir poislagarde.worktree-cleanup`. Disable automatic checks

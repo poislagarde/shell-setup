@@ -311,11 +311,19 @@ Worktree cleanup uses [herdr-worktree-cleanup](https://github.com/poislagarde/he
 installed at the commit in `herdr/worktree-cleanup.ref` by bootstrap §18. Closing
 a linked worktree's last tab (including exiting its last shell) checks that it is
 clean, has closed or merged GitHub PRs with none open, and has no unpushed commits.
-Eligible checkouts are removed automatically; local branches remain. Worktrees
+Eligible checkouts and their local branches are removed automatically. Worktrees
 still used by another local herdr space or pane are kept. Missing information or
-failed checks keep the checkout. Inspect decisions with
+failed checks before removal keep the checkout. Removal includes ignored files
+such as `.venv/`, `node_modules/`, and caches; configure patterns through Git's
+ignore files. Worktree deletion runs without a timeout. The branch is removed
+after another eligibility check, only if its tip is unchanged and no other
+worktree uses it. Removal failures produce a warning. Inspect decisions with
 `herdr plugin log list --plugin poislagarde.worktree-cleanup`; use
 `herdr plugin disable poislagarde.worktree-cleanup` to stop automatic checks.
+
+Primary checkouts are protected even when switched to a PR branch. Cleanup
+requires herdr's linked-worktree provenance and Git's matching linked-worktree
+registration and metadata; directory names alone do not establish eligibility.
 
 ### Agents
 
