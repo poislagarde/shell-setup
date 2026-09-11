@@ -92,7 +92,7 @@ command = "~/.shell-setup/claude-pane.sh space"
 key = "ctrl+alt+p"
 type = "shell"
 description = "new space running Claude Code in $PROJECTS_DIR"
-command = "~/.shell-setup/claude-pane.sh space claude \"${PROJECTS_DIR:-$HOME}\""
+command = "~/.shell-setup/claude-pane.sh space claude --projects"
 
 [[keys.command]]
 key = "ctrl+alt+shift+="

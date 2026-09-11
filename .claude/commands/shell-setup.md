@@ -369,7 +369,7 @@ export PATH="$PATH:$HOME/.local/bin"
 
 Deep-copy this repo's `.claude/` into `~/.claude/` — except this bootstrap command itself (`commands/shell-setup.md`), which is run one-time from this repo (a project-scoped `/shell-setup`) and is never needed as a global command. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
-The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `assistant-resurrect/` for session persistence, and `assistant-activity/` for the window-label activity indicator — both symlinked there by §17. Until §17 runs, Claude Code skips the missing hook scripts harmlessly.
+The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `assistant-resurrect/` for session persistence and `assistant-activity/` for the window-label activity indicator (§17), plus `worktree-register.py` for deferred Herdr registration (§18). Complete those symlinks before starting a new assistant session.
 
 Run from the root of this repo:
 
@@ -419,9 +419,8 @@ ln -sf "$PWD/.claude/statusline-command.sh" ~/.claude/statusline-command.sh
 # 4. Codex CLI counterpart: install the hooks (the Codex-side equivalent of the
 #    Claude hooks above; both point at scripts symlinked by §17). Codex requires
 #    you to TRUST each hook before it runs, keyed by a hash of the entry — so
-#    approve the trust prompts on your first `codex` run after this, and again
-#    after any change to this file (or run once with
-#    --dangerously-bypass-hook-trust).
+#    review and trust new or changed entries with /hooks on your first `codex`
+#    run after this. Do not bypass hook trust.
 merge_hooks ~/.codex/hooks.json .codex/hooks.json
 
 # 5. Codex settings: merge the tracked top-level defaults and [tui] block into
@@ -830,7 +829,17 @@ herdr plugin install poislagarde/herdr-last-workspace \
   --ref "$(cat herdr/last-workspace.ref)" --yes
 python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required for the worktree plugins"'
 herdr plugin install poislagarde/herdr-worktree-cleanup \
-  --ref "$(cat herdr/worktree-cleanup.ref)" --yes
+  --ref "$(cat herdr/worktree-cleanup.ref)" --yes || exit 1
+ln -sfn "$(pwd)/herdr/worktree-register.py" ~/.shell-setup/worktree-register.py
+worktree_repositories_file="${XDG_CONFIG_HOME:-$HOME/.config}/herdr/worktree-repositories.txt"
+if [ -f "$worktree_repositories_file" ]; then
+  while IFS= read -r checkout || [ -n "$checkout" ]; do
+    case "$checkout" in ''|\#*) continue ;; esac
+    if git -C "$checkout" rev-parse --git-dir >/dev/null 2>&1; then
+      python3 ~/.shell-setup/worktree-register.py install "$checkout" || exit 1
+    fi
+  done < "$worktree_repositories_file"
+fi
 if [ -f herdr/worktree-cleanup-disposable.gitignore ]; then
   worktree_cleanup_config_dir="$(herdr plugin config-dir poislagarde.worktree-cleanup)"
   ln -sfn "$(pwd)/herdr/worktree-cleanup-disposable.gitignore" "$worktree_cleanup_config_dir/disposable.gitignore"
@@ -841,6 +850,12 @@ if herdr plugin install poislagarde/herdr-pr-worktree \
     [ "$(readlink "$HOME/.shell-setup/pr-worktree.py")" = "$(pwd)/herdr/pr-worktree.py" ]; then
     rm "$HOME/.shell-setup/pr-worktree.py"
   fi
+fi
+herdr plugin install tdi/herdr-worktree-setup \
+  --ref "$(cat herdr/worktree-setup.ref)" --yes
+worktree_setup_config_dir="$(herdr plugin config-dir tdi.worktree-setup)"
+if [ ! -e "$worktree_setup_config_dir/config.toml" ] && [ ! -L "$worktree_setup_config_dir/config.toml" ]; then
+  cp herdr/worktree-setup.example.toml "$worktree_setup_config_dir/config.toml"
 fi
 herdr config check
 if herdr status server >/dev/null 2>&1; then
@@ -864,6 +879,19 @@ space. The repository needs a GitHub remote matching the URL; open it in a space
 first if it is not already available. Existing worktrees are reused as-is,
 preserving local commits and uncommitted changes. If the branch has different
 commits and no worktree, update or rename it before retrying.
+
+The worktree-setup plugin needs Node 18+ on the herdr server's `PATH` and npm
+(§7) for installation; individual setup scripts may require another Node version.
+Its source commit is pinned in `herdr/worktree-setup.ref`. Bootstrap seeds
+`config.toml` in the plugin's configuration directory from
+`herdr/worktree-setup.example.toml` only when no local config exists. Keep this
+config as a regular local file: repository paths and commands must stay outside
+this public repository. Set each project's `path` to its main checkout, using
+`~` for the home directory. Steps run inside the new worktree and can invoke a
+script from `$HERDR_MAIN_REPO`. Configuration changes apply to the next
+`worktree.created` event.
+Inspect runs with `herdr plugin log list --plugin tdi.worktree-setup`; complete
+output is also kept in the plugin's state directory as `setup-*.log`.
 
 The branch-labels plugin builds with Rust/Cargo (§3) and needs Git. Its source
 commit is pinned in `herdr/branch-labels.ref`. Symlink `herdr/branch-labels.json`
@@ -891,6 +919,61 @@ files are disposable. Unpushed commits, open PRs, and branches without PRs retai
 the local branch. Closed or merged PR branches are deleted only after verifying
 their current tip is recoverable from GitHub and no other worktree uses them.
 GitHub failures retain the branch without blocking checkout removal.
+
+Enroll each repository once to automatically register worktrees created by
+ordinary `git worktree add`. Run the installer against its main checkout:
+
+```bash
+python3 ~/.shell-setup/worktree-register.py install /path/to/main-checkout
+```
+
+Repeat for each repository you want to enroll. The command is safe to rerun;
+no Herdr or shell restart is required. To restore enrollment during bootstrap,
+keep one absolute checkout path per line in the local-only
+`~/.config/herdr/worktree-repositories.txt` (or under `$XDG_CONFIG_HOME`). Blank
+lines and `#` comments are ignored. Transfer this local file separately between
+machines; never add repository inventories to the public bootstrap.
+
+After enrollment, create worktrees from the Herdr pane whose space should own
+them:
+
+```bash
+git -C /path/to/main-checkout worktree add -b my-feature /path/to/new-worktree
+```
+
+Closing that space checks its registered worktrees across all enrolled
+repositories. Worktrees created or opened through Herdr's own worktree commands
+are already observed and do not require this Git-hook enrollment. Enrollment
+does not register existing worktrees or run cleanup.
+
+The installer keeps `core.hooksPath` and other hooks unchanged. It chains an
+existing simple `post-checkout` from `post-checkout.shell-setup-original`, with
+its arguments, stdin and exit status preserved. It refuses recognized hook-manager
+or filename-dependent scripts, backup conflicts, and relative `core.hooksPath`.
+For those cases, add `python3 ~/.shell-setup/worktree-register.py post-checkout
+"$@"` through the existing hook manager, preserving its original exit status.
+For `git worktree add --no-checkout` or an existing worktree, run this from
+the Herdr pane that should own it:
+
+```bash
+python3 ~/.shell-setup/worktree-register.py register /path/to/linked-checkout
+```
+
+Register it from each space that will use it. A registered worktree stays
+protected until all its owner spaces close.
+
+When a sandbox blocks access to Herdr, registration can queue a request if
+`~/.local/state/herdr` (or the configured XDG state directory) is writable.
+The Claude/Codex tool-completion hooks retry queued registrations. Review and
+trust the Codex hook with `/hooks`. To retry due queued requests manually:
+
+```bash
+python3 ~/.shell-setup/worktree-register.py drain
+```
+
+`register` and `drain` do not clean files. If registration reports an error,
+fix the reported context or permissions issue and run `register` again from
+the owning Herdr pane.
 
 Configure disposable ignored files in the optional
 `herdr/worktree-cleanup-disposable.gitignore`; symlink it as `disposable.gitignore`

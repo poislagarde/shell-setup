@@ -134,10 +134,12 @@ alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
 # this one and still win.
 alias codex='codex -c model_reasoning_effort=ultra'
 
-# Root of the projects tree. Consumed by the tmux C-M-p bind (see tmux.conf),
-# which opens a new Claude Code window here. Exported (not just set) so it's
-# visible to the `zsh -ic` that bind spawns; change it per-machine as needed.
-export PROJECTS_DIR="$HOME"
+# Machine-local shell settings stay outside this public repository.
+if [[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/shell-setup/local-env.sh" ]]; then
+  source "${XDG_CONFIG_HOME:-$HOME/.config}/shell-setup/local-env.sh"
+fi
+# Project launchers use the local PROJECTS_DIR setting, falling back to home.
+export PROJECTS_DIR="${PROJECTS_DIR:-$HOME}"
 
 # tm — tmux session helper. `tm <name>` attaches to (or creates) the named
 # session, switching the current client instead when already inside tmux.

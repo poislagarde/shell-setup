@@ -1,12 +1,19 @@
 #!/bin/sh
 # Open a herdr space, tab or split and type a command into its shell.
-# Usage: claude-pane.sh space|tab|right|down [command=claude] [cwd=$HOME]
+# Usage: claude-pane.sh space|tab|right|down [command=claude] [cwd=$HOME|--projects]
 # Meant for a [[keys.command]] shell binding: herdr supplies HERDR_BIN_PATH,
 # HERDR_ACTIVE_WORKSPACE_ID, HERDR_ACTIVE_PANE_ID and HERDR_ACTIVE_PANE_CWD.
 set -eu
 herdr=${HERDR_BIN_PATH:-herdr}
 cmd=${2:-claude}
 cwd=${3:-$HOME}
+if [ "$cwd" = --projects ]; then
+  local_env_file="${XDG_CONFIG_HOME:-$HOME/.config}/shell-setup/local-env.sh"
+  if [ -r "$local_env_file" ]; then
+    . "$local_env_file"
+  fi
+  cwd=${PROJECTS_DIR:-$HOME}
+fi
 case ${1:-} in
   space)
     json=$("$herdr" workspace create --cwd "$cwd" --focus)

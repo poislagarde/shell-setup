@@ -56,6 +56,15 @@
             "command": "~/.shell-setup/assistant-activity/set-state.sh busy"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.shell-setup/worktree-register.py drain",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "PermissionRequest": [

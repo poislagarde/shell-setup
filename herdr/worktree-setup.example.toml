@@ -1,0 +1,7 @@
+# Copy to config.toml in `herdr plugin config-dir tdi.worktree-setup`.
+# Keep project paths and commands in that local file, outside this repository.
+# Configuration is read on each worktree.created event.
+
+# [[project]]
+# path = "/path/to/repo"
+# steps = ['bash "$HERDR_MAIN_REPO/tools/worktree-setup.sh"']

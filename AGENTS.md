@@ -10,6 +10,14 @@ native installer, not npm"); a parenthetical recounting what went wrong with
 the other option is not. If a *why* is genuinely needed to stop a future edit
 from undoing the decision, keep it to one short clause.
 
+## Public examples and private machine settings
+
+This repository is public. Use generic examples such as `/path/to/repo`; never
+include private project names, checkout inventories, organization-specific
+paths, or local account identifiers. Store machine-specific project paths and
+setup commands in local files outside this checkout. Check the complete diff
+for those details before committing or publishing.
+
 ## Multiplexer keybindings
 
 herdr and tmux are alternative environments: the user runs one or the other,
@@ -189,6 +197,10 @@ generation current; inspect the reported log and retry the save.
 | herdr worktree cleanup | `herdr/worktree-cleanup.ref` | `poislagarde.worktree-cleanup` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | herdr disposable ignored files | `herdr/worktree-cleanup-disposable.gitignore` (optional) | `disposable.gitignore` under `herdr plugin config-dir poislagarde.worktree-cleanup` (symlink to the repo file; rules are read on each cleanup) |
 | herdr PR worktree | `herdr/pr-worktree.ref` | `poislagarde.pr-worktree` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
+| herdr worktree setup | `herdr/worktree-setup.ref` | `tdi.worktree-setup` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
+| herdr project setup steps | `herdr/worktree-setup.example.toml` | `config.toml` under `herdr plugin config-dir tdi.worktree-setup` (regular local file; seed only when absent, never overwrite existing project settings) |
+| herdr enrolled repositories | local-only inventory, not tracked | `~/.config/herdr/worktree-repositories.txt` (one absolute path per line; bootstrap restores enrolled hooks) |
+| herdr Git worktree registration | `herdr/worktree-register.py` | `~/.shell-setup/worktree-register.py` (symlink; bootstrap §18 installs per-repo `post-checkout` wrappers and §15 merges agent `PostToolUse` drain hooks) |
 | Karabiner | `karabiner/hyper.json` | the Hyper rule inside `~/.config/karabiner/karabiner.json` (merge via `karabiner/merge-hyper.sh` — the file holds other rules and device state; Karabiner reloads it on change) |
 | herdr Claude launcher | `herdr/claude-pane.sh` | `~/.shell-setup/claude-pane.sh` (symlink to the repo file; run by the `[[keys.command]]` bindings) |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
@@ -206,4 +218,5 @@ generation current; inspect the reported log and retry the save.
 | Codex defaults | `.codex/config-defaults.toml` | the top-level `model` and `model_reasoning_effort` keys of `~/.codex/config.toml` (merge those keys only; preserve the rest) |
 | Codex TUI | `.codex/config-tui.toml` | the `[tui]` block of `~/.codex/config.toml` (merge that block only; preserve every other section) |
 | zsh (`~/.zshrc`) | `zsh/zshrc` | `~/.zshrc` (managed block `source`s the repo file — edit the repo file only) |
+| local project folder | local-only settings, not tracked | `~/.config/shell-setup/local-env.sh` (sourced by zsh and the Herdr project launcher; set `PROJECTS_DIR` here) |
 | zsh (`~/.zprofile`) | described in `.claude/commands/shell-setup.md` | `~/.zprofile` |

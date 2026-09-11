@@ -37,7 +37,7 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ├── config-defaults.toml     # Codex default model and reasoning effort
 ├── config-tui.toml          # Codex TUI statusline: context used + model/reasoning + PR + weekly/5h limits
 ├── config-features.toml     # Codex [features].hooks — hooks.json is inert without it
-└── hooks.json               # Codex lifecycle hooks (session tracking + activity indicator)
+└── hooks.json               # Codex lifecycle hooks (session tracking, activity, worktree registration)
 ghostty/
 └── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 karabiner/
@@ -56,6 +56,9 @@ herdr/
 ├── worktree-cleanup.ref      # pinned commit of the automatic worktree-cleanup plugin
 ├── worktree-cleanup-disposable.gitignore # optional rules permitting deletion of ignored files
 ├── pr-worktree.ref          # pinned commit of the GitHub PR worktree plugin
+├── worktree-setup.ref        # pinned commit of the per-project worktree setup plugin
+├── worktree-setup.example.toml # generic seed for local-only project setup commands
+├── worktree-register.py      # Git creation hook installer + deferred ownership registration adapter
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)
@@ -142,7 +145,7 @@ tmux is an alternative to herdr: use one or the other, never together or nested.
 | prefix, `x` | Kill current pane |
 | prefix, `Space` | Cycle pane layouts |
 
-> The `Ctrl+Alt+…` chords add `Ctrl` to their plain counterparts and launch the `claude` alias (truecolor + `--chrome`) in the new window/pane — which closes when Claude exits. `Ctrl+Alt+p` opens in `$PROJECTS_DIR`, set in `~/.zshrc` (the projects root you mostly work in).
+> The `Ctrl+Alt+…` chords add `Ctrl` to their plain counterparts and launch the `claude` alias (truecolor + `--chrome`) in the new window/pane — which closes when Claude exits. `Ctrl+Alt+p` opens in `$PROJECTS_DIR`, configured in the local-only `~/.config/shell-setup/local-env.sh`; it defaults to `$HOME`.
 
 ### Sessions
 
@@ -295,6 +298,18 @@ Requires Python 3.9+, Git, and authenticated `gh` (`gh auth status`). The
 repository needs a remote matching the URL's GitHub repository. If no matching
 repository is open, open it in a space first.
 
+New worktrees use [herdr-worktree-setup](https://github.com/tdi/herdr-worktree-setup),
+installed at the commit in `herdr/worktree-setup.ref` by bootstrap §18.
+Bootstrap seeds local `config.toml` in `herdr plugin config-dir tdi.worktree-setup`
+from `herdr/worktree-setup.example.toml` only if no config exists. Store private
+project paths and setup commands in that regular local file, outside this public
+repository. Configure a main-checkout path and commands to run inside its new
+worktrees; `$HERDR_MAIN_REPO` points to the primary checkout. Config changes apply
+to the next worktree creation. The plugin needs Node 18+ and npm to install;
+configured scripts may require their own runtimes.
+Inspect failures with `herdr plugin log list --plugin tdi.worktree-setup`; output is also
+saved as `setup-*.log` in the plugin's state directory.
+
 Sidebar branch labels use [herdr-branch-labels](https://github.com/poislagarde/herdr-branch-labels),
 installed at the commit in `herdr/branch-labels.ref` by bootstrap §18.
 `herdr/branch-labels.json` supplies this checkout's `type/YYYY-MM-DD-` stripping
@@ -316,6 +331,8 @@ Use the [temporary runtime patch](herdr/RUNTIME-WORKAROUND.md) for herdr 0.9.0.
 It restores the focus events needed by space history. Follow that document's
 verification and removal criteria before returning to an official build.
 
+### Worktree cleanup
+
 Worktree cleanup uses [herdr-worktree-cleanup](https://github.com/poislagarde/herdr-worktree-cleanup),
 installed at the commit in `herdr/worktree-cleanup.ref` by bootstrap §18. Closing
 a linked worktree's last tab (including exiting its last shell) removes a clean
@@ -324,6 +341,59 @@ or no PR keep the local branch without blocking checkout removal. A branch is
 deleted only when its PRs are closed or merged, its current tip is verified
 recoverable from GitHub, and no other worktree uses it. GitHub failures retain
 the branch.
+
+#### Enroll repositories
+
+After running `/shell-setup`, enroll each repository once to automatically
+register worktrees created by ordinary `git worktree add`:
+
+```sh
+python3 ~/.shell-setup/worktree-register.py install /path/to/main-checkout
+```
+
+Repeat for each repository. The command is safe to rerun and takes effect
+immediately. Bootstrap §18 restores paths from the local-only
+`~/.config/herdr/worktree-repositories.txt` (or under `$XDG_CONFIG_HOME`), one
+absolute checkout path per line. Blank lines and `#` comments are ignored.
+Transfer that file separately between machines; keep repository inventories out
+of this public checkout.
+
+Create worktrees from the Herdr pane whose space should own them:
+
+```sh
+git -C /path/to/main-checkout worktree add -b my-feature /path/to/new-worktree
+```
+
+Closing that space checks its registered worktrees across enrolled repositories.
+Worktrees created or opened through Herdr's own worktree commands are already
+observed and need no Git-hook enrollment. Enrollment does not register existing
+worktrees or run cleanup.
+
+For an existing worktree or one created with `--no-checkout`, register it from
+each Herdr space that will use it:
+
+```sh
+python3 ~/.shell-setup/worktree-register.py register /path/to/linked-checkout
+```
+
+All registered owner spaces must close before the worktree can be cleaned.
+If a sandbox blocks access to Herdr, registration can queue a request when the
+plugin's state directory is writable. The Claude/Codex tool-completion hooks
+retry queued registrations; review and trust the Codex hook with `/hooks`.
+To retry due requests manually:
+
+```sh
+python3 ~/.shell-setup/worktree-register.py drain
+```
+
+Registration and retry do not clean files. If a command reports an error,
+fix the reported issue and rerun `register` from the owning Herdr pane.
+
+The installer preserves `core.hooksPath` and other hooks. If it refuses a
+repository's hook manager or relative hook path, use the
+[manual hook-manager integration instructions](.claude/commands/shell-setup.md#18-restore-herdr-configuration).
+
+#### Cleanup rules
 
 Tracked changes, non-ignored untracked files, and unapproved ignored files keep
 the checkout. Cleanup can still remove approved ignored files to reclaim space.
