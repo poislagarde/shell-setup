@@ -1,0 +1,46 @@
+# Treat matching Git-ignored paths as disposable during worktree cleanup.
+# Match paths relative to each worktree root.
+# Keep the worktree when an ignored regular file does not match.
+
+# Installed dependencies and isolated Python environments.
+node_modules/
+.venv/
+**/.terraform/providers/
+**/.terraform/modules/
+
+# Python bytecode, test environments, and tool caches.
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.nox/
+
+# Frontend build output and compiler/linter caches.
+.next/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# Regenerable test coverage and mutation-testing output.
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+.nyc_output/
+.stryker-tmp/
+
+# Zig and CMake build output.
+zig-cache/
+.zig-cache/
+zig-out/
+CMakeFiles/
+CMakeCache.txt
+build-cmake/
+
+# Operating-system directory metadata.
+.DS_Store
+Thumbs.db

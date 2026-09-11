@@ -54,6 +54,7 @@ herdr/
 ├── branch-labels.ref        # pinned commit of the regex-based sidebar-label plugin
 ├── last-workspace.ref        # pinned commit of the workspace-history plugin
 ├── worktree-cleanup.ref      # pinned commit of the automatic worktree-cleanup plugin
+├── worktree-cleanup-disposable.gitignore # optional rules permitting deletion of ignored files
 ├── pr-worktree.ref          # pinned commit of the GitHub PR worktree plugin
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
@@ -317,17 +318,34 @@ verification and removal criteria before returning to an official build.
 
 Worktree cleanup uses [herdr-worktree-cleanup](https://github.com/poislagarde/herdr-worktree-cleanup),
 installed at the commit in `herdr/worktree-cleanup.ref` by bootstrap §18. Closing
-a linked worktree's last tab (including exiting its last shell) checks that it is
-clean, has closed or merged GitHub PRs with none open, and has no unpushed commits.
-Eligible checkouts and their local branches are removed automatically. Worktrees
-still used by another local herdr space or pane are kept. Missing information or
-failed checks before removal keep the checkout. Removal includes ignored files
-such as `.venv/`, `node_modules/`, and caches; configure patterns through Git's
-ignore files. Worktree deletion runs without a timeout. The branch is removed
-after another eligibility check, only if its tip is unchanged and no other
-worktree uses it. Removal failures produce a warning. Inspect decisions with
-`herdr plugin log list --plugin poislagarde.worktree-cleanup`; use
-`herdr plugin disable poislagarde.worktree-cleanup` to stop automatic checks.
+a linked worktree's last tab (including exiting its last shell) removes a clean
+checkout when its remaining files are disposable. Unpushed commits, an open PR,
+or no PR keep the local branch without blocking checkout removal. A branch is
+deleted only when its PRs are closed or merged, its current tip is verified
+recoverable from GitHub, and no other worktree uses it. GitHub failures retain
+the branch.
+
+Tracked changes, non-ignored untracked files, and unapproved ignored files keep
+the checkout. Cleanup can still remove approved ignored files to reclaim space.
+Use `herdr/worktree-cleanup-disposable.gitignore` for gitignore-style disposal
+rules; bootstrap links this optional file into the plugin's config directory as
+`disposable.gitignore`. Patterns apply only to ignored files; `!` exceptions
+protect files. Ignored symlinks can be unlinked without following their targets;
+hardlinks require another link outside the deletion set. Missing disposal rules
+protect ordinary ignored files. Partial or skipped cleanup reports its blockers.
+
+Worktrees used by another local herdr space or pane, locked worktrees, protected
+branches, and active Git operations are protected. Inspection failures keep the
+affected data. Worktree deletion runs without a timeout. Inspect decisions with
+`herdr plugin log list --plugin poislagarde.worktree-cleanup`; disable automatic
+checks with `herdr plugin disable poislagarde.worktree-cleanup`.
+
+For accumulated worktrees, preview with
+`herdr plugin action invoke poislagarde.worktree-cleanup.check-unused`, then run
+`herdr plugin action invoke poislagarde.worktree-cleanup.clean-unused` to clean
+unused recorded worktrees. The plugin records provenance at startup and when
+spaces are opened or created; there are no periodic or startup cleanup runs.
+Open an older unrecorded worktree in herdr once before including it in a sweep.
 
 Primary checkouts are protected even when switched to a PR branch. Cleanup
 requires herdr's linked-worktree provenance and Git's matching linked-worktree

@@ -187,6 +187,7 @@ generation current; inspect the reported log and retry the save.
 | herdr branch label regex | `herdr/branch-labels.json` | `config.json` under `herdr plugin config-dir poislagarde.branch-labels` (symlink to the repo file; `herdr plugin action invoke poislagarde.branch-labels.refresh`) |
 | herdr space history | `herdr/last-workspace.ref` | `poislagarde.last-workspace` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | herdr worktree cleanup | `herdr/worktree-cleanup.ref` | `poislagarde.worktree-cleanup` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
+| herdr disposable ignored files | `herdr/worktree-cleanup-disposable.gitignore` (optional) | `disposable.gitignore` under `herdr plugin config-dir poislagarde.worktree-cleanup` (symlink to the repo file; rules are read on each cleanup) |
 | herdr PR worktree | `herdr/pr-worktree.ref` | `poislagarde.pr-worktree` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | Karabiner | `karabiner/hyper.json` | the Hyper rule inside `~/.config/karabiner/karabiner.json` (merge via `karabiner/merge-hyper.sh` — the file holds other rules and device state; Karabiner reloads it on change) |
 | herdr Claude launcher | `herdr/claude-pane.sh` | `~/.shell-setup/claude-pane.sh` (symlink to the repo file; run by the `[[keys.command]]` bindings) |
