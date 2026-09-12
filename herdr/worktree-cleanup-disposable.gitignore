@@ -19,6 +19,7 @@ __pycache__/
 .nox/
 
 # Frontend build output and compiler/linter caches.
+dist/
 .next/
 .parcel-cache/
 .eslintcache
