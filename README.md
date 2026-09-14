@@ -35,7 +35,7 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 └── statusline-command.sh    # statusline: ctx % + model[effort] (left), weekly + 5h usage (right); degrades to fit width
 .codex/
 ├── config-defaults.toml     # Codex default model and reasoning effort
-├── config-tui.toml          # Codex TUI statusline: context used + model/reasoning + PR + weekly/5h limits
+├── config-tui.toml          # Codex TUI: statusline (context, model, PR, limits) + whimsy off
 ├── config-features.toml     # Codex [features].hooks — hooks.json is inert without it
 └── hooks.json               # Codex lifecycle hooks (session tracking, activity, worktree registration)
 ghostty/

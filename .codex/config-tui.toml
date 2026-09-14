@@ -4,6 +4,8 @@
 # hashes): never copy it wholesale — append/reconcile this block only.
 
 [tui]
+# Decorative composer effects break terminal text selection.
+whimsy = false
 status_line = [
   "context-used",
   "model-with-reasoning",
