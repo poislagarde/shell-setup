@@ -72,6 +72,10 @@ window-colorspace = srgb
 # mouse. The tmux pane/window drag-swaps use Ctrl instead (C- bindings),
 # which the mouse protocol forwards to tmux on its own.
 
+# Shift+drag selections land on the macOS clipboard, not just Ghostty's
+# internal selection clipboard (`true` stops at the latter on macOS).
+copy-on-select = clipboard
+
 # --- Keyboard behavior ---
 # Treat the Option key as Alt so `alt+*` keybinds (and Meta-prefixed shell
 # shortcuts) fire. Without this, Option+Backspace, Option+arrows, etc. don't
