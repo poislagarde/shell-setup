@@ -800,24 +800,8 @@ Shared keybinds are a muscle-memory convenience; each multiplexer can bind
 chords independently. Check conflicts against the chosen multiplexer, Ghostty,
 and OS-level shortcuts.
 
-For stock herdr 0.9.0, apply the pinned
-[runtime workaround](../../herdr/RUNTIME-WORKAROUND.md). It requires Rust/Cargo
-and Zig 0.15.2 (`brew install zig@0.15` on macOS). Follow that document before
-replacing a running server or removing the workaround.
-
 ```bash
 command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh
-if [ "$(herdr --version)" = "herdr 0.9.0" ]; then
-  if ! ZIG="$(brew --prefix zig@0.15)/bin/zig" \
-    herdr/build-focus-events-fix.sh "$HOME/.local/bin/herdr-focus-candidate"; then
-    echo "herdr patch build failed; keep the installed runtime and inspect the error" >&2
-    exit 1
-  fi
-  if [ ! -e "$HOME/.local/bin/herdr-before-focus-fix" ]; then
-    cp -p "$HOME/.local/bin/herdr" "$HOME/.local/bin/herdr-before-focus-fix" || exit 1
-  fi
-  mv "$HOME/.local/bin/herdr-focus-candidate" "$HOME/.local/bin/herdr" || exit 1
-fi
 mkdir -p ~/.config/herdr ~/.shell-setup
 ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
 ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh

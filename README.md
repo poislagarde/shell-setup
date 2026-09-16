@@ -45,9 +45,6 @@ karabiner/
 └── merge-hyper.sh           # idempotent upsert of that rule into the selected profile
 herdr/
 ├── PLUGIN-LANGUAGE.md       # workload-based criteria for choosing a plugin's language
-├── RUNTIME-WORKAROUND.md    # temporary runtime patch: build, activation, and removal criteria
-├── build-focus-events-fix.sh # builds the pinned runtime candidate
-├── patches/                # exact upstream focus-event fix
 ├── tests/                  # private keyboard-history regression test
 ├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
 ├── branch-labels.json       # personal sidebar regex (symlinked into the plugin's config directory)
@@ -328,10 +325,6 @@ installed at the commit in `herdr/last-workspace.ref` by bootstrap §18. It keep
 up to 256 visits per herdr session. Pane and tab changes within a space leave
 the history alone. Going back and then choosing another space starts a new
 branch; closed spaces are skipped. History begins when the plugin is installed.
-
-Use the [temporary runtime patch](herdr/RUNTIME-WORKAROUND.md) for herdr 0.9.0.
-It restores the focus events needed by space history. Follow that document's
-verification and removal criteria before returning to an official build.
 
 ### Worktree cleanup
 

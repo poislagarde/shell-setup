@@ -37,14 +37,6 @@ the plugin's README, and link the
 [published policy](https://github.com/poislagarde/shell-setup/blob/main/herdr/PLUGIN-LANGUAGE.md)
 from a new standalone plugin's agent instructions.
 
-## Temporary herdr runtime patch
-
-Before updating or reinstalling herdr, read
-[the runtime workaround and removal criteria](herdr/RUNTIME-WORKAROUND.md).
-Preserve the pinned focus-event patch until an official stable release contains
-upstream PR #3850 and passes the private keyboard-history test. Do not replace
-the patched binary with stock 0.9.0.
-
 ## Applying shell-setup changes
 
 When the user asks to change their shell setup in this directory, the change must
