@@ -444,6 +444,9 @@ These act on Ghostty surfaces directly. Inside herdr or tmux, the Alt-based tab/
 | `Cmd+]` / `Cmd+[` | Next / previous split |
 | `Cmd+Shift+[` / `]`, `Cmd+Shift+=` / `-` | Forwarded to the terminal — herdr tab cycling and splits, tmux pane cycling and splits |
 | `Cmd+W` | Close the split / surface |
+| `Cmd+Q`, then `Cmd+Q` | Quit Ghostty |
+
+Quitting by keyboard requires pressing `Cmd+Q` twice. Close confirmations are disabled, including for individual surfaces, menu quits, and system restarts.
 
 ### Screen / scrollback
 

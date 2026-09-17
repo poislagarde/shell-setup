@@ -83,6 +83,10 @@ copy-on-select = clipboard
 # Set to `left` to let Right-Option keep typing characters like ®, ¨.
 macos-option-as-alt = true
 
+# Press ⌘Q twice to quit; menu quits and system restarts need no confirmation.
+confirm-close-surface = false
+keybind = super+q>super+q=quit
+
 # Do NOT bind shift+space here. A keybind fires ahead of macOS text input, so
 # it discards a pending dead key (US-International `"` + Shift+Space must still
 # type `"`). tmux normalizes Shift+Space to a plain space instead — see the
