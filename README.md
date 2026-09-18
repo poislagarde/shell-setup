@@ -285,8 +285,9 @@ You can also run `herdr plugin action invoke poislagarde.pr-worktree.open`.
 The plugin finds a matching repository in the current directory or another open
 space in this herdr session, then opens the PR branch beneath that repository's
 space. The current directory's repository is preferred; otherwise the first
-matching open repository is used. New worktrees use the fetched PR head,
-including fork PRs. Existing worktrees are reused as-is, preserving local commits
+matching open repository is used. Invoking from a linked worktree still opens
+the PR beneath the repository's parent space. New worktrees use the fetched PR
+head, including fork PRs. Existing worktrees are reused as-is, preserving local commits
 and uncommitted changes. If the branch has different commits and no worktree,
 update or rename it before retrying. Existing upstream settings are preserved;
 new branches have no upstream.
