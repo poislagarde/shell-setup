@@ -292,6 +292,13 @@ and uncommitted changes. If the branch has different commits and no worktree,
 update or rename it before retrying. Existing upstream settings are preserved;
 new branches have no upstream.
 
+Missing, unlocked checkouts are recreated when the local branch matches the PR
+and the retained Git index is clean. The plugin backs up their metadata before
+removing only the stale registration. Locked checkouts, staged changes, and
+unavailable parent directories require manual repair. Remove temporary checkouts
+with `git worktree remove /path/to/checkout`; use `git worktree move` to relocate
+them, and lock checkouts on removable storage before disconnecting it.
+
 Requires Python 3.9+, Git, and authenticated `gh` (`gh auth status`). The
 repository needs a remote matching the URL's GitHub repository. If no matching
 repository is open, open it in a space first.
