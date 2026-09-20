@@ -32,7 +32,8 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ├── commands/
 │   └── shell-setup.md       # the /shell-setup slash command
 ├── settings.json            # Claude Code settings (statusline, plugins, prefs)
-└── statusline-command.sh    # statusline: ctx % + model[effort] (left), weekly + 5h usage (right); degrades to fit width
+├── statusline-command.sh    # statusline: ctx % + model[effort] (left), weekly + 5h usage (right); degrades to fit width, keeping the limit that runs out first
+└── tests/                   # statusline reset-format and gauge-priority regression test
 .codex/
 ├── config-defaults.toml     # Codex default model and reasoning effort
 ├── config-tui.toml          # Codex TUI: statusline (context, model, PR, limits) + whimsy off

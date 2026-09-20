@@ -105,9 +105,12 @@ make_bar() {
 dwidth() { printf '%s' "$(( $(printf '%s' "$1" | sed "s/${ESC}\[[0-9;]*m//g" | wc -m | tr -d ' ') + $2 ))"; }
 
 # Pieces, built once (each empty if its data is absent).
+now=$(date +%s)
 ctx=""
 [ -n "$used" ] && ctx="${C_CTX}🧠 $(printf '%.0f' "$used")%${C_RESET}"
 
+five_icon="⏱️"; five_label="5h"
+week_icon="📅"; week_label="7d"
 five_bar=""; five_pctstr=""; five_resetstr=""; five_hl=""; five_hlr=""
 if [ -n "$five_pct" ]; then
   five_bar=$(make_bar "$five_pct")
@@ -117,21 +120,61 @@ if [ -n "$five_pct" ]; then
   awk -v p="$five_pct" 'BEGIN{exit !(p+0>80)}' && { five_hl="$C_HOT"; five_hlr="$C_RESET"; }
 fi
 
-week_seg=""
+week_bar=""; week_pctstr=""; week_resetstr=""; week_hl=""; week_hlr=""
 if [ -n "$week_pct" ]; then
-  week_tail="$(printf '%.0f' "$week_pct")%"
-  [ -n "$week_resets" ] && { t=$(date -r "$week_resets" '+%a' 2>/dev/null); [ -n "$t" ] && week_tail="$week_tail resets $t"; }
-  week_hl=""; week_hlr=""
+  week_bar=$(make_bar "$week_pct")
+  week_pctstr="$(printf '%.0f' "$week_pct")%"
+  # Reset stamp: time alone when it lands today, day + time when under 48h away,
+  # otherwise just the day (a week out, the hour is noise).
+  if [ -n "$week_resets" ]; then
+    if [ "$(date -r "$week_resets" '+%F' 2>/dev/null)" = "$(date '+%F')" ]; then
+      wfmt='+%H:%M'
+    elif [ "$(( week_resets - now ))" -lt 172800 ]; then
+      wfmt='+%a %H:%M'
+    else
+      wfmt='+%a'
+    fi
+    t=$(date -r "$week_resets" "$wfmt" 2>/dev/null); [ -n "$t" ] && week_resetstr="resets $t"
+  fi
   awk -v p="$week_pct" 'BEGIN{exit !(p+0>80)}' && { week_hl="$C_HOT"; week_hlr="$C_RESET"; }
-  week_seg="📅 7d $(make_bar "$week_pct") ${week_hl}${week_tail}${week_hlr}"
 fi
+
+# Only one gauge fits from level 1 down: keep whichever runs out first. Project
+# each window's exhaustion from its burn rate so far (elapsed = window length -
+# time left); a window at 0% or already reset counts as never hit, and without
+# both reset stamps 5h wins.
+# ponytail: assumes a flat burn rate; revisit if it flaps mid-session.
+primary=""
+[ -n "$five_pctstr" ] && primary=five
+[ -n "$week_pctstr" ] && [ -z "$primary" ] && primary=week
+if [ -n "$five_pctstr" ] && [ -n "$week_pctstr" ]; then
+  primary=$(awk -v fp="$five_pct" -v fr="$five_resets" -v wp="$week_pct" -v wr="$week_resets" -v now="$now" 'BEGIN {
+    ft = fr - now; wt = wr - now
+    if (ft <= 0 || wt <= 0) { print "five"; exit }
+    fe = 18000 - ft; we = 604800 - wt
+    ff = (fe > 0 && fp > 0) ? (100 - fp) * fe / fp : 1e18
+    wf = (we > 0 && wp > 0) ? (100 - wp) * we / wp : 1e18
+    print (wf < ff) ? "week" : "five"
+  }')
+fi
+
+# Render one gauge (five|week) at degradation level N onto stdout.
+gauge() {
+  eval "_i=\$${1}_icon; _l=\$${1}_label; _b=\$${1}_bar; _p=\$${1}_pctstr; _r=\$${1}_resetstr; _h=\$${1}_hl; _hr=\$${1}_hlr"
+  _tail="$_p"
+  [ "$2" -le 2 ] && [ -n "$_r" ] && _tail="$_tail $_r"
+  _g="$_i"
+  [ "$2" -le 3 ] && _g="$_g $_l"
+  [ "$2" -le 1 ] && _g="$_g $_b"
+  printf '%s %s' "$_g" "${_h}${_tail}${_hr}"
+}
 
 # Build the line at degradation level N into LEFT/RIGHT (+ their emoji bonuses).
 # As the terminal narrows, the richest level that still fits is chosen; features
 # drop in this order (N = drops applied):
-#   1 weekly · 2 5h bar · 3 5h "resets …" · 4 the "5h" label · 5 model effort
-#   6 model · 7 the whole 5h gauge
-# 🧠 context % is never dropped; the compact "⏱️ NN%" gauge outlives model/effort.
+#   1 the less urgent gauge · 2 its bar · 3 its "resets …" · 4 its label
+#   5 model effort · 6 model · 7 the gauge itself
+# 🧠 context % is never dropped; the compact "NN%" gauge outlives model/effort.
 build_level() {  # $1 = N
   _n=$1
   LEFT="$ctx"; LB=0; [ -n "$ctx" ] && LB=1
@@ -141,16 +184,14 @@ build_level() {  # $1 = N
     if [ -n "$LEFT" ]; then LEFT="$LEFT$SEP$_m"; else LEFT="$_m"; fi
   fi
   RIGHT=""; RB=0
-  if [ -n "$five_pctstr" ] && [ "$_n" -le 6 ]; then
-    _ftail="$five_pctstr"
-    [ "$_n" -le 2 ] && [ -n "$five_resetstr" ] && _ftail="$_ftail $five_resetstr"
-    _five="⏱️"
-    [ "$_n" -le 3 ] && _five="$_five 5h"
-    [ "$_n" -le 1 ] && _five="$_five $five_bar"
-    _five="$_five ${five_hl}${_ftail}${five_hlr}"
-    # At the full level weekly leads (📅 7d … · ⏱️ 5h …); it is still the first
-    # segment to drop, leaving the 5h gauge alone at every narrower level.
-    if [ "$_n" -eq 0 ] && [ -n "$week_seg" ]; then RIGHT="$week_seg$SEP$_five"; RB=1; else RIGHT="$_five"; fi
+  if [ -n "$primary" ] && [ "$_n" -le 6 ]; then
+    if [ "$_n" -eq 0 ] && [ -n "$five_pctstr" ] && [ -n "$week_pctstr" ]; then
+      # Full width: weekly leads, 5h follows.
+      RIGHT="$(gauge week 0)$SEP$(gauge five 0)"; RB=1
+    else
+      RIGHT="$(gauge "$primary" "$_n")"
+      [ "$primary" = week ] && RB=1
+    fi
   fi
 }
 
