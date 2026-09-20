@@ -18,6 +18,12 @@ paths, or local account identifiers. Store machine-specific project paths and
 setup commands in local files outside this checkout. Check the complete diff
 for those details before committing or publishing.
 
+## Committing here
+
+Commit straight to `main` in this repository and push — no branch, no pull
+request, unless the user asks for one. Pull requests still apply to every other
+repository you work in.
+
 ## Multiplexer keybindings
 
 herdr and tmux are alternative environments: the user runs one or the other,
