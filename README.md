@@ -290,8 +290,9 @@ matching open repository is used. Invoking from a linked worktree still opens
 the PR beneath the repository's parent space. New worktrees use the fetched PR
 head, including fork PRs. Existing worktrees are reused as-is, preserving local commits
 and uncommitted changes. If the branch has different commits and no worktree,
-update or rename it before retrying. Existing upstream settings are preserved;
-new branches have no upstream.
+update or rename it before retrying. Branches without tracking settings pull from
+the PR's source branch, including forks. Existing tracking settings are preserved;
+reopening a worktree fills in missing tracking without changing local work.
 
 Missing, unlocked checkouts are recreated when the local branch matches the PR
 and the retained Git index is clean. The plugin backs up their metadata before
