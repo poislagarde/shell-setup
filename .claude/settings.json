@@ -30,6 +30,7 @@
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
+  "promptSuggestionEnabled": false,
   "hooks": {
     "SessionStart": [
       {
