@@ -1,0 +1,99 @@
+diff --git a/build.zig b/build.zig
+index f9d861b19..2b7059ef7 100644
+--- a/build.zig
++++ b/build.zig
+@@ -116,7 +116,6 @@ pub fn build(b: *std.Build) !void {
+         );
+     };
+     libghostty_vt_shared.install(libvt_step);
+-    libghostty_vt_shared.install(b.getInstallStep());
+ 
+     // Helpgen
+     if (config.emit_helpgen) deps.help_strings.install();
+diff --git a/macos/Sources/Features/QuickTerminal/QuickTerminalPosition.swift b/macos/Sources/Features/QuickTerminal/QuickTerminalPosition.swift
+index 8742a7836..6e9346cca 100644
+--- a/macos/Sources/Features/QuickTerminal/QuickTerminalPosition.swift
++++ b/macos/Sources/Features/QuickTerminal/QuickTerminalPosition.swift
+@@ -7,6 +7,12 @@ enum QuickTerminalPosition: String {
+     case right
+     case center
+ 
++    /// Anchor top quick terminals to the right edge of the visible screen.
++    private func topHorizontalOrigin(for window: NSWindow, on screen: NSScreen) -> CGFloat {
++        let frame = screen.visibleFrame
++        return round(frame.maxX - window.frame.width)
++    }
++
+     /// Set the loaded state for a window. This should only be called when the window is first loaded,
+     /// usually in `windowDidLoad` or in a similar callback. This is the initial state.
+     func setLoaded(_ window: NSWindow, size: QuickTerminalSize) {
+@@ -67,7 +73,7 @@ enum QuickTerminalPosition: String {
+         switch self {
+         case .top:
+             return .init(
+-                x: round(screen.visibleFrame.origin.x + (screen.visibleFrame.width - window.frame.width) / 2),
++                x: topHorizontalOrigin(for: window, on: screen),
+                 y: screen.visibleFrame.maxY)
+ 
+         case .bottom:
+@@ -95,7 +101,7 @@ enum QuickTerminalPosition: String {
+         switch self {
+         case .top:
+             return .init(
+-                x: round(screen.visibleFrame.origin.x + (screen.visibleFrame.width - window.frame.width) / 2),
++                x: topHorizontalOrigin(for: window, on: screen),
+                 y: screen.visibleFrame.maxY - window.frame.height)
+ 
+         case .bottom:
+@@ -141,7 +147,7 @@ enum QuickTerminalPosition: String {
+         switch self {
+         case .top:
+             return CGPoint(
+-                x: round(screen.visibleFrame.origin.x + (screen.visibleFrame.width - window.frame.width) / 2),
++                x: topHorizontalOrigin(for: window, on: screen),
+                 y: window.frame.origin.y // Keep the same Y position
+             )
+ 
+diff --git a/src/build/LibtoolStep.zig b/src/build/LibtoolStep.zig
+index d2b514927..0d7a88a9a 100644
+--- a/src/build/LibtoolStep.zig
++++ b/src/build/LibtoolStep.zig
+@@ -31,7 +31,7 @@ pub fn create(b: *std.Build, opts: Options) *LibtoolStep {
+     const self = b.allocator.create(LibtoolStep) catch @panic("OOM");
+ 
+     const run_step = RunStep.create(b, b.fmt("libtool {s}", .{opts.name}));
+-    run_step.addArgs(&.{ "libtool", "-static", "-o" });
++    run_step.addFileArg(b.path("src/build/repack-static-archives.sh"));
+     const output = run_step.addOutputFileArg(opts.out_name);
+     for (opts.sources) |source| run_step.addFileArg(source);
+ 
+diff --git a/src/build/repack-static-archives.sh b/src/build/repack-static-archives.sh
+new file mode 100755
+index 000000000..8b7e462b1
+--- /dev/null
++++ b/src/build/repack-static-archives.sh
+@@ -0,0 +1,24 @@
++#!/bin/bash
++set -euo pipefail
++
++output=$1
++shift
++scratch=$(mktemp -d)
++trap 'rm -rf "$scratch"' EXIT
++
++objects=()
++index=0
++for archive in "$@"; do
++  archive=$(realpath "$archive")
++  directory="$scratch/$index"
++  mkdir -p "$directory"
++  (cd "$directory" && xcrun ar -x "$archive")
++  for object in "$directory"/*.o; do
++    [[ -e "$object" ]] || continue
++    chmod u+r "$object"
++    objects+=("$object")
++  done
++  index=$((index + 1))
++done
++
++xcrun libtool -static -o "$output" "${objects[@]}"

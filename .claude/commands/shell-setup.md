@@ -505,6 +505,22 @@ Verify it parses:
 
 Reload a running Ghostty with `⌘⇧,` to pick up the new config.
 
+For the top-right quick terminal, build Ghostty 1.3.1 with the pinned patch in
+this repo. Install Zig 0.15.2 and gettext, select Xcode, and install its Metal
+Toolchain if missing. From the repo root, run:
+
+```bash
+ghostty/build-top-right.sh
+```
+
+The script prints the staged app path. After Ghostty is fully quit, run
+`ghostty/install-top-right.sh /path/to/Ghostty.app` with that path, then reopen
+Ghostty. The installer checks the build and saves the current app under
+`~/.local/share/shell-setup/ghostty-backups/`. Verify the quick terminal slides
+down at the right edge on each display. The local build has an ad-hoc
+signature: grant Ghostty Accessibility and Full Disk Access again if macOS
+requests them. Rebuild and reinstall the patch after updating Ghostty.
+
 ## 17. Restore tmux Configuration
 
 Symlink this repo's tmux config at `~/.tmux.conf` — a **symlink, not a

@@ -40,7 +40,10 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ├── config-features.toml     # Codex [features].hooks — hooks.json is inert without it
 └── hooks.json               # Codex lifecycle hooks (session tracking, activity, worktree registration)
 ghostty/
-└── config                   # Ghostty terminal config (quick terminal, splits, NTE)
+├── config                   # Ghostty terminal config (quick terminal, splits, NTE)
+├── build-top-right.sh       # build a Ghostty app with a top-right quick terminal
+├── install-top-right.sh     # replace Ghostty after quitting it; keep a backup
+└── top-right-quick-terminal.patch # pin the top quick terminal to the right edge
 karabiner/
 ├── hyper.json               # Karabiner rule: Caps Lock → Hyper (merged into ~/.config/karabiner/karabiner.json)
 └── merge-hyper.sh           # idempotent upsert of that rule into the selected profile
@@ -447,9 +450,9 @@ These act on Ghostty surfaces directly. Inside herdr or tmux, the Alt-based tab/
 
 ### Quick terminal & splits
 
-The quick terminal slides down from the top of the mouse's display,
-centered horizontally at 1466 × 778 pixels. Restart Ghostty after changing
-`quick-terminal-position`.
+With the patched Ghostty build from §16, the quick terminal slides down from
+the top-right of the mouse's display at 1466 × 778 pixels on every screen.
+Restart Ghostty after changing `quick-terminal-position`.
 
 | Keys | Action |
 | --- | --- |

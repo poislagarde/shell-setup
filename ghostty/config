@@ -5,7 +5,8 @@
 # ⌥Space is a familiar default (alternative: `global:cmd+grave_accent`).
 keybind = global:alt+space=toggle_quick_terminal
 
-# Slide down from the top. Changing position requires a full Ghostty restart.
+# Slide down from the top. The patched build in build-top-right.sh anchors the
+# specified width to the right edge. Changing position requires a full restart.
 quick-terminal-position = top
 
 # Size of the panel — pinned in pixels so column/row count stays constant
