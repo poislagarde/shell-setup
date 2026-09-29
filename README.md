@@ -447,6 +447,11 @@ These act on Ghostty surfaces directly. Inside herdr or tmux, the Alt-based tab/
 
 ### Quick terminal & splits
 
+The quick terminal opens on the mouse's display, anchored to the right edge
+and centered vertically at 1466 × 778 pixels. This placement applies on every
+display, leaving room beside the terminal on wider screens. Restart Ghostty
+after changing `quick-terminal-position`.
+
 | Keys | Action |
 | --- | --- |
 | `Alt+Space` | Toggle the quick terminal (global — works from any app) |

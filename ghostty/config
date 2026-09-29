@@ -5,19 +5,20 @@
 # ⌥Space is a familiar default (alternative: `global:cmd+grave_accent`).
 keybind = global:alt+space=toggle_quick_terminal
 
-# Where the panel slides in from: top | bottom | left | right | center
-quick-terminal-position = top
+# Anchor to the right edge and center vertically; wide screens leave room
+# beside the panel. Changing position requires a full Ghostty restart.
+quick-terminal-position = right
 
 # Size of the panel — pinned in pixels so column/row count stays constant
-# across monitors of different sizes. Format for position=top is
-# `HEIGHT,WIDTH`; omitting the second value lets Ghostty maximize the
-# secondary axis, which makes the width change between displays.
+# across monitors of different sizes. Format for position=right is
+# `WIDTH,HEIGHT`; omitting the second value lets Ghostty maximize the
+# secondary axis, which makes the height change between displays.
 #
 # 778px ≈ 48 rows at JetBrains Mono 12pt (see font-size below, ~16px/row). Nudge
 # ±16px to hit a target row count. Width 1466px ≈ 203 columns at the same font
 # (~7.2px/cell advance); pinning px keeps the row/column count constant across
 # monitors of different sizes.
-quick-terminal-size = 778px,1466px
+quick-terminal-size = 1466px,778px
 
 # Which display to show on: main | mouse | macos-menu-bar
 quick-terminal-screen = mouse
