@@ -7,7 +7,8 @@
     "defaultMode": "auto"
   },
   "env": {
-    "CLAUDE_AFK_TIMEOUT_MS": "2147483647"
+    "CLAUDE_AFK_TIMEOUT_MS": "2147483647",
+    "CLAUDE_CODE_NATIVE_CURSOR": "1"
   },
   "enabledPlugins": {
     "engineering@knowledge-work-plugins": true

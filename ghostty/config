@@ -67,6 +67,9 @@ font-size = 12
 font-thicken = true
 window-colorspace = srgb
 
+# Use a thin bar as the default cursor for terminal applications.
+cursor-style = bar
+
 # --- Mouse behavior ---
 # Deliberately NOT setting mouse-shift-capture: Shift must stay Ghostty's
 # mouse-reporting bypass so Cmd+Shift+click opens links while tmux owns the

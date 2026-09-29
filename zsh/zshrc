@@ -59,11 +59,8 @@ bindkey '^[[45;10u' zle-noop
 bindkey '^[[91;10u' zle-noop
 bindkey '^[[93;10u' zle-noop
 
-# Cursor: blinking thin bar at the prompt. Outside tmux, Ghostty's default
-# already gives us this. Inside tmux, tmux owns cursor rendering and defaults
-# to a steady block — so re-assert DECSCUSR=5 (blinking bar) on each prompt.
-# Pairs with `terminal-features 'xterm*:cstyle'` in tmux.conf so the escape is
-# forwarded to Ghostty instead of swallowed.
+# Reassert a blinking thin bar at each prompt. Ghostty uses the same default;
+# tmux forwards DECSCUSR through its xterm*:cstyle capability.
 _zsh_cursor_blinking_bar() { print -n '\e[5 q' }
 precmd_functions+=(_zsh_cursor_blinking_bar)
 
@@ -132,7 +129,7 @@ alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
 # and updates persist their own value), so the file can't be trusted to hold.
 # An explicit -c beats the file; flags passed on the command line come after
 # this one and still win.
-alias codex='codex -c model_reasoning_effort=ultra'
+alias codex='codex -c model_reasoning_effort=max'
 
 # Machine-local shell settings stay outside this public repository.
 if [[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/shell-setup/local-env.sh" ]]; then
