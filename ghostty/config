@@ -71,6 +71,9 @@ window-colorspace = srgb
 cursor-style = bar
 
 # --- Mouse behavior ---
+# Keep discrete wheel reports at one per scroll unit.
+mouse-scroll-multiplier = discrete:1
+
 # Deliberately NOT setting mouse-shift-capture: Shift must stay Ghostty's
 # mouse-reporting bypass so Cmd+Shift+click opens links while tmux owns the
 # mouse. The tmux pane/window drag-swaps use Ctrl instead (C- bindings),

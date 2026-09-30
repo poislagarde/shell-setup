@@ -6,8 +6,8 @@
 [tui]
 # Decorative composer effects break terminal text selection.
 whimsy = false
-# Let the multiplexer handle mouse-wheel scrolling in its scrollback.
-alternate_screen = "never"
+# Keep the fixed input box and native transcript scrolling.
+alternate_screen = "always"
 status_line = [
   "context-used",
   "model-with-reasoning",
