@@ -36,7 +36,7 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 └── tests/                   # statusline reset-format and gauge-priority regression test
 .codex/
 ├── config-defaults.toml     # Codex default model and reasoning effort
-├── config-tui.toml          # Codex TUI: statusline (context, model, PR, limits) + whimsy off
+├── config-tui.toml          # Codex TUI: statusline (context, model, PR, limits), inline scrollback, whimsy off
 ├── config-features.toml     # Codex [features].hooks — hooks.json is inert without it
 └── hooks.json               # Codex lifecycle hooks (session tracking, activity, worktree registration)
 ghostty/
@@ -90,7 +90,7 @@ What the setup puts on your PATH, plus the shell helpers and aliases it defines 
 | `awsenv` *(helper)* | Log into an AWS SSO profile and export its credentials into the current shell: `awsenv dev` / `awsenv prod` / `awsenv prod-admin` (the three profiles from §11). |
 | `bfg` | BFG Repo-Cleaner — strip large files or secrets from git history. `bfg --delete-files secrets.txt` or `bfg --replace-text passwords.txt`, then `git reflog expire --expire=now --all && git gc --prune=now --aggressive`. |
 | `claude` *(alias)* | Claude Code, aliased to `claude --chrome` with tmux truecolor forced on; uses the native terminal cursor. `claude` to start, `claude --resume` / `claude --continue` to pick up a conversation. Installed via the native installer (§8) — update with `claude update`. |
-| `codex` *(alias)* | OpenAI Codex CLI, aliased to force `model_reasoning_effort=max` on every launch. `codex` to start; `codex resume <id>`. Installed via its native installer (§8) — update with `codex update`. |
+| `codex` *(alias)* | OpenAI Codex CLI, aliased to force `model_reasoning_effort=max` on every launch; uses inline view and multiplexer scrollback. `codex` to start; `codex resume <id>`. Installed via its native installer (§8) — update with `codex update`. |
 | `cswap` | Switch between logged-in Claude Code accounts. Register once per account (log in first, then `cswap --add-account`); switch with `cswap --switch`, `cswap --switch-to <n\|email>`, or the `cswap --tui` menu; `cswap --list` shows registered accounts. Restart Claude Code after switching to pick up the new token. |
 | `gcloud` | Google Cloud CLI. `gcloud auth login`, `gcloud config set project <id>`. |
 | `gh` | GitHub CLI. `gh pr create`, `gh pr view --web`, `gh repo clone <repo>`. |
