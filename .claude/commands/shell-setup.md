@@ -877,8 +877,9 @@ The plugin finds a matching repository in the current directory or another open
 space in this herdr session, then opens the PR branch beneath that repository's
 space. The repository needs a GitHub remote matching the URL; open it in a space
 first if it is not already available. Existing worktrees are reused as-is,
-preserving local commits and uncommitted changes. If the branch has different
-commits and no worktree, update or rename it before retrying.
+preserving local commits and uncommitted changes. A branch with no worktree is
+fast-forwarded when it is behind the PR; if it has commits not in the PR, push,
+rebase, or rename it before retrying.
 
 The worktree-setup plugin needs Node 18+ on the herdr server's `PATH` and npm
 (§7) for installation; individual setup scripts may require another Node version.

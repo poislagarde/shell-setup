@@ -292,13 +292,14 @@ space. The current directory's repository is preferred; otherwise the first
 matching open repository is used. Invoking from a linked worktree still opens
 the PR beneath the repository's parent space. New worktrees use the fetched PR
 head, including fork PRs. Existing worktrees are reused as-is, preserving local commits
-and uncommitted changes. If the branch has different commits and no worktree,
-update or rename it before retrying. Branches without tracking settings pull from
+and uncommitted changes. A branch with no worktree is fast-forwarded when it is
+behind the PR; if it has commits not in the PR, push, rebase, or rename it before
+retrying. Branches without tracking settings pull from
 the PR's source branch, including forks. Existing tracking settings are preserved;
 reopening a worktree fills in missing tracking without changing local work.
 
-Missing, unlocked checkouts are recreated when the local branch matches the PR
-and the retained Git index is clean. The plugin backs up their metadata before
+Missing, unlocked checkouts are recreated, and their branch fast-forwarded, when
+the branch has no commits beyond the PR and the retained Git index is clean. The plugin backs up their metadata before
 removing only the stale registration. Locked checkouts, staged changes, and
 unavailable parent directories require manual repair. Remove temporary checkouts
 with `git worktree remove /path/to/checkout`; use `git worktree move` to relocate
