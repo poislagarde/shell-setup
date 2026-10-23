@@ -32,6 +32,7 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ├── commands/
 │   └── shell-setup.md       # the /shell-setup slash command
 ├── settings.json            # Claude Code settings (statusline, plugins, prefs)
+├── show-visual-work.md      # global instruction to show visual work inline, imported by ~/.claude/CLAUDE.md
 ├── statusline-command.sh    # statusline: ctx % + model[effort] (left), weekly + 5h usage (right); degrades to fit width, keeping the limit that runs out first
 └── tests/                   # statusline reset-format and gauge-priority regression test
 .codex/

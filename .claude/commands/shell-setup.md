@@ -410,12 +410,21 @@ merge_hooks ~/.claude/settings.json .claude/settings.json
 #    ~/.claude that aren't in the repo (no --delete). Exclude the bootstrap
 #    command itself — `shell-setup.md` runs one-time from this repo, so it
 #    must not be installed as a global ~/.claude command — and the statusline
-#    script, which is symlinked below instead of copied.
+#    script and visual-work instruction, which are symlinked below instead.
 rsync -av --exclude='settings.json' --exclude='commands/shell-setup.md' \
-  --exclude='statusline-command.sh' .claude/ ~/.claude/
+  --exclude='statusline-command.sh' --exclude='show-visual-work.md' \
+  .claude/ ~/.claude/
 
 # 3. Symlink the statusline script into place (one file, no repo/home drift).
 ln -sf "$PWD/.claude/statusline-command.sh" ~/.claude/statusline-command.sh
+
+# 3b. Global instruction to show visual work with the show-your-work tools.
+#     Import it from ~/.claude/CLAUDE.md, which stays a regular file so
+#     personal instructions never land in this public repo. Needed because
+#     Claude Code drops the plugin's own prompt line for organization accounts.
+ln -sf "$PWD/.claude/show-visual-work.md" ~/.claude/show-visual-work.md
+grep -qxF '@~/.claude/show-visual-work.md' ~/.claude/CLAUDE.md 2>/dev/null ||
+  printf '%s\n' '@~/.claude/show-visual-work.md' >> ~/.claude/CLAUDE.md
 
 # 4. Codex CLI counterpart: install the hooks (the Codex-side equivalent of the
 #    Claude hooks above; both point at scripts symlinked by §17). Codex requires
