@@ -90,6 +90,10 @@ fi
 # Editor
 export EDITOR="zed --wait"
 
+# herdr passes OSC 8 links through to Ghostty, but CLIs that sniff TERM_PROGRAM
+# (Claude Code's PR link, etc.) don't recognize `herdr` and print plain text.
+[[ $TERM_PROGRAM == herdr ]] && export FORCE_HYPERLINK=1
+
 # User-installed zsh completions (must come BEFORE compinit so it picks them up)
 fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
 
