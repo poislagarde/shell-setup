@@ -11,13 +11,21 @@
     "CLAUDE_CODE_NATIVE_CURSOR": "1"
   },
   "enabledPlugins": {
-    "engineering@knowledge-work-plugins": true
+    "engineering@knowledge-work-plugins": true,
+    "show-your-work@iamumeransari": true
   },
   "extraKnownMarketplaces": {
     "knowledge-work-plugins": {
       "source": {
         "source": "github",
         "repo": "anthropics/knowledge-work-plugins"
+      }
+    },
+    "iamumeransari": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/iamumeransari/claude-show-your-work.git",
+        "ref": "releases"
       }
     }
   },

@@ -31,6 +31,7 @@ brew install \
   autojump \
   auth0 \
   bfg \
+  ffmpeg \
   gh \
   go \
   jq \
