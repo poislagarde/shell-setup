@@ -90,8 +90,10 @@ fi
 # Editor
 export EDITOR="zed --wait"
 
-# herdr passes OSC 8 links through to Ghostty, but CLIs that sniff TERM_PROGRAM
-# (Claude Code's PR link, etc.) don't recognize `herdr` and print plain text.
+# herdr opens OSC 8 links on Ctrl+click (with mouse capture on, it doesn't hand
+# them to Ghostty, so Cmd+Shift+click can't open them). CLIs that sniff
+# TERM_PROGRAM (Claude Code's PR link, etc.) don't recognize `herdr` and print
+# plain text instead.
 [[ $TERM_PROGRAM == herdr ]] && export FORCE_HYPERLINK=1
 # Same for kitty graphics: Claude Code only draws images when XTVERSION names
 # kitty or Ghostty, so force them on; herdr's [terminal] kitty_graphics relays them.
