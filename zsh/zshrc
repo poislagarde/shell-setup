@@ -93,6 +93,9 @@ export EDITOR="zed --wait"
 # herdr passes OSC 8 links through to Ghostty, but CLIs that sniff TERM_PROGRAM
 # (Claude Code's PR link, etc.) don't recognize `herdr` and print plain text.
 [[ $TERM_PROGRAM == herdr ]] && export FORCE_HYPERLINK=1
+# Same for kitty graphics: Claude Code only draws images when XTVERSION names
+# kitty or Ghostty, so force them on; herdr's [terminal] kitty_graphics relays them.
+[[ $TERM_PROGRAM == herdr ]] && export CLAUDE_CODE_FORCE_TERMINAL_IMAGES=1
 
 # User-installed zsh completions (must come BEFORE compinit so it picks them up)
 fpath=("$HOME/.local/share/zsh/site-functions" $fpath)

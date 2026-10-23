@@ -22,6 +22,11 @@ rows = [
 name = "solarized"
 auto_switch = false
 
+# Pass kitty graphics (Claude Code images and the show-your-work player) on to
+# Ghostty. Changing it requires restarting the herdr server.
+[terminal]
+kitty_graphics = true
+
 # Keybinds mirror tmux/tmux.conf with tmux windows <> herdr spaces and tmux
 # panes <> herdr tabs; each array keeps herdr's default first. tmux reads Cmd
 # as Meta, so Cmd and Alt chords land on the same tmux binding. Shifted punctuation is bound in both forms the terminal may
