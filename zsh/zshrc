@@ -96,7 +96,7 @@ export EDITOR="zed --wait"
 # plain text instead.
 [[ $TERM_PROGRAM == herdr ]] && export FORCE_HYPERLINK=1
 # Same for kitty graphics: Claude Code only draws images when XTVERSION names
-# kitty or Ghostty, so force them on; herdr's [terminal] kitty_graphics relays them.
+# kitty or Ghostty, so force them on; herdr relays them to Ghostty.
 [[ $TERM_PROGRAM == herdr ]] && export CLAUDE_CODE_FORCE_TERMINAL_IMAGES=1
 
 # User-installed zsh completions (must come BEFORE compinit so it picks them up)
