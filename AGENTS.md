@@ -200,6 +200,8 @@ generation current; inspect the reported log and retry the save.
 | herdr enrolled repositories | local-only inventory, not tracked | `~/.config/herdr/worktree-repositories.txt` (one absolute path per line; bootstrap restores enrolled hooks) |
 | herdr Git worktree registration | `herdr/worktree-register.py` | `~/.shell-setup/worktree-register.py` (symlink; bootstrap §18 installs per-repo `post-checkout` wrappers and §15 merges agent `PostToolUse` drain hooks) |
 | Karabiner | `karabiner/hyper.json` | the Hyper rule inside `~/.config/karabiner/karabiner.json` (merge via `karabiner/merge-hyper.sh` — the file holds other rules and device state; Karabiner reloads it on change) |
+| herdr Claude detection | `herdr/claude-detection-overlay.sh` | `~/.shell-setup/herdr-claude-detection.sh` (symlink to the repo file; writes the generated `~/.config/herdr/agent-detection/claude.toml` override — edit the script, never the generated file, then run it) |
+| herdr Claude detection LaunchAgent | `herdr/local.shell-setup.herdr-claude-detection.plist` | `~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist` (rendered copy with `__HOME__` replaced; after edits re-render as in bootstrap §18, then `launchctl bootout` + `bootstrap`) |
 | herdr Claude launcher | `herdr/claude-pane.sh` | `~/.shell-setup/claude-pane.sh` (symlink to the repo file; run by the `[[keys.command]]` bindings) |
 | tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
 | tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.shell-setup/assistant-resurrect` (symlink to the repo dir; edit either; one place) |

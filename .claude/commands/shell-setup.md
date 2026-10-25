@@ -831,6 +831,11 @@ command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh
 mkdir -p ~/.config/herdr ~/.shell-setup
 ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
 ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
+ln -sfn "$(pwd)/herdr/claude-detection-overlay.sh" ~/.shell-setup/herdr-claude-detection.sh
+sed "s|__HOME__|$HOME|g" herdr/local.shell-setup.herdr-claude-detection.plist \
+  > ~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist
+launchctl bootout gui/$(id -u)/local.shell-setup.herdr-claude-detection 2>/dev/null || true
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist
 herdr plugin install poislagarde/herdr-branch-labels \
   --ref "$(cat herdr/branch-labels.ref)" --yes
 branch_labels_config_dir="$(herdr plugin config-dir poislagarde.branch-labels)"
@@ -878,6 +883,17 @@ fi
 
 The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
 file, reconcile its differences into the repo first, then re-symlink.
+
+`herdr/claude-detection-overlay.sh` writes herdr's local Claude detection
+override, `~/.config/herdr/agent-detection/claude.toml`, from the cached remote
+manifest plus the rules in the script. Its extra rule shows a Claude pane idle
+with a background shell or Monitor as `working`, so the sidebar circle stays
+yellow until the job exits. A local override replaces herdr's manifest
+entirely, so the `local.shell-setup.herdr-claude-detection` LaunchAgent reruns
+the script whenever herdr refreshes the remote copy. After editing the rules,
+run `herdr/tests/claude-detection-test.sh`, then
+`~/.shell-setup/herdr-claude-detection.sh`; it reloads herdr's manifests when
+the override changes. `herdr agent explain <pane>` names the matched rule.
 
 The PR worktree plugin needs Python 3.9+, Git, and authenticated `gh`
 (`gh auth status`). Its source commit is pinned in `herdr/pr-worktree.ref`.

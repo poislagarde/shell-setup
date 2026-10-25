@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>local.shell-setup.herdr-claude-detection</string>
+	<!-- Regenerates herdr's local Claude detection override whenever herdr
+	     refreshes its cached remote manifest. -->
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/sh</string>
+		<string>-c</string>
+		<string>exec "$HOME/.shell-setup/herdr-claude-detection.sh"</string>
+	</array>
+	<!-- launchd expands neither ~ nor $HOME here; bootstrap renders __HOME__. -->
+	<key>WatchPaths</key>
+	<array>
+		<string>__HOME__/.local/state/herdr/agent-detection/remote</string>
+		<string>__HOME__/.local/state/herdr/agent-detection/remote/claude.toml</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>

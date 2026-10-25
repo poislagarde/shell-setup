@@ -50,7 +50,7 @@ karabiner/
 └── merge-hyper.sh           # idempotent upsert of that rule into the selected profile
 herdr/
 ├── PLUGIN-LANGUAGE.md       # workload-based criteria for choosing a plugin's language
-├── tests/                  # private keyboard-history regression test
+├── tests/                  # private keyboard-history and Claude detection regression tests
 ├── config.toml              # herdr config: tmux-compatible keybinds (symlinked to ~/.config/herdr/)
 ├── branch-labels.json       # personal sidebar regex (symlinked into the plugin's config directory)
 ├── branch-labels.ref        # pinned commit of the regex-based sidebar-label plugin
@@ -61,6 +61,8 @@ herdr/
 ├── worktree-setup.ref        # pinned commit of the per-project worktree setup plugin
 ├── worktree-setup.example.toml # generic seed for local-only project setup commands
 ├── worktree-register.py      # Git creation hook installer + deferred ownership registration adapter
+├── claude-detection-overlay.sh # herdr's Claude detection manifest + a rule counting background shells as working
+├── local.shell-setup.herdr-claude-detection.plist # LaunchAgent: regenerates that override when herdr refreshes its manifest
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)
@@ -438,6 +440,10 @@ registration and metadata; directory names alone do not establish eligibility.
 | `Alt+Tab` | Next agent (agent-panel order: attention-needing first) |
 | `Alt+Shift+Tab` | Previous agent |
 | prefix, `o` | Jump to the agent behind the visible notification |
+
+A Claude session idle at its prompt with a background shell or Monitor still
+running counts as working: its sidebar circle stays yellow `●` until the job
+exits (see `herdr/claude-detection-overlay.sh`).
 
 ## herdr plugin development
 
