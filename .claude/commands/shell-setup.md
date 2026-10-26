@@ -10,9 +10,14 @@ Run each section in order. Pause and report after each section completes so I ca
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-After install, add Homebrew to PATH for the current session:
+After install, put Homebrew ahead of the system directories on PATH for login
+shells and the current session. The installer's `/etc/paths.d/homebrew` alone
+puts it after `/bin`. `~/.zprofile` is installer-owned (§14), so append the line
+only if it's missing:
 
 ```bash
+grep -qxF 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.zprofile 2>/dev/null ||
+  printf '\n%s\n' 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
 eval "$(/opt/homebrew/bin/brew shellenv)"
 ```
 
