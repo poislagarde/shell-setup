@@ -312,7 +312,7 @@ unavailable parent directories require manual repair. Remove temporary checkouts
 with `git worktree remove /path/to/checkout`; use `git worktree move` to relocate
 them, and lock checkouts on removable storage before disconnecting it.
 
-Requires Python 3.9+, Git, and authenticated `gh` (`gh auth status`). The
+Requires Python 3.11+, Git, and authenticated `gh` (`gh auth status`). The
 repository needs a remote matching the URL's GitHub repository. If no matching
 repository is open, open it in a space first.
 

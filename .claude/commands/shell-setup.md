@@ -906,7 +906,7 @@ run `herdr/tests/claude-detection-test.sh`, then
 `~/.shell-setup/herdr-claude-detection.sh`; it reloads herdr's manifests when
 the override changes. `herdr agent explain <pane>` names the matched rule.
 
-The PR worktree plugin needs Python 3.9+, Git, and authenticated `gh`
+The PR worktree plugin needs Python 3.11+, Git, and authenticated `gh`
 (`gh auth status`). Its source commit is pinned in `herdr/pr-worktree.ref`.
 From any space, press `Ctrl+B`, then `Alt+G`, paste a GitHub PR URL, and press
 Enter, or run `herdr plugin action invoke poislagarde.pr-worktree.open`.
