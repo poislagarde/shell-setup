@@ -354,6 +354,13 @@ deleted only when its PRs are closed or merged, its current tip is verified
 recoverable from GitHub, and no other worktree uses it. GitHub failures retain
 the branch.
 
+If a checkout is deleted while a pane still uses it, herdr restores that pane as
+"Saved directory is unavailable". On herdr startup the plugin recreates the
+checkout from its recorded branch, resumes the pane's Claude Code or Codex
+session in a replacement pane, and closes the dead one. To retry after fixing
+what its notification reports, run
+`herdr plugin action invoke poislagarde.worktree-cleanup.restore`.
+
 #### Enroll repositories
 
 After running `/shell-setup`, enroll each repository once to automatically

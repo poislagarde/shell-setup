@@ -952,7 +952,9 @@ including its last shell exiting, removes the checkout if clean and its remainin
 files are disposable. Unpushed commits, open PRs, and branches without PRs retain
 the local branch. Closed or merged PR branches are deleted only after verifying
 their current tip is recoverable from GitHub and no other worktree uses them.
-GitHub failures retain the branch without blocking checkout removal.
+GitHub failures retain the branch without blocking checkout removal. On herdr
+startup, a pane whose recorded checkout was deleted gets the checkout recreated
+from its recorded branch and its agent session resumed in a replacement pane.
 
 Enroll each repository once to automatically register worktrees created by
 ordinary `git worktree add`. Run the installer against its main checkout:
