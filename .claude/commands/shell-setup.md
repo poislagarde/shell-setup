@@ -43,6 +43,7 @@ brew install \
   libpq \
   nvm \
   pipx \
+  python \
   railway \
   rust \
   tmux \
@@ -852,7 +853,7 @@ branch_labels_config_dir="$(herdr plugin config-dir poislagarde.branch-labels)"
 ln -sfn "$(pwd)/herdr/branch-labels.json" "$branch_labels_config_dir/config.json"
 herdr plugin install poislagarde/herdr-last-workspace \
   --ref "$(cat herdr/last-workspace.ref)" --yes
-python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ is required for the worktree plugins"'
+python3 -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ is required for the worktree plugins"'
 herdr plugin install poislagarde/herdr-worktree-cleanup \
   --ref "$(cat herdr/worktree-cleanup.ref)" --yes || exit 1
 ln -sfn "$(pwd)/herdr/worktree-register.py" ~/.shell-setup/worktree-register.py
@@ -950,7 +951,7 @@ back through space history; `Alt+Shift+Backtick` goes forward. The plugin tracks
 workspace changes independently of pane/tab focus and keeps history per herdr
 session. `init` records the current space without changing focus.
 
-The worktree-cleanup plugin needs Python 3.9+ and Git; authenticated `gh`
+The worktree-cleanup plugin needs Python 3.11+ and Git; authenticated `gh`
 (`gh auth status`) enables cleanup of finished local branches. Its source commit
 is pinned in `herdr/worktree-cleanup.ref`. Closing a linked worktree's space,
 including its last shell exiting, removes the checkout if clean and its remaining
