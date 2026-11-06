@@ -23,3 +23,6 @@ Temporary Items
 *.tmp
 .idea/
 .vscode/
+
+# Claude Code worktrees (claude -w, isolated subagents)
+/.claude/worktrees/
