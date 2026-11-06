@@ -375,7 +375,7 @@ export PATH="$PATH:$HOME/.local/bin"
 
 Deep-copy this repo's `.claude/` into `~/.claude/` — except this bootstrap command itself (`commands/shell-setup.md`), which is run one-time from this repo (a project-scoped `/shell-setup`) and is never needed as a global command. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
-The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `assistant-resurrect/` for session persistence and `assistant-activity/` for the window-label activity indicator (§17), plus `worktree-register.py` for deferred Herdr registration (§18). Complete those symlinks before starting a new assistant session.
+The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `assistant-resurrect/` for session persistence and `assistant-activity/` for the window-label activity indicator (§17), `worktree-register.py` for deferred Herdr registration (§18), and `worktree-guard.py`, which refuses `git worktree add` into `/tmp` or `$TMPDIR` (linked below). Complete those symlinks before starting a new assistant session.
 
 Run from the root of this repo:
 
@@ -422,6 +422,11 @@ rsync -av --exclude='settings.json' --exclude='commands/shell-setup.md' \
 
 # 3. Symlink the statusline script into place (one file, no repo/home drift).
 ln -sf "$PWD/.claude/statusline-command.sh" ~/.claude/statusline-command.sh
+
+# 3a. Both assistants' PreToolUse hook that keeps worktrees out of directories
+#     macOS empties automatically.
+mkdir -p ~/.shell-setup
+ln -sfn "$PWD/assistants/worktree-guard.py" ~/.shell-setup/worktree-guard.py
 
 # 3b. Global instruction to show visual work with the show-your-work tools.
 #     Import it from ~/.claude/CLAUDE.md, which stays a regular file so

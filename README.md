@@ -22,6 +22,7 @@ Claude runs a 20-section checklist top to bottom, pausing for verification betwe
 - **AWS** — official CLI installer + interactive SSO profile setup (`prod` / `prod-admin` / `dev`).
 - **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, herdr, and tmux configs; tmux-resurrect plus a guarded persistence coordinator keep sessions, layouts, scrollback, and Claude/Codex conversations across Ghostty quits and reboots.
+- **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically, and tells the agent to use a persistent directory instead.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -39,7 +40,10 @@ This list is deliberately non-exhaustive. The authoritative source — exact com
 ├── config-defaults.toml     # Codex default model and reasoning effort
 ├── config-tui.toml          # Codex TUI: fullscreen, statusline (context, model, PR, limits), whimsy off
 ├── config-features.toml     # Codex [features].hooks — hooks.json is inert without it
-└── hooks.json               # Codex lifecycle hooks (session tracking, activity, worktree registration)
+└── hooks.json               # Codex lifecycle hooks (session tracking, activity, worktree registration and guard)
+assistants/
+├── worktree-guard.py        # Claude Code + Codex PreToolUse hook: refuse worktrees under /tmp or $TMPDIR (symlinked to ~/.shell-setup/)
+└── tests/                   # hook-payload regression test for the guard
 ghostty/
 ├── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 ├── build-top-right.sh       # build a Ghostty app with a top-right quick terminal

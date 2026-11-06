@@ -213,6 +213,7 @@ generation current; inspect the reported log and retry the save.
 | tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
 | Claude Code | `.claude/` (settings.json, commands) | `~/.claude/` |
 | Claude Code statusline | `.claude/statusline-command.sh` | `~/.claude/statusline-command.sh` (symlink to the repo file) |
+| Claude Code + Codex worktree guard | `assistants/worktree-guard.py` | `~/.shell-setup/worktree-guard.py` (symlink to the repo file; run by both assistants' `PreToolUse` hooks; test with `assistants/tests/worktree-guard-test.py`) |
 | Claude Code visual-work instruction | `.claude/show-visual-work.md` | `~/.claude/show-visual-work.md` (symlink to the repo file), imported by an `@~/.claude/show-visual-work.md` line in `~/.claude/CLAUDE.md` (regular file; personal instructions stay there, never in the repo) |
 | Codex CLI | `.codex/hooks.json` | `~/.codex/hooks.json` (merge — may hold user hooks this repo doesn't track, so only the `~/.shell-setup` entries are upserted; Codex must be told to *trust* each hook on first run and after every change to it) |
 | Codex features | `.codex/config-features.toml` | the `[features].hooks` key of `~/.codex/config.toml` (merge that key only; preserve every other flag) |

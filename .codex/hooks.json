@@ -46,6 +46,16 @@
             "command": "~/.shell-setup/assistant-activity/set-state.sh tool-start"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.shell-setup/worktree-guard.py || true",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
