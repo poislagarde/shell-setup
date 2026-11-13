@@ -484,7 +484,7 @@ Restart Ghostty after changing `quick-terminal-position`.
 
 | Keys | Action |
 | --- | --- |
-| `Alt+Space` | Toggle the quick terminal (global — works from any app) |
+| `Alt+Space` | Toggle the quick terminal (global — works from any app; macOS only, unbound on Linux, where Omarchy's Quake console on ``Super+` `` takes its place) |
 | `Cmd+D` / `Cmd+Shift+D` | New native split right / down |
 | `Cmd+]` / `Cmd+[` | Next / previous split |
 | `Cmd+Shift+[` / `]`, `Cmd+Shift+=` / `-` | Forwarded to the terminal — herdr tab cycling and splits, tmux pane cycling and splits |
