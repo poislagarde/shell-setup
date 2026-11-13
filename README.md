@@ -26,7 +26,7 @@ Claude runs a 22-section checklist top to bottom, pausing for verification betwe
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, herdr, and tmux configs; tmux-resurrect plus a guarded persistence coordinator keep sessions, layouts, scrollback, and Claude/Codex conversations across Ghostty quits and reboots.
 - **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically (as does a tmpfs `/tmp` on Linux), and tells the agent to use a persistent directory instead.
 - **Omarchy** — Ghostty as the default terminal, and Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it.
-- **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents.
+- **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents. On Omarchy, `` ` `` and `~` type immediately; their dead keys move to AltGr, and ñ is AltGr+N.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -91,6 +91,9 @@ tmux/
 └── assistant-activity/                  # assistant hooks: window-label activity states + pane auto-focus
 omarchy/
 ├── dead-keys.XCompose       # US International dead keys typed as on macOS: ' + m → 'm (included by ~/.XCompose's managed block)
+├── xkb/                     # linked into ~/.config/xkb: US International's ` and ~ as plain keys, dead keys on AltGr
+│   ├── rules/evdev
+│   └── symbols/shell-setup
 └── qconsole.lua             # Omarchy's Quake console: default shell, full width × 75% height, physical ` key (loaded by ~/.config/hypr/hyprland.lua's managed block)
 zsh/
 └── zshrc                    # sourced by ~/.zshrc's managed block (theme/plugins, PATH, keybinds, awsenv)

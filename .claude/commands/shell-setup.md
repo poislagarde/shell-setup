@@ -1322,7 +1322,7 @@ omarchy default terminal ghostty
 A console that is already open keeps its windows; the shell seeding applies the
 next time it is created empty.
 
-## 21. Make Dead Keys Type Like macOS
+## 21. Adjust US International Dead Keys
 
 **Linux only.**
 
@@ -1354,14 +1354,36 @@ while [ -s "$f" ] && [ -z "$(tail -n 1 "$f")" ]; do sed -i '$d' "$f"; done
 } >> "$f"
 ```
 
-Reload the input method. On Omarchy:
+**Omarchy only:** make the `` ` `` key a plain key. Skip this part where
+`/etc/xkb/rules/evdev` doesn't exist, since the repo's rules load it.
+
+`omarchy/xkb/` holds XKB rules that load Omarchy's. For `us intl` only, they
+make `` ` `` and `~` type immediately and move their dead keys to AltGr and
+AltGr + Shift. ñ stays on AltGr + N. §20 binds the Quake console to the
+physical key, so the console keeps working. libxkbcommon reads `~/.config/xkb`
+before `/etc/xkb`, so link both files there. If
+`~/.config/xkb/rules/evdev` already exists and isn't this link, stop and ask:
+it would be replaced.
 
 ```bash
+mkdir -p ~/.config/xkb/rules ~/.config/xkb/symbols
+ln -sfn "$PWD/omarchy/xkb/rules/evdev" ~/.config/xkb/rules/evdev
+ln -sfn "$PWD/omarchy/xkb/symbols/shell-setup" ~/.config/xkb/symbols/shell-setup
+```
+
+Reload. On Omarchy, Hyprland recompiles keymaps only when a keyboard setting
+changes, so set the rules name at runtime first; the reload restores it. fcitx5
+keeps a copy of the keymap and also reloads the compose table:
+
+```bash
+hyprctl repl 'hl.config({input = {kb_rules = "evdev"}})' >/dev/null
+hyprctl reload >/dev/null && hyprctl configerrors
 omarchy restart xcompose
+xkbcli dump-keymap-wayland | grep 'key <TLDE>'   # expect grave, asciitilde, dead_grave, dead_tilde
 ```
 
 Elsewhere, log out and back in. Apps that compose keys themselves, without the
-input method, pick the change up when they restart.
+input method, pick up the compose change when they restart.
 
 ## 22. Post-Setup Verification
 
@@ -1405,13 +1427,15 @@ systemctl --user show -p ExecStart app-com.mitchellh.ghostty.service | grep -q g
 grep -c '/omarchy/dead-keys.XCompose"$' ~/.XCompose   # expect 1
 ```
 
-**Omarchy:** confirm §20's Quake console changes loaded:
+**Omarchy:** confirm §20's Quake console changes and §21's plain `` ` `` key
+loaded:
 
 ```bash
 hyprctl configerrors
 hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
 hyprctl repl 'return tostring(qconsole_resized)'     # expect true
 omarchy default terminal                             # expect ghostty
+xkbcli dump-keymap-wayland | grep 'key <TLDE>'       # expect grave, asciitilde, dead_grave, dead_tilde
 ```
 
 **macOS:** confirm the tmux server agent is loaded and running:

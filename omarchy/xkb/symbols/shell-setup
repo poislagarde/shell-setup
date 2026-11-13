@@ -1,0 +1,6 @@
+// ` and ~ type immediately; their dead keys move to AltGr and AltGr + Shift.
+// Ñ stays on AltGr + N.
+partial alphanumeric_keys
+xkb_symbols "plain_grave" {
+  key <TLDE> { [ grave, asciitilde, dead_grave, dead_tilde ] };
+};

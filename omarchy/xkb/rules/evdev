@@ -1,0 +1,8 @@
+// shell-setup's XKB rules, read from ~/.config/xkb before /etc/xkb. They load
+// Omarchy's rules (which load the system's) and then make US International's
+// ` key a plain key. Omarchy only: without /etc/xkb/rules/evdev no keymap
+// compiles, so remove the ~/.config/xkb/rules/evdev link if Omarchy drops it.
+! include %E/evdev
+
+! layout variant = symbols
+  us intl = +shell-setup(plain_grave)
