@@ -26,7 +26,7 @@ Claude runs a 22-section checklist top to bottom, pausing for verification betwe
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, and herdr configs.
 - **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically (as does a tmpfs `/tmp` on Linux), and tells the agent to use a persistent directory instead.
 - **Omarchy** — Ghostty as the default terminal, and Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it.
-- **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents. On Omarchy, `` ` `` and `~` type immediately; their dead keys move to AltGr, and ñ is AltGr+N. AltGr+↑/↓ work as Alt+↑/↓.
+- **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents. On Omarchy, `` ` `` and `~` type immediately; their dead keys move to AltGr, and ñ is AltGr+N. Alt+←/→ jump words and Alt+Backspace deletes one in every app, and AltGr works as Alt with the arrows and Backspace.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -78,7 +78,7 @@ herdr/
 ├── local.shell-setup.herdr-claude-detection.service # Linux: systemd unit the path unit starts to regenerate the override
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 omarchy/
-├── altgr-arrows.lua         # AltGr+↑/↓ send Alt+↑/↓ (loaded by ~/.config/hypr/hyprland.lua's managed block)
+├── alt-keys.lua             # Alt+←/→/Backspace edit words in every app; AltGr acts as Alt with arrows and Backspace (loaded by ~/.config/hypr/hyprland.lua's managed block)
 ├── dead-keys.XCompose       # US International dead keys typed as on macOS: ' + m → 'm (included by ~/.XCompose's managed block)
 ├── xkb/                     # linked into ~/.config/xkb: US International's ` and ~ as plain keys, dead keys on AltGr
 │   ├── rules/evdev
@@ -177,7 +177,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | prefix, `s` | herdr settings |
 | prefix, `?` | List all key bindings |
 
-> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓ (`omarchy/altgr-arrows.lua`).
+> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓ (`omarchy/alt-keys.lua`).
 
 PR worktrees use [herdr-pr-worktree](https://github.com/poislagarde/herdr-pr-worktree),
 installed at the commit in `herdr/pr-worktree.ref` by bootstrap §18. From any
@@ -393,6 +393,8 @@ The gaps Ghostty doesn't bind out of the box:
 | `Alt+Delete` (`fn+Alt+Backspace`) | Delete word forward |
 | `fn+Backspace` (`⌦`) | Forward-delete a character |
 | `Shift+Enter` | Insert a newline without submitting in Claude Code, Codex and zsh (inside herdr, zsh gets a plain Enter) |
+
+> On Omarchy, `Alt+←/→` and `Alt+Backspace` work on words in every app, not only Ghostty; GUI apps get the `Ctrl` chords, so browsers lose `Alt+←/→` for back/forward. AltGr works as Alt with these keys (`omarchy/alt-keys.lua`).
 
 ## License
 

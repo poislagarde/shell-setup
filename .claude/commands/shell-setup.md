@@ -1012,14 +1012,18 @@ Karabiner picks the change up on save.
 - It is bound to the physical \` key (`code:49`), which dead-key layouts such as
   US International never send as `grave`.
 
-`omarchy/altgr-arrows.lua` makes AltGr + ↑/↓ send Alt + ↑/↓, so they switch
-herdr spaces too. Apps can't see AltGr as a modifier and would get a plain
-arrow.
+`omarchy/alt-keys.lua` gives every app macOS-style Alt keys:
+
+- Alt + ←/→ jump a word and Alt + Backspace deletes the previous one. GUI apps
+  get the Ctrl chords; terminals get the Alt chords, which Ghostty turns into
+  word jumps (§16). Browsers lose Alt + ←/→ for back/forward.
+- AltGr acts as Alt with these keys and with ↑/↓, so AltGr + ↑/↓ switch herdr
+  spaces. Apps can't see AltGr as a modifier and would get a plain key.
 
 The console module has to record the console's event subscriptions while
 Omarchy's defaults load, so a **managed block** replaces the
 `require("default.hypr.omarchy")` line in `~/.config/hypr/hyprland.lua` with
-lines that wrap it and then load the AltGr module. Re-running replaces the
+lines that wrap it and then load the Alt keys module. Re-running replaces the
 block. `omarchy refresh hyprland` resets the file, so run this section again
 after one. Run from the root of this repo:
 
@@ -1034,12 +1038,12 @@ awk -v dir="$PWD/omarchy" '
   $0 == "require(\"default.hypr.omarchy\")" && !done {
     print "-- >>> shell-setup managed >>>"
     print "-- Omarchy defaults, wrapped by the shell-setup Quake console changes,"
-    print "-- then the shell-setup AltGr arrow binds."
+    print "-- then the shell-setup Alt keys."
     printf "local shell_setup_qconsole = dofile(\"%s/qconsole.lua\")\n", dir
     print "shell_setup_qconsole.capture()"
     print "require(\"default.hypr.omarchy\")"
     print "shell_setup_qconsole.apply()"
-    printf "dofile(\"%s/altgr-arrows.lua\")\n", dir
+    printf "dofile(\"%s/alt-keys.lua\")\n", dir
     print "-- <<< shell-setup managed <<<"
     done = 1
     next
@@ -1059,7 +1063,7 @@ Omarchy's default.
 ```bash
 hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
 hyprctl repl 'return tostring(qconsole_resized)'     # expect true
-hyprctl binds -j | jq '[.[] | select(.modmask == 128 and (.key == "UP" or .key == "DOWN"))] | length'   # expect 2
+hyprctl binds -j | jq '[.[] | select(.description | IN("Word back", "Word forward", "Delete word back", "Alt + Up", "Alt + Down"))] | length'   # expect 8
 ```
 
 Make Ghostty Omarchy's default terminal, so Super + Return, the console and
@@ -1176,14 +1180,14 @@ systemctl --user show -p ExecStart app-com.mitchellh.ghostty.service | grep -q g
 grep -c '/omarchy/dead-keys.XCompose"$' ~/.XCompose   # expect 1
 ```
 
-**Omarchy:** confirm §20's Quake console changes and AltGr arrow binds, and
+**Omarchy:** confirm §20's Quake console changes and Alt keys, and
 §21's plain `` ` `` key, loaded:
 
 ```bash
 hyprctl configerrors
 hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
 hyprctl repl 'return tostring(qconsole_resized)'     # expect true
-hyprctl binds -j | jq '[.[] | select(.modmask == 128 and (.key == "UP" or .key == "DOWN"))] | length'   # expect 2
+hyprctl binds -j | jq '[.[] | select(.description | IN("Word back", "Word forward", "Delete word back", "Alt + Up", "Alt + Down"))] | length'   # expect 8
 omarchy default terminal                             # expect ghostty
 xkbcli dump-keymap-wayland | grep 'key <TLDE>'       # expect grave, asciitilde, dead_grave, dead_tilde
 ```
