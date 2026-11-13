@@ -106,6 +106,11 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 > - `~/.zshrc` → **regular file**: machine-local lines plus a managed block
 >   (created by §9) that just `source`s the repo's `zsh/zshrc` — edit the repo
 >   file only; local additions stay outside the markers, never between them.
+> - `~/.config/hypr/hyprland.lua` (Omarchy) → **regular file** (Omarchy's user
+>   template) with a managed block (created by §20) in place of its
+>   `require("default.hypr.omarchy")` line: it `dofile`s `omarchy/qconsole.lua`
+>   around that require. Edit the repo module; personal Hyprland settings stay in
+>   `~/.config/hypr/`, never in this repo or between the markers.
 > - `~/.zprofile` → **regular file**, not linked (installer-owned,
 >   machine-specific) — edit both the home file and the `shell-setup.md`
 >   instructions (still inlined there).
@@ -198,6 +203,7 @@ Linux, and so are the tmux-only assistant hooks).
 | Tool | Repo file | Home file |
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` (macOS: symlink to the repo file; Linux: the managed block loads it) |
+| Omarchy Quake console | `omarchy/qconsole.lua` | loaded by the managed block in `~/.config/hypr/hyprland.lua`, which wraps `require("default.hypr.omarchy")` (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
 | Ghostty on Linux | `ghostty/linux.conf` | loaded after `ghostty/config` by the managed block in `~/.config/ghostty/config` (Linux only) |
 | Ghostty D-Bus service on Linux | `ghostty/linux-service.conf`, `ghostty/linux-service-override.conf` | `~/.shell-setup/ghostty-service.conf` (symlink) and `~/.config/systemd/user/app-com.mitchellh.ghostty.service.d/shell-setup.conf` (symlink); after edits `systemctl --user daemon-reload`, then restart the service (closes its windows) |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |
