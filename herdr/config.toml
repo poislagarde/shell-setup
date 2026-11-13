@@ -30,6 +30,8 @@ auto_switch = false
 # Ghostty unbinds its Linux Alt+1..9 and Ctrl+Alt+arrow defaults so these reach
 # herdr, and sends Shift+Enter as CSI 13;2u so it never reads as Alt+Enter (see
 # ghostty/config). Omarchy's Hyprland binds the Super chords, so none are used.
+# Omarchy's Alt+Left/Right tab keys are left out: Ghostty sends them as word
+# jumps (Esc b / Esc f).
 [keys]
 prefix = "ctrl+space"
 
@@ -67,8 +69,8 @@ new_tab = "prefix+c"
 rename_tab = "prefix+r"
 close_tab = "prefix+k"
 switch_tab = ["prefix+1..9", "alt+1..9"]
-previous_tab = ["prefix+p", "alt+left"]
-next_tab = ["prefix+n", "alt+right"]
+previous_tab = "prefix+p"
+next_tab = "prefix+n"
 
 move_tab_previous = "alt+shift+left"
 move_tab_next = "alt+shift+right"

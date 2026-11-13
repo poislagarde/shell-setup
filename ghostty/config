@@ -147,8 +147,12 @@ keybind = alt+9=unbind
 #   keybind = super+arrow_left=text:\x01    # Cmd+←  → start of line (^A)
 #   keybind = super+arrow_right=text:\x05   # Cmd+→  → end of line   (^E)
 #   keybind = super+backspace=text:\x15     # Cmd+⌫  → kill to line start (^U)
-#   keybind = alt+arrow_left=esc:b          # ⌥+←   → word back
-#   keybind = alt+arrow_right=esc:f         # ⌥+→   → word fwd
+
+# ⌥+← / ⌥+→ → word back / forward (Esc b / Esc f), as macOS Ghostty does by
+# default. Linux Ghostty sends Alt+arrow CSI instead, which herdr would read as
+# tab switching, so herdr leaves these chords unbound.
+keybind = alt+arrow_left=esc:b
+keybind = alt+arrow_right=esc:f
 
 # ⌘+⌫  → delete to line start (^U). Paired with `bindkey '^U' backward-kill-line`
 # in ~/.zshrc — zsh's default `^U` is `kill-whole-line` which doesn't match

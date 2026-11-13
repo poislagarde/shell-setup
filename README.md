@@ -125,14 +125,14 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | Keys | Action |
 | --- | --- |
 | prefix, `c` | New tab |
-| `Alt+→` / prefix, `n` | Next tab |
-| `Alt+←` / prefix, `p` | Previous tab |
+| prefix, `n` | Next tab |
+| prefix, `p` | Previous tab |
 | `Alt+Shift+←` / `Alt+Shift+→` | Move tab toward the front / back |
 | `Alt+1` … `Alt+9` / prefix, `1` … `9` | Jump to tab 1–9 |
 | prefix, `r` | Rename tab |
 | prefix, `k` | Close tab |
 
-> On macOS, Ghostty sends `Option+←/→` as word jumps (`Esc b` / `Esc f`), so they never switch tabs there; use prefix, `p` / `n`. On Linux, `Alt+←/→` switch tabs inside herdr instead of jumping words.
+> Ghostty sends `Alt+←/→` as word jumps (`Esc b` / `Esc f`), so herdr leaves out Omarchy's `Alt+←/→` tab keys; use prefix, `p` / `n`.
 
 ### Panes (splits)
 
