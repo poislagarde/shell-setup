@@ -117,12 +117,22 @@ keybind = shift+enter=csi:13;2u
 # keybind = performable:super+alt+down=goto_split:down
 # keybind = performable:alt+shift+enter=toggle_split_zoom
 
-# Ghostty's Linux defaults bind Ctrl+Alt+arrows to goto_split; herdr moves
-# between its panes with them, so let them through to the terminal.
+# Ghostty's Linux defaults bind Ctrl+Alt+arrows to goto_split and Alt+1..9 to
+# goto_tab / last_tab; herdr uses them to move between panes and tabs, so let
+# them through to the terminal.
 keybind = ctrl+alt+arrow_left=unbind
 keybind = ctrl+alt+arrow_right=unbind
 keybind = ctrl+alt+arrow_up=unbind
 keybind = ctrl+alt+arrow_down=unbind
+keybind = alt+1=unbind
+keybind = alt+2=unbind
+keybind = alt+3=unbind
+keybind = alt+4=unbind
+keybind = alt+5=unbind
+keybind = alt+6=unbind
+keybind = alt+7=unbind
+keybind = alt+8=unbind
+keybind = alt+9=unbind
 
 # Ghostty's defaults already cover the rest of the split workflow:
 #   ⌘W       → close_surface            (close current pane)
@@ -137,10 +147,10 @@ keybind = super+alt+right=csi:1;11C
 keybind = super+alt+up=csi:1;11A
 keybind = super+alt+down=csi:1;11B
 
-# herdr cycles tabs with ⌘⇧[ / ⌘⇧]; tmux reads those and ⌘⇧= / ⌘⇧- as M-S-…
-# (Cmd is Meta to it) for pane cycling and splits. Forward
-# them as CSI u (key;modifiers, 10 = Cmd+Shift), which both decode; this
-# replaces Ghostty's own tab bindings on the bracket chords.
+# tmux reads ⌘⇧[ / ⌘⇧] and ⌘⇧= / ⌘⇧- as M-S-… (Cmd is Meta to it) for pane
+# cycling and splits. Forward them as CSI u (key;modifiers, 10 = Cmd+Shift),
+# which tmux decodes; this replaces Ghostty's own tab bindings on the bracket
+# chords.
 keybind = super+shift+[=csi:91;10u
 keybind = super+shift+]=csi:93;10u
 keybind = super+shift+==csi:61;10u

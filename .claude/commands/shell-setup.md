@@ -1105,7 +1105,7 @@ the override changes. `herdr agent explain <pane>` names the matched rule.
 
 The PR worktree plugin needs Python 3.11+, Git, and authenticated `gh`
 (`gh auth status`). Its source commit is pinned in `herdr/pr-worktree.ref`.
-From any space, press `Ctrl+B`, then `Alt+G`, paste a GitHub PR URL, and press
+From any space, press `Ctrl+Space`, then `Alt+G`, paste a GitHub PR URL, and press
 Enter, or run `herdr plugin action invoke poislagarde.pr-worktree.open`.
 The plugin finds a matching repository in the current directory or another open
 space in this herdr session, then opens the PR branch beneath that repository's

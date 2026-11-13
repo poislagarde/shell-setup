@@ -22,46 +22,64 @@ rows = [
 name = "solarized"
 auto_switch = false
 
-# Keybinds mirror tmux/tmux.conf with tmux windows <> herdr spaces and tmux
-# panes <> herdr tabs, except the pane chords, which follow Omarchy's herdr
-# defaults (see below). Each array keeps herdr's default first. tmux reads Cmd
-# as Meta, so Cmd and Alt chords land on the same tmux binding. Shifted punctuation is bound in both forms the terminal may
-# send (shift+key under the kitty keyboard protocol, the shifted character
-# otherwise). Keep the README "herdr keybinds" table in sync.
+# Keybinds are Omarchy's herdr defaults, copied from
+# /usr/share/omarchy/config/herdr/config.toml: tmux sessions <> herdr spaces,
+# tmux windows <> herdr tabs, tmux panes <> herdr panes. Compare after
+# Omarchy updates and copy changes here. The [[keys.command]] entries below are
+# this repo's additions. Keep the README "herdr keybinds" tables in sync.
+#
+# Ghostty unbinds its Linux Alt+1..9 and Ctrl+Alt+arrow defaults so these reach
+# herdr, and sends Shift+Enter as CSI 13;2u so it never reads as Alt+Enter (see
+# ghostty/config). Omarchy's Hyprland binds the Super chords, so none are used.
 [keys]
-settings = "prefix+shift+s"
-detach = ["prefix+q", "prefix+d"]
-workspace_picker = ["prefix+w", "prefix+s", "alt+shift+s"]
-new_workspace = ["prefix+shift+n", "alt+="]
-switch_workspace = ["prefix+shift+1..9", "alt+1..9"]
-next_workspace = ["prefix+)", "alt+]"]
-previous_workspace = ["prefix+(", "alt+["]
-rename_workspace = ["prefix+shift+w", "prefix+$"]
-# Cmd+Shift chords reach herdr through Ghostty forwarders (see ghostty/config).
-new_tab = ["prefix+c", "alt+shift+=", "alt+plus"]
-next_tab = ["prefix+n", "alt+shift+]", "alt+}", "cmd+shift+]", "cmd+}"]
-previous_tab = ["prefix+p", "alt+shift+[", "alt+{", "cmd+shift+[", "cmd+{"]
-switch_tab = ["prefix+1..9", "alt+shift+1..9"]
-rename_tab = ["prefix+shift+t", "prefix+comma"]
-close_tab = ["prefix+shift+x", "prefix+ampersand"]
-# Pane chords are Omarchy's herdr defaults (/usr/share/omarchy/config/herdr/
-# config.toml on Omarchy): Omarchy's Hyprland binds the Super chords first.
-# Alt+Enter only splits because Ghostty sends Shift+Enter as CSI 13;2u, never as
-# Esc+Enter (see ghostty/config).
+prefix = "ctrl+space"
+
+# Config and help
+reload_config = "prefix+q"
+help = "prefix+?"
+detach = "prefix+d"
+
+# Copy mode
+copy_mode = "prefix+["
+
+# Panes
+split_horizontal = ["prefix+h", "alt+enter"]
 split_vertical = ["prefix+v", "alt+shift+enter"]
-split_horizontal = ["prefix+minus", "alt+enter"]
+close_pane = ["prefix+x", "alt+esc"]
 zoom = "prefix+z"
-focus_pane_left = ["prefix+h", "ctrl+alt+left"]
-focus_pane_down = ["prefix+j", "ctrl+alt+down"]
-focus_pane_up = ["prefix+k", "ctrl+alt+up"]
-focus_pane_right = ["prefix+l", "ctrl+alt+right"]
+last_pane = "prefix+;"
+
+focus_pane_left = "ctrl+alt+left"
+focus_pane_down = "ctrl+alt+down"
+focus_pane_up = "ctrl+alt+up"
+focus_pane_right = "ctrl+alt+right"
+
+resize_mode = ["prefix+ctrl+left", "prefix+ctrl+down", "prefix+ctrl+up", "prefix+ctrl+right"]
+
 resize_pane_left = "ctrl+alt+shift+left"
 resize_pane_down = "ctrl+alt+shift+down"
 resize_pane_up = "ctrl+alt+shift+up"
 resize_pane_right = "ctrl+alt+shift+right"
-# Agents cycle in agent-panel order (priority sort: attention-needing first).
-next_agent = "alt+tab"
-previous_agent = "alt+shift+tab"
+
+rename_pane = "prefix+shift+o"
+
+# Tabs
+new_tab = "prefix+c"
+rename_tab = "prefix+r"
+close_tab = "prefix+k"
+switch_tab = ["prefix+1..9", "alt+1..9"]
+previous_tab = ["prefix+p", "alt+left"]
+next_tab = ["prefix+n", "alt+right"]
+
+move_tab_previous = "alt+shift+left"
+move_tab_next = "alt+shift+right"
+
+# Spaces
+new_workspace = "prefix+shift+c"
+rename_workspace = "prefix+shift+r"
+close_workspace = "prefix+shift+k"
+previous_workspace = ["prefix+shift+p", "alt+up"]
+next_workspace = ["prefix+shift+n", "alt+down"]
 
 [[keys.command]]
 key = "prefix+alt+g"

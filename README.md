@@ -131,7 +131,7 @@ Also installed but used indirectly, not via their own command: **sanesidebuttons
 
 ## tmux keybinds
 
-tmux is an alternative to herdr: use one or the other, never together or nested. Nothing auto-attaches; start or join a tmux session with `tm` (below). Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** and share muscle memory with herdr (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**). The two multiplexers' bindings are independent. tmux reads Cmd as Alt, so a Cmd chord lands on the matching Alt binding. If a chord fails, run `cat -v` in the pane, press it, and rebind what shows.
+tmux is an alternative to herdr: use one or the other, never together or nested. Nothing auto-attaches; start or join a tmux session with `tm` (below). Prefix is the default **`Ctrl-b`** ("prefix, X" = press Ctrl-b, release, then X). The custom chords are **no-prefix** and independent of herdr's. tmux reads Cmd as Alt, so a Cmd chord lands on the matching Alt binding. If a chord fails, run `cat -v` in the pane, press it, and rebind what shows.
 
 ### Windows (tabs)
 
@@ -160,8 +160,8 @@ tmux is an alternative to herdr: use one or the other, never together or nested.
 | Right-click pane border / status strip | Pane context menu (paste, split, swap, kill, zoom) — works even when the pane's program captures the mouse |
 | `Ctrl` + left-drag pane | Drag onto another pane to swap them |
 | `Cmd+Opt+←/→/↑/↓` | Move focus between panes (spatial) |
-| `Alt+Shift+1` … `Alt+Shift+9` | Jump to pane 1–9 (mirrors herdr tab N) |
-| `Alt+Shift+]` / `Alt+Shift+[` | Next / previous pane (mirrors herdr tab cycling; `Cmd+Shift` does the same) |
+| `Alt+Shift+1` … `Alt+Shift+9` | Jump to pane 1–9 |
+| `Alt+Shift+]` / `Alt+Shift+[` | Next / previous pane (`Cmd+Shift` does the same) |
 | `Alt+Shift+Enter` | Zoom / unzoom active pane (fullscreen) |
 | prefix, `z` | Zoom / unzoom (default alias) |
 | prefix, `{` / `}` | Swap pane with previous / next |
@@ -249,65 +249,67 @@ State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never together or nested. Some chords share muscle memory with tmux (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**), but tmux bindings place no restrictions on herdr bindings. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts. Pane chords use Omarchy's herdr defaults, because Omarchy's Hyprland binds the Super chords before Ghostty sees them. herdr's own defaults stay active alongside the custom bindings (`prefix+?` lists everything). Prefix is `Ctrl+B`.
+herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never together or nested. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), which treat herdr spaces like tmux sessions, tabs like tmux windows and panes like tmux panes, plus this repo's plugin and Claude Code commands. They don't match this repo's tmux chords. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
 
-### Tabs (tmux panes)
+### Tabs (tmux windows)
 
 | Keys | Action |
 | --- | --- |
-| `Alt+Shift+=` / prefix, `c` | New tab |
-| `Alt+Shift+]` / `Cmd+Shift+]` / prefix, `n` | Next tab |
-| `Alt+Shift+[` / `Cmd+Shift+[` / prefix, `p` | Previous tab |
-| `Alt+Shift+1` … `Alt+Shift+9` / prefix, `1` … `9` | Jump to tab 1–9 |
-| prefix, `,` / prefix, `Shift+T` | Rename tab |
-| prefix, `&` / prefix, `Shift+X` | Close tab |
+| prefix, `c` | New tab |
+| `Alt+→` / prefix, `n` | Next tab |
+| `Alt+←` / prefix, `p` | Previous tab |
+| `Alt+Shift+←` / `Alt+Shift+→` | Move tab toward the front / back |
+| `Alt+1` … `Alt+9` / prefix, `1` … `9` | Jump to tab 1–9 |
+| prefix, `r` | Rename tab |
+| prefix, `k` | Close tab |
+
+> On macOS, Ghostty sends `Option+←/→` as word jumps (`Esc b` / `Esc f`), so they never switch tabs there; use prefix, `p` / `n`. On Linux, `Alt+←/→` switch tabs inside herdr instead of jumping words.
 
 ### Panes (splits)
 
 | Keys | Action |
 | --- | --- |
 | `Alt+Shift+Enter` / prefix, `v` | Split right (side-by-side) |
-| `Alt+Enter` / prefix, `-` | Split down (stacked) |
+| `Alt+Enter` / prefix, `h` | Split down (stacked) |
 | `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
-| `Ctrl+Alt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
-| `Ctrl+Alt+Shift+←/→/↑/↓` | Resize the active pane |
-| prefix, `z` | Zoom / unzoom active pane |
+| `Ctrl+Alt+←/→/↑/↓` | Move focus between panes (spatial) |
 | prefix, `Tab` / prefix, `Shift+Tab` | Next / previous pane |
-| prefix, `Shift+H`/`J`/`K`/`L` | Swap pane left/down/up/right |
-| prefix, `r` | Resize mode (arrows, `Esc` to leave) |
-| prefix, `Shift+P` | Rename pane |
-| prefix, `x` | Close pane |
+| prefix, `;` | Last pane |
+| `Ctrl+Alt+Shift+←/→/↑/↓` | Resize the active pane |
+| prefix, `Ctrl+←/→/↑/↓` | Resize mode (arrows, `Esc` to leave) |
+| prefix, `z` | Zoom / unzoom active pane |
+| prefix, `Shift+O` | Rename pane |
+| `Alt+Esc` / prefix, `x` | Close pane |
 | prefix, `[` | Copy mode (`q` to quit) |
 | prefix, `e` | Open scrollback in `$EDITOR` |
 
-### Spaces (tmux windows)
+### Spaces (tmux sessions)
 
 | Keys | Action |
 | --- | --- |
-| `Alt+=` / prefix, `Shift+N` | New space |
+| prefix, `Shift+C` | New space |
 | `Ctrl+Alt+=` | New space running **Claude Code** (at `$HOME`) |
 | `Ctrl+Alt+p` | New space running **Claude Code** in `$PROJECTS_DIR` |
-| `Alt+1` … `Alt+9` / prefix, `Shift+1` … `Shift+9` | Jump to space 1–9 |
-| `Alt+]` / prefix, `)` | Next space |
-| `Alt+[` / prefix, `(` | Previous space |
+| `Alt+↓` / prefix, `Shift+N` | Next space |
+| `Alt+↑` / prefix, `Shift+P` | Previous space |
 | `Alt+Backtick` | Back through space history |
 | `Alt+Shift+Backtick` | Forward through space history |
 | `Alt+~` | Forward through space history (shifted-character alternate) |
-| `Alt+Shift+S` / prefix, `s` / prefix, `w` | **Space picker** |
-| prefix, `$` / prefix, `Shift+W` | Rename space |
-| prefix, `Shift+D` | Close space |
+| prefix, `w` | **Space picker** |
+| prefix, `Shift+R` | Rename space |
+| prefix, `Shift+K` | Close space |
 | prefix, `Shift+G` | New space on a new git worktree |
 | prefix, `Alt+G` | New worktree space from a GitHub PR URL |
-| prefix, `d` / prefix, `q` | Detach (everything keeps running) |
+| prefix, `d` | Detach (everything keeps running) |
 | prefix, `b` | Toggle sidebar |
-| prefix, `Shift+R` | Reload `config.toml` |
-| prefix, `Shift+S` | herdr settings (moved off prefix, `s`) |
+| prefix, `q` | Reload `config.toml` |
+| prefix, `s` | herdr settings |
 | prefix, `?` | List all key bindings |
 
 PR worktrees use [herdr-pr-worktree](https://github.com/poislagarde/herdr-pr-worktree),
 installed at the commit in `herdr/pr-worktree.ref` by bootstrap §18. From any
-space, press `Ctrl+B`, then `Alt+G`, paste the PR's GitHub URL, and press Enter.
+space, press `Ctrl+Space`, then `Alt+G`, paste the PR's GitHub URL, and press Enter.
 You can also run `herdr plugin action invoke poislagarde.pr-worktree.open`.
 The plugin finds a matching repository in the current directory or another open
 space in this herdr session, then opens the PR branch beneath that repository's
@@ -464,8 +466,6 @@ registration and metadata; directory names alone do not establish eligibility.
 
 | Keys | Action |
 | --- | --- |
-| `Alt+Tab` | Next agent (agent-panel order: attention-needing first) |
-| `Alt+Shift+Tab` | Previous agent |
 | prefix, `o` | Jump to the agent behind the visible notification |
 
 A Claude session idle at its prompt with a background shell or Monitor still
