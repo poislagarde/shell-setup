@@ -86,7 +86,9 @@ rename_workspace = "prefix+shift+r"
 close_workspace = "prefix+shift+k"
 previous_workspace = ["prefix+shift+p", "alt+up"]
 next_workspace = ["prefix+shift+n", "alt+down"]
-switch_workspace = ["prefix+shift+1..9", "alt+shift+1..9"]  # this repo's addition
+# this repo's addition. Not Shift+digits: Shift+6 is a dead key (^) on
+# us-intl, so Alt+Shift+6 and prefix+Shift+6 never reach herdr.
+switch_workspace = "ctrl+alt+1..9"
 
 [[keys.command]]
 key = "prefix+alt+g"
