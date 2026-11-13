@@ -178,7 +178,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | prefix, `s` | herdr settings |
 | prefix, `?` | List all key bindings |
 
-> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓, and Alt+Shift+6 reaches herdr as Ctrl+Alt+6 because Shift+6 is a dead key on US International (`omarchy/alt-keys.lua`).
+> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓, and Alt+Shift+1…9 reach herdr as Ctrl+Alt+1…9 because Shift+6 is a dead key on US International (`omarchy/alt-keys.lua`).
 
 PR worktrees use [herdr-pr-worktree](https://github.com/poislagarde/herdr-pr-worktree),
 installed at the commit in `herdr/pr-worktree.ref` by bootstrap §18. From any
