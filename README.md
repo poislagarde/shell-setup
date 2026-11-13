@@ -119,7 +119,7 @@ Also installed but used indirectly, not via their own command: **sanesidebuttons
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus `Alt+T` for a new tab, `Ctrl+Alt+1`…`9` for spaces, and this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
+herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus `Alt+T` for a new tab, `Alt+Shift+1`…`9` for spaces, and this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
 
 ### Tabs
 
@@ -163,7 +163,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | `Ctrl+Alt+p` | New space running **Claude Code** in `$PROJECTS_DIR` |
 | `Alt+↓` / prefix, `Shift+N` | Next space |
 | `Alt+↑` / prefix, `Shift+P` | Previous space |
-| `Ctrl+Alt+1` … `Ctrl+Alt+9` | Jump to space 1–9 |
+| `Alt+Shift+1` … `Alt+Shift+9` (or `Ctrl+Alt+1` … `9`) | Jump to space 1–9 |
 | `Alt+Backtick` | Back through space history |
 | `Alt+Shift+Backtick` | Forward through space history |
 | `Alt+~` | Forward through space history (shifted-character alternate) |
@@ -178,7 +178,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | prefix, `s` | herdr settings |
 | prefix, `?` | List all key bindings |
 
-> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓ (`omarchy/alt-keys.lua`).
+> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓, and Alt+Shift+6 reaches herdr as Ctrl+Alt+6 because Shift+6 is a dead key on US International (`omarchy/alt-keys.lua`).
 
 PR worktrees use [herdr-pr-worktree](https://github.com/poislagarde/herdr-pr-worktree),
 installed at the commit in `herdr/pr-worktree.ref` by bootstrap §18. From any

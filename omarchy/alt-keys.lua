@@ -7,6 +7,9 @@
 --   Alt + Up/Down switch spaces). Apps can't see AltGr as a modifier, so
 --   without these binds they get a plain key. AltGr is MOD5 (Right Alt on US
 --   International); layouts without it never fire its binds.
+-- - Alt + Shift + 6 reaches terminals as Ctrl + Alt + 6, which herdr also binds
+--   to "jump to space 6". Shift + 6 is a dead key (^) on US International, so
+--   the terminal would swallow it. Other apps get Alt + Shift + 6 unchanged.
 --
 -- Loaded by the shell-setup managed block in ~/.config/hypr/hyprland.lua
 -- (bootstrap §20), after Omarchy's defaults.
@@ -49,3 +52,11 @@ end
 
 o.bind("MOD5 + UP", "Alt + Up", as_alt("Up"), { repeating = true })
 o.bind("MOD5 + DOWN", "Alt + Down", as_alt("Down"), { repeating = true })
+
+o.bind("ALT + SHIFT + code:15", "Jump to herdr space 6", function()
+  if active_window_is_terminal() then
+    send_key_once("CTRL ALT", "6")
+  else
+    send_key_once("ALT SHIFT", "6")
+  end
+end)

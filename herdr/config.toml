@@ -86,9 +86,10 @@ rename_workspace = "prefix+shift+r"
 close_workspace = "prefix+shift+k"
 previous_workspace = ["prefix+shift+p", "alt+up"]
 next_workspace = ["prefix+shift+n", "alt+down"]
-# this repo's addition. Not Shift+digits: Shift+6 is a dead key (^) on
-# us-intl, so Alt+Shift+6 and prefix+Shift+6 never reach herdr.
-switch_workspace = "ctrl+alt+1..9"
+# this repo's addition. Shift+6 is a dead key (^) on US International, so
+# alt+shift+6 never reaches herdr there; on Omarchy, omarchy/alt-keys.lua
+# sends it to terminals as ctrl+alt+6. Keep ctrl+alt+1..9 for that.
+switch_workspace = ["alt+shift+1..9", "ctrl+alt+1..9"]
 
 [[keys.command]]
 key = "prefix+alt+g"
