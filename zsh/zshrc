@@ -49,6 +49,8 @@ for _key in A B C D; do
 done
 unset _key
 bindkey '^[[13;4u' zle-noop
+# Ghostty's Alt+Shift+6 (herdr's jump to space 6) arrives as CSI 54;7u.
+bindkey '^[[54;7u' zle-noop
 
 # Reassert a blinking thin bar at each prompt, Ghostty's default, in case a
 # program changed the cursor shape.

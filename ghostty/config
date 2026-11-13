@@ -102,6 +102,14 @@ keybind = super+q>super+q=quit
 # 13;2u to a literal newline in a bare shell; inside herdr it gets plain Enter.
 keybind = shift+enter=csi:13;2u
 
+# Alt+Shift+6 → CSI 54;7u, the kitty-protocol Ctrl+Alt+6, which herdr also binds
+# to "jump to space 6". Shift+6 is a dead key (^) on U.S. International – PC, so
+# Alt+Shift+6 itself never reaches herdr; a keybind fires ahead of macOS text
+# input. Match the physical key, since Shift+6 is no longer `6`. zsh binds the
+# sequence to a no-op for a bare shell. On Omarchy, Hyprland rewrites the chord
+# before Ghostty sees it (omarchy/alt-keys.lua).
+keybind = alt+shift+digit_6=csi:54;7u
+
 # --- Pane management ---
 # Keep the custom Ghostty-native split, focus, and zoom bindings disabled;
 # herdr owns these chords.

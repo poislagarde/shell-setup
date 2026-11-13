@@ -179,6 +179,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | prefix, `?` | List all key bindings |
 
 > On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓, and Alt+Shift+1…9 reach herdr as Ctrl+Alt+1…9 because Shift+6 is a dead key on US International (`omarchy/alt-keys.lua`).
+> On macOS, use the left Option key; Ghostty sends Option+Shift+6 as Ctrl+Alt+6 for the same reason on U.S. International – PC.
 
 PR worktrees use [herdr-pr-worktree](https://github.com/poislagarde/herdr-pr-worktree),
 installed at the commit in `herdr/pr-worktree.ref` by bootstrap §18. From any
@@ -355,6 +356,8 @@ for occasional tool orchestration. Python is a deliberate choice, not a default.
 ## Ghostty keybinds
 
 These act on Ghostty surfaces directly. Inside herdr, the Alt-based tab/pane chords above take over; the Cmd-based ones below stay with Ghostty.
+
+Ghostty sends Alt+Shift+6 (left Option on macOS) as Ctrl+Alt+6, so herdr's jump to space 6 survives the dead `^` of US International layouts.
 
 The mouse wheel uses a 1× scroll multiplier; trackpad scrolling keeps Ghostty's default.
 

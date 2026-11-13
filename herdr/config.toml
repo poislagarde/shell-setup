@@ -86,9 +86,11 @@ rename_workspace = "prefix+shift+r"
 close_workspace = "prefix+shift+k"
 previous_workspace = ["prefix+shift+p", "alt+up"]
 next_workspace = ["prefix+shift+n", "alt+down"]
-# this repo's addition. Shift+6 is a dead key (^) on US International, so
-# alt+shift+6 never reaches herdr there; on Omarchy, omarchy/alt-keys.lua
-# sends alt+shift+1..9 to terminals as ctrl+alt+1..9. Keep ctrl+alt+1..9.
+# this repo's addition. Shift+6 is a dead key (^) on US International (and
+# macOS's U.S. International – PC), so alt+shift+6 never reaches herdr there.
+# On Omarchy, omarchy/alt-keys.lua sends alt+shift+1..9 to terminals as
+# ctrl+alt+1..9; on macOS, ghostty/config sends alt+shift+6 as ctrl+alt+6.
+# Keep ctrl+alt+1..9.
 switch_workspace = ["alt+shift+1..9", "ctrl+alt+1..9"]
 
 [[keys.command]]
