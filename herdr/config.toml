@@ -86,6 +86,7 @@ rename_workspace = "prefix+shift+r"
 close_workspace = "prefix+shift+k"
 previous_workspace = ["prefix+shift+p", "alt+up"]
 next_workspace = ["prefix+shift+n", "alt+down"]
+switch_workspace = ["prefix+shift+1..9", "alt+shift+1..9"]  # this repo's addition
 
 [[keys.command]]
 key = "prefix+alt+g"
