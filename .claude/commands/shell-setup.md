@@ -1000,7 +1000,7 @@ merged, not symlinked:
 
 Karabiner picks the change up on save.
 
-## 20. Adjust Omarchy's Quake Console
+## 20. Adjust Omarchy's Hyprland Defaults
 
 **Linux, Omarchy only.** Skip this section where
 `${OMARCHY_PATH:-/usr/share/omarchy}/default/hypr/qconsole.lua` doesn't exist.
@@ -1012,27 +1012,34 @@ Karabiner picks the change up on save.
 - It is bound to the physical \` key (`code:49`), which dead-key layouts such as
   US International never send as `grave`.
 
-It has to record the console's event subscriptions while Omarchy's defaults
-load, so a **managed block** replaces the `require("default.hypr.omarchy")`
-line in `~/.config/hypr/hyprland.lua` with lines that wrap it. Re-running
-replaces the block. `omarchy refresh hyprland` resets the file, so run this
-section again after one. Run from the root of this repo:
+`omarchy/altgr-arrows.lua` makes AltGr + ↑/↓ send Alt + ↑/↓, so they switch
+herdr spaces too. Apps can't see AltGr as a modifier and would get a plain
+arrow.
+
+The console module has to record the console's event subscriptions while
+Omarchy's defaults load, so a **managed block** replaces the
+`require("default.hypr.omarchy")` line in `~/.config/hypr/hyprland.lua` with
+lines that wrap it and then load the AltGr module. Re-running replaces the
+block. `omarchy refresh hyprland` resets the file, so run this section again
+after one. Run from the root of this repo:
 
 ```bash
 f=~/.config/hypr/hyprland.lua
 [ -f "$f.pre-shell-setup" ] || cp "$f" "$f.pre-shell-setup"
 tmp=$(mktemp)
-awk -v mod="$PWD/omarchy/qconsole.lua" '
+awk -v dir="$PWD/omarchy" '
   /^-- >>> shell-setup managed >>>$/ { inblock = 1; next }
   inblock && /^-- <<< shell-setup managed <<<$/ { inblock = 0; $0 = "require(\"default.hypr.omarchy\")" }
   inblock { next }
   $0 == "require(\"default.hypr.omarchy\")" && !done {
     print "-- >>> shell-setup managed >>>"
-    print "-- Omarchy defaults, wrapped by the shell-setup Quake console changes."
-    printf "local shell_setup_qconsole = dofile(\"%s\")\n", mod
+    print "-- Omarchy defaults, wrapped by the shell-setup Quake console changes,"
+    print "-- then the shell-setup AltGr arrow binds."
+    printf "local shell_setup_qconsole = dofile(\"%s/qconsole.lua\")\n", dir
     print "shell_setup_qconsole.capture()"
     print "require(\"default.hypr.omarchy\")"
     print "shell_setup_qconsole.apply()"
+    printf "dofile(\"%s/altgr-arrows.lua\")\n", dir
     print "-- <<< shell-setup managed <<<"
     done = 1
     next
@@ -1044,13 +1051,15 @@ grep -qxF 'shell_setup_qconsole.apply()' "$f" ||
 hyprctl reload >/dev/null && hyprctl configerrors
 ```
 
-`hyprctl configerrors` must report nothing, and both checks must pass. If
-either fails after an Omarchy update, Omarchy changed how `qconsole.lua` seeds
-or sizes the console; the console then keeps that part of Omarchy's default.
+`hyprctl configerrors` must report nothing, and all three checks must pass. If
+one of the first two fails after an Omarchy update, Omarchy changed how
+`qconsole.lua` seeds or sizes the console; the console then keeps that part of
+Omarchy's default.
 
 ```bash
 hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
 hyprctl repl 'return tostring(qconsole_resized)'     # expect true
+hyprctl binds -j | jq '[.[] | select(.modmask == 128 and (.key == "UP" or .key == "DOWN"))] | length'   # expect 2
 ```
 
 Make Ghostty Omarchy's default terminal, so Super + Return, the console and
@@ -1167,13 +1176,14 @@ systemctl --user show -p ExecStart app-com.mitchellh.ghostty.service | grep -q g
 grep -c '/omarchy/dead-keys.XCompose"$' ~/.XCompose   # expect 1
 ```
 
-**Omarchy:** confirm §20's Quake console changes and §21's plain `` ` `` key
-loaded:
+**Omarchy:** confirm §20's Quake console changes and AltGr arrow binds, and
+§21's plain `` ` `` key, loaded:
 
 ```bash
 hyprctl configerrors
 hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
 hyprctl repl 'return tostring(qconsole_resized)'     # expect true
+hyprctl binds -j | jq '[.[] | select(.modmask == 128 and (.key == "UP" or .key == "DOWN"))] | length'   # expect 2
 omarchy default terminal                             # expect ghostty
 xkbcli dump-keymap-wayland | grep 'key <TLDE>'       # expect grave, asciitilde, dead_grave, dead_tilde
 ```

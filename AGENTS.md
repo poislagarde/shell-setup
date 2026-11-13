@@ -104,8 +104,9 @@ tell the user how to reload (e.g. reload Ghostty config,
 > - `~/.config/hypr/hyprland.lua` (Omarchy) → **regular file** (Omarchy's user
 >   template) with a managed block (created by §20) in place of its
 >   `require("default.hypr.omarchy")` line: it `dofile`s `omarchy/qconsole.lua`
->   around that require. Edit the repo module; personal Hyprland settings stay in
->   `~/.config/hypr/`, never in this repo or between the markers.
+>   around that require, then `omarchy/altgr-arrows.lua`. Edit the repo modules;
+>   personal Hyprland settings stay in `~/.config/hypr/`, never in this repo or
+>   between the markers.
 > - `~/.XCompose` (Linux) → **regular file** (Omarchy's template plus personal
 >   compose sequences) with a managed block (created by §21) at its end that
 >   `include`s `omarchy/dead-keys.XCompose`. Edit the repo file; personal
@@ -138,6 +139,7 @@ The Karabiner row applies to macOS only (§19 is skipped on Linux).
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` (macOS: symlink to the repo file; Linux: the managed block loads it) |
 | Omarchy Quake console | `omarchy/qconsole.lua` | loaded by the managed block in `~/.config/hypr/hyprland.lua`, which wraps `require("default.hypr.omarchy")` (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
+| Omarchy AltGr arrows | `omarchy/altgr-arrows.lua` | loaded by the same managed block, after Omarchy's defaults (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
 | US International dead keys | `omarchy/dead-keys.XCompose` | included by the managed block at the end of `~/.XCompose` (Linux; created by bootstrap §21; `omarchy restart xcompose`) |
 | Plain `` ` `` key | `omarchy/xkb/rules/evdev`, `omarchy/xkb/symbols/shell-setup` | `~/.config/xkb/rules/evdev` and `~/.config/xkb/symbols/shell-setup` (symlinks; Omarchy only, since the rules load `/etc/xkb/rules/evdev`; created by bootstrap §21; after edits force a keymap recompile and restart fcitx5 as §21 does) |
 | Ghostty on Linux | `ghostty/linux.conf` | loaded after `ghostty/config` by the managed block in `~/.config/ghostty/config` (Linux only) |
