@@ -1,6 +1,8 @@
 # shell-setup
 
-My personal macOS bootstrap, packaged as a Claude Code slash command so any fresh macOS machine can be brought up to my baseline by handing the instructions to Claude.
+My personal macOS and Linux bootstrap, packaged as a Claude Code slash command so any fresh machine can be brought up to my baseline by handing the instructions to Claude.
+
+Linux support targets Arch-based systems (pacman plus an AUR helper), as on [Omarchy](https://omarchy.org). There, the tmux persistence server (launchd) and the Karabiner Hyper key are skipped, and Ghostty keeps the distro's config with this repo's layered on top.
 
 ## Usage
 
@@ -16,13 +18,13 @@ The command lives at [`.claude/commands/shell-setup.md`](.claude/commands/shell-
 
 Claude runs a 20-section checklist top to bottom, pausing for verification between sections. At a high level:
 
-- **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `gcloud-cli`, …).
+- **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `gcloud-cli`, …); on Linux, the same tools from pacman, the AUR and mise.
 - **Node** — nvm pinned to `~/.nvm` (survives `brew upgrade`), latest LTS as `default`.
 - **Shell** — Oh My Zsh plus an idempotent **managed block** appended to `~/.zshrc` that sources this repo's `zsh/zshrc` (theme, plugins, PATH, completions, the `awsenv` / `tm` helpers, and keyboard tweaks) — so `git pull` updates the live shell. tmux no longer auto-starts; `tm` attaches on demand.
 - **AWS** — official CLI installer + interactive SSO profile setup (`prod` / `prod-admin` / `dev`).
 - **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, herdr, and tmux configs; tmux-resurrect plus a guarded persistence coordinator keep sessions, layouts, scrollback, and Claude/Codex conversations across Ghostty quits and reboots.
-- **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically, and tells the agent to use a persistent directory instead.
+- **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically (as does a tmpfs `/tmp` on Linux), and tells the agent to use a persistent directory instead.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -46,6 +48,7 @@ assistants/
 └── tests/                   # hook-payload regression test for the guard
 ghostty/
 ├── config                   # Ghostty terminal config (quick terminal, splits, NTE)
+├── linux.conf               # Linux overrides, loaded after config by ~/.config/ghostty/config's managed block
 ├── build-top-right.sh       # build a Ghostty app with a top-right quick terminal
 ├── install-top-right.sh     # replace Ghostty after quitting it; keep a backup
 └── top-right-quick-terminal.patch # pin the top quick terminal to the right edge
@@ -67,6 +70,8 @@ herdr/
 ├── worktree-register.py      # Git creation hook installer + deferred ownership registration adapter
 ├── claude-detection-overlay.sh # herdr's Claude detection manifest + a rule counting background shells as working
 ├── local.shell-setup.herdr-claude-detection.plist # LaunchAgent: regenerates that override when herdr refreshes its manifest
+├── local.shell-setup.herdr-claude-detection.path  # Linux: systemd path unit watching the same manifest
+├── local.shell-setup.herdr-claude-detection.service # Linux: systemd unit the path unit starts to regenerate the override
 └── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
 tmux/
 ├── tmux.conf                            # tmux config (mouse support, guarded Resurrect persistence)

@@ -7,6 +7,8 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 LINE=$ROOT/.claude/statusline-command.sh
 NOW=$(date +%s)
+# Format an epoch timestamp: BSD `date -r` (macOS), else GNU `date -d @` (Linux).
+epoch_fmt() { date -r "$1" "$2" 2>/dev/null || date -d "@$1" "$2"; }
 
 # A cached scoped weekly bucket would override the payload's seven_day values.
 export HOME=$(mktemp -d /tmp/statusline-test.XXXXXX)
@@ -26,11 +28,11 @@ check() { # what, expected substring, actual
 
 # Weekly reset stamp: time alone today, day + time under 48h, day alone beyond.
 today=$((NOW + 1800))
-check 'weekly resets today' "resets $(date -r "$today" '+%H:%M')" "$(render 5 $((NOW + 7200)) 88 "$today" 120)"
+check 'weekly resets today' "resets $(epoch_fmt "$today" '+%H:%M')" "$(render 5 $((NOW + 7200)) 88 "$today" 120)"
 soon=$((NOW + 30 * 3600))
-check 'weekly resets under 48h' "resets $(date -r "$soon" '+%a %H:%M')" "$(render 5 $((NOW + 7200)) 88 "$soon" 120)"
+check 'weekly resets under 48h' "resets $(epoch_fmt "$soon" '+%a %H:%M')" "$(render 5 $((NOW + 7200)) 88 "$soon" 120)"
 far=$((NOW + 5 * 86400))
-check 'weekly resets beyond 48h' "resets $(date -r "$far" '+%a')" "$(render 5 $((NOW + 7200)) 88 "$far" 120)"
+check 'weekly resets beyond 48h' "resets $(epoch_fmt "$far" '+%a')" "$(render 5 $((NOW + 7200)) 88 "$far" 120)"
 
 # One gauge only: the window whose burn rate exhausts it first.
 check '5h burns out first' '5h' "$(render 92 $((NOW + 7200)) 30 "$far" 60)"

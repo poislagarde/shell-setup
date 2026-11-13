@@ -8,7 +8,8 @@ import re
 import shlex
 import sys
 
-# macOS clears /private/tmp and the per-user /private/var/folders trees.
+# macOS clears /private/tmp and the per-user /private/var/folders trees; on
+# Linux, /tmp is usually a tmpfs that empties on reboot.
 MKTEMP_ROOT = os.path.realpath(os.environ.get("TMPDIR") or "/tmp")
 TEMP_ROOTS = sorted({os.path.realpath("/tmp"), os.path.realpath("/var/folders"), MKTEMP_ROOT})
 OPERATORS = {"&&", "||", ";", ";;", "|", "&", "(", ")"}

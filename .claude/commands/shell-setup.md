@@ -1,10 +1,18 @@
 # Shell Setup
 
-Set up a fresh macOS machine with my shell environment.
+Set up a fresh macOS or Linux machine with my shell environment. Linux means
+Arch-based (pacman plus an AUR helper such as `yay`), as on Omarchy.
 
 Run each section in order. Pause and report after each section completes so I can verify before continuing.
 
+Check the platform first (`uname`). Parts marked **macOS** or **Linux** apply to
+that platform only; everything else applies to both. On Linux, `sudo` needs a
+password the agent can't type: hand `sudo`, `yay` and `chsh` commands to the
+user to run in a terminal, then verify their result.
+
 ## 1. Install Homebrew
+
+**macOS.** On Linux, skip §1–§2: pacman, the AUR and mise install everything in §3–§4.
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -29,7 +37,9 @@ brew tap auth0/auth0-cli
 
 ## 3. Install Homebrew Formulae
 
-Install the core tools I use (skip transitive dependencies — Homebrew resolves those):
+Install the core tools I use (skip transitive dependencies — the package manager resolves those).
+
+**macOS:**
 
 ```bash
 brew install \
@@ -50,7 +60,21 @@ brew install \
   yt-dlp
 ```
 
+**Linux:** the same tools from pacman and the AUR, plus `zsh` (§5 needs it).
+`auth0` and `railway` have no Arch package, so mise installs them. `libpq` is
+`postgresql-libs`; `nvm` comes from its own installer in §6; tmux is skipped
+because §17 is macOS-only. Install `github-cli` too unless `gh` is already on
+PATH (Omarchy ships it through mise).
+
+```bash
+sudo pacman -S --needed ffmpeg go jq postgresql-libs python python-pipx rust yt-dlp zsh
+yay -S --needed autojump bfg
+mise use -g github:auth0/auth0-cli@latest railway@latest
+```
+
 ## 4. Install Homebrew Casks
+
+**macOS:**
 
 ```bash
 brew install --cask \
@@ -73,10 +97,29 @@ Ghostty needs Full Disk Access to read history files under protected directories
 open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
 ```
 
+**Linux:** `sanesidebuttons` and Full Disk Access are macOS-only; skip them.
+The AUR `aws-session-manager-plugin` pulls in AWS CLI v1 at `/usr/bin/aws` as a
+dependency; §10's v2 in `/usr/local/bin` comes first on PATH.
+
+```bash
+sudo pacman -S --needed ghostty ttf-nerd-fonts-symbols
+yay -S --needed google-cloud-cli aws-session-manager-plugin
+```
+
 ## 5. Install Oh My Zsh
+
+**macOS:**
 
 ```bash
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
+**Linux:** stop the installer from switching the login shell or starting zsh
+mid-bootstrap. Switching the login shell (`chsh -s "$(command -v zsh)"`) is the
+user's call; offer it after §9.
+
+```bash
+RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
 ## 6. Set Up NVM with ~/.nvm
@@ -87,7 +130,20 @@ This is critical: NVM must store node versions in `~/.nvm` (not the Homebrew cel
 mkdir -p ~/.nvm
 ```
 
-The Oh My Zsh `nvm` plugin handles sourcing `nvm.sh` automatically. Symlinks from `~/.nvm/nvm.sh` and `~/.nvm/nvm-exec` into the Homebrew cellar are created by the `nvm` formula — verify they exist:
+The Oh My Zsh `nvm` plugin handles sourcing `nvm.sh` automatically.
+
+**Linux:** there is no `nvm` formula. Install nvm itself into `~/.nvm` with its
+own installer; `PROFILE=/dev/null` keeps it out of the shell rc files (§9 loads
+it). `nvm.sh` and `nvm-exec` are then regular files, so skip the symlink check
+below.
+
+```bash
+tag=$(gh api repos/nvm-sh/nvm/releases/latest --jq .tag_name)
+curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/$tag/install.sh" |
+  NVM_DIR="$HOME/.nvm" PROFILE=/dev/null bash
+```
+
+**macOS:** symlinks from `~/.nvm/nvm.sh` and `~/.nvm/nvm-exec` into the Homebrew cellar are created by the `nvm` formula — verify they exist:
 
 ```bash
 ls -la ~/.nvm/nvm.sh ~/.nvm/nvm-exec
@@ -137,6 +193,10 @@ the machine has a Homebrew cask or npm copy, remove it
 (`brew uninstall --cask codex` / `npm uninstall -g @openai/codex`) so PATH
 can't pick it up.
 
+Where mise already provides `claude` or `codex` (Omarchy does), keep mise's copy
+and skip that native installer: mise also updates it, and a second copy in
+`~/.local/bin` would sit behind mise's on PATH anyway.
+
 npm globals:
 
 ```bash
@@ -145,7 +205,7 @@ npm install -g vercel
 
 (corepack and npm ship with node)
 
-pipx tools (pipx itself comes from Homebrew in §3):
+pipx tools (pipx itself comes from §3):
 
 ```bash
 pipx install claude-swap   # provides `cswap` — switch between logged-in Claude Code accounts
@@ -178,13 +238,15 @@ if ! grep -q '^# >>> shell-setup managed >>>$' ~/.zshrc \
   cp ~/.zshrc ~/.zshrc.pre-shell-setup
 fi
 
-# Strip any prior managed block (no-op if absent). BSD sed (`-i ''`).
-sed -i '' '/^# >>> shell-setup managed >>>$/,/^# <<< shell-setup managed <<<$/d' ~/.zshrc
+# Strip any prior managed block (no-op if absent). `-i.bak` works with both
+# BSD (macOS) and GNU (Linux) sed.
+sed -i.bak '/^# >>> shell-setup managed >>>$/,/^# <<< shell-setup managed <<<$/d' ~/.zshrc &&
+  rm -f ~/.zshrc.bak
 
 # Trim any trailing blank lines left behind by the strip (or pre-existing in
 # the file). Keeps the separator below at exactly one blank line across reruns.
 while [ -s ~/.zshrc ] && [ -z "$(tail -n 1 ~/.zshrc)" ]; do
-  sed -i '' -e '$d' ~/.zshrc
+  sed -i.bak -e '$d' ~/.zshrc && rm -f ~/.zshrc.bak
 done
 
 # Append the managed block: a single source line pointing at this checkout.
@@ -197,7 +259,7 @@ done
 ```
 
 The sourced `zsh/zshrc` sets up Oh My Zsh (theme + shell-setup's required plugins),
-points `NVM_DIR` at `~/.nvm`, wires Homebrew + user site-functions completions
+points `NVM_DIR` at `~/.nvm`, activates mise where it's installed, wires Homebrew + user site-functions completions
 onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, the
 `claude` alias, and the `tm` session helper (`tm <name>` attaches/creates a
 tmux session; plain `tm` is a numbered picker marking sessions attached/detached).
@@ -222,14 +284,46 @@ load.
 > Machine-local additions belong in `~/.zshrc` outside the markers, never
 > between them. See `AGENTS.md`.
 
+Machine-local environment settings go in `~/.config/shell-setup/local-env.sh`,
+which `zsh/zshrc` sources after its own exports and the herdr project launcher
+sources too, so keep it POSIX sh. Set `PROJECTS_DIR` there. Where Zed isn't
+installed (e.g. on Linux), also override the zshrc's `EDITOR="zed --wait"`. If
+the file doesn't exist, ask the user for both values and create it, e.g.:
+
+```sh
+# Machine-local shell settings (not tracked in shell-setup). Sourced by zsh and
+# by herdr's project launcher, so keep it POSIX sh.
+export PROJECTS_DIR="$HOME/path/to/projects"
+export EDITOR="nvim"   # Omarchy: "omarchy-launch-editor --inline"
+```
+
 ## 10. Install AWS CLI
 
-Use the official macOS installer (not Homebrew — AWS does not maintain third-party repositories). Reference: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+Use AWS's official installer (not Homebrew or a distro package — AWS does not maintain third-party repositories). Reference: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+**macOS:**
 
 ```bash
 curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
 sudo installer -pkg AWSCLIV2.pkg -target /
 rm AWSCLIV2.pkg
+```
+
+**Linux:** download and unpack the official zip in a fresh directory, then hand
+the user the `sudo …/aws/install` line; it installs to `/usr/local/aws-cli`
+with `aws` in `/usr/local/bin`.
+
+```bash
+d=$(mktemp -d)
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "$d/awscliv2.zip"
+unzip -q "$d/awscliv2.zip" -d "$d"
+echo "Run: sudo $d/aws/install"
+```
+
+Only after the user reports the install finished, remove the download:
+
+```bash
+rm -rf "$d"
 ```
 
 Verify:
@@ -303,11 +397,21 @@ chmod +x /tmp/aws-sso-setup.sh
 
 ### Step 2: Launch the script in a new Terminal window
 
+**macOS:**
+
 ```bash
 rm -f /tmp/aws-sso-setup-done
 osascript \
   -e 'tell application "Terminal" to do script "/tmp/aws-sso-setup.sh"' \
   -e 'tell application "Terminal" to activate'
+```
+
+**Linux:** open the default terminal with `xdg-terminal-exec` (Omarchy and
+most desktops provide it; otherwise start any terminal emulator on the script).
+
+```bash
+rm -f /tmp/aws-sso-setup-done
+setsid -f xdg-terminal-exec /tmp/aws-sso-setup.sh >/dev/null 2>&1
 ```
 
 ### Step 3: Wait for the completion marker
@@ -347,9 +451,13 @@ Clone the repo and run its installer (symlinks the script to `~/.local/bin/git-m
 mkdir -p ~/repos
 [ -d ~/repos/git-mux ] || git clone git@github.com:poislagarde/git-mux.git ~/repos/git-mux
 ~/repos/git-mux/install.sh
+mkdir -p ~/.local/share/zsh/site-functions
 ln -sf ~/repos/git-mux/completions/_git-mux ~/.local/share/zsh/site-functions/_git-mux
 rm -f ~/.zcompdump*
 ```
+
+Without a GitHub SSH key on the machine, clone over HTTPS instead
+(`https://github.com/poislagarde/git-mux.git`).
 
 The `_git-mux` completion delegates to git's own command completion (so `git mux sw<TAB>` expands to `git mux switch`) and additionally completes git-mux's own flags. Open a fresh shell to pick it up.
 
@@ -377,6 +485,11 @@ export PATH="$PATH:$HOME/.local/bin"
 Deep-copy this repo's `.claude/` into `~/.claude/` — except this bootstrap command itself (`commands/shell-setup.md`), which is run one-time from this repo (a project-scoped `/shell-setup`) and is never needed as a global command. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
 The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `assistant-resurrect/` for session persistence and `assistant-activity/` for the window-label activity indicator (§17), `worktree-register.py` for deferred Herdr registration (§18), and `worktree-guard.py`, which refuses `git worktree add` into `/tmp` or `$TMPDIR` (linked below). Complete those symlinks before starting a new assistant session.
+
+**Linux:** §17 (tmux) is macOS-only, so the block below drops the tmux-only
+hooks (`assistant-resurrect/`, `assistant-activity/`) from both assistants'
+repo hooks before merging. Only the worktree guard and the herdr worktree
+registration hooks are installed.
 
 Run from the root of this repo:
 
@@ -409,8 +522,19 @@ merge_hooks() {   # merge_hooks <live file> <repo file>
   ' "$1" "$2" > "$tmp" && mv "$tmp" "$1"
 }
 
+# The repo hooks file to merge on this platform: as-is on macOS; on Linux a copy
+# without the tmux-only hooks (§17 is macOS-only), dropping emptied events.
+platform_hooks() {   # platform_hooks <repo file>  → prints the path to merge
+  if [ "$(uname)" = Darwin ]; then printf '%s\n' "$1"; return 0; fi
+  tmp=$(mktemp)
+  jq '.hooks |= (with_entries(.value |= (map(.hooks |= map(select((.command // "")
+        | test("assistant-(resurrect|activity)/") | not)))
+        | map(select((.hooks | length) > 0))))
+      | with_entries(select((.value | length) > 0)))' "$1" > "$tmp" && printf '%s\n' "$tmp"
+}
+
 # 1. Claude Code settings.
-merge_hooks ~/.claude/settings.json .claude/settings.json
+merge_hooks ~/.claude/settings.json "$(platform_hooks .claude/settings.json)"
 
 # 2. Copy everything else, overwriting on conflict but preserving files in
 #    ~/.claude that aren't in the repo (no --delete). Exclude the bootstrap
@@ -442,7 +566,7 @@ grep -qxF '@~/.claude/show-visual-work.md' ~/.claude/CLAUDE.md 2>/dev/null ||
 #    you to TRUST each hook before it runs, keyed by a hash of the entry — so
 #    review and trust new or changed entries with /hooks on your first `codex`
 #    run after this. Do not bypass hook trust.
-merge_hooks ~/.codex/hooks.json .codex/hooks.json
+merge_hooks ~/.codex/hooks.json "$(platform_hooks .codex/hooks.json)"
 
 # 5. Codex settings: merge the tracked top-level defaults and [tui] block into
 #    ~/.codex/config.toml. Preserve all other machine-local settings.
@@ -507,7 +631,7 @@ fi
 
 ## 16. Restore Ghostty Configuration
 
-Symlink this repo's Ghostty config into `~/.config/ghostty/` — a **symlink,
+**macOS:** symlink this repo's Ghostty config into `~/.config/ghostty/` — a **symlink,
 not a copy**, so the live file and the repo file are one file and can never
 drift (see AGENTS.md). Replaces any prior config.
 
@@ -526,7 +650,7 @@ Verify it parses:
 
 Reload a running Ghostty with `⌘⇧,` to pick up the new config.
 
-For the top-right quick terminal, build Ghostty 1.3.1 with the pinned patch in
+**macOS:** for the top-right quick terminal, build Ghostty 1.3.1 with the pinned patch in
 this repo. Install Zig 0.15.2 and gettext, select Xcode, and install its Metal
 Toolchain if missing. From the repo root, run:
 
@@ -542,7 +666,37 @@ down at the right edge on each display. The local build has an ad-hoc
 signature: grant Ghostty Accessibility and Full Disk Access again if macOS
 requests them. Rebuild and reinstall the patch after updating Ghostty.
 
+**Linux:** keep the existing `~/.config/ghostty/config` (a distro default such
+as Omarchy's supplies the theme, font and Wayland settings) and append a
+**managed block** that loads this repo's config and then `ghostty/linux.conf`.
+Ghostty reads `config-file` includes after the file's own settings, in order,
+so the repo config wins over the file's own values and `linux.conf` wins over
+both. Re-running replaces the block. Run from the root of this repo:
+
+```bash
+mkdir -p ~/.config/ghostty
+touch ~/.config/ghostty/config
+[ -f ~/.config/ghostty/config.pre-shell-setup ] ||
+  cp ~/.config/ghostty/config ~/.config/ghostty/config.pre-shell-setup
+sed -i.bak '/^# >>> shell-setup managed >>>$/,/^# <<< shell-setup managed <<<$/d' ~/.config/ghostty/config &&
+  rm -f ~/.config/ghostty/config.bak
+{
+  printf '\n# >>> shell-setup managed >>>\n'
+  printf 'config-file = "%s/ghostty/config"\n' "$PWD"
+  printf 'config-file = "%s/ghostty/linux.conf"\n' "$PWD"
+  printf '# <<< shell-setup managed <<<\n'
+} >> ~/.config/ghostty/config
+ghostty +validate-config
+```
+
+Reload a running Ghostty with `ctrl+shift+,`. Under Hyprland, the config's
+`super+…` chords go to the window manager, not Ghostty. The top-right quick
+terminal build above is macOS-only.
+
 ## 17. Restore tmux Configuration
+
+**macOS only.** On Linux, skip this section and §20's tmux checks: the tmux
+server and its persistence coordinator run under launchd.
 
 Symlink this repo's tmux config at `~/.tmux.conf` — a **symlink, not a
 copy**, same reasoning as the Ghostty config in §16. Enables mouse support
@@ -843,10 +997,19 @@ mkdir -p ~/.config/herdr ~/.shell-setup
 ln -sfn "$(pwd)/herdr/config.toml" ~/.config/herdr/config.toml
 ln -sfn "$(pwd)/herdr/claude-pane.sh" ~/.shell-setup/claude-pane.sh
 ln -sfn "$(pwd)/herdr/claude-detection-overlay.sh" ~/.shell-setup/herdr-claude-detection.sh
-sed "s|__HOME__|$HOME|g" herdr/local.shell-setup.herdr-claude-detection.plist \
-  > ~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist
-launchctl bootout gui/$(id -u)/local.shell-setup.herdr-claude-detection 2>/dev/null || true
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist
+if [ "$(uname)" = Darwin ]; then
+  sed "s|__HOME__|$HOME|g" herdr/local.shell-setup.herdr-claude-detection.plist \
+    > ~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist
+  launchctl bootout gui/$(id -u)/local.shell-setup.herdr-claude-detection 2>/dev/null || true
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist
+else
+  # systemd user units: the .path unit watches what the plist's WatchPaths do.
+  systemctl --user link "$(pwd)/herdr/local.shell-setup.herdr-claude-detection.service" \
+    "$(pwd)/herdr/local.shell-setup.herdr-claude-detection.path"
+  systemctl --user daemon-reload
+  systemctl --user enable --now local.shell-setup.herdr-claude-detection.path
+  systemctl --user start local.shell-setup.herdr-claude-detection.service
+fi
 herdr plugin install poislagarde/herdr-branch-labels \
   --ref "$(cat herdr/branch-labels.ref)" --yes
 branch_labels_config_dir="$(herdr plugin config-dir poislagarde.branch-labels)"
@@ -893,14 +1056,19 @@ fi
 ```
 
 The launcher needs `jq` (§3). If `~/.config/herdr/config.toml` is a regular
-file, reconcile its differences into the repo first, then re-symlink.
+file, reconcile its differences into the repo first, then re-symlink. A distro
+default (Omarchy ships one) is not drift: back it up as
+`config.toml.pre-shell-setup` and link over it. A distro-installed herdr (Omarchy
+packages it) satisfies the `command -v herdr` check; update it with the system
+package manager instead of `herdr update`.
 
 `herdr/claude-detection-overlay.sh` writes herdr's local Claude detection
 override, `~/.config/herdr/agent-detection/claude.toml`, from the cached remote
 manifest plus the rules in the script. Its extra rule shows a Claude pane idle
 with a background shell or Monitor as `working`, so the sidebar circle stays
 yellow until the job exits. A local override replaces herdr's manifest
-entirely, so the `local.shell-setup.herdr-claude-detection` LaunchAgent reruns
+entirely, so the `local.shell-setup.herdr-claude-detection` LaunchAgent (a
+systemd path unit of the same name on Linux) reruns
 the script whenever herdr refreshes the remote copy. After editing the rules,
 run `herdr/tests/claude-detection-test.sh`, then
 `~/.shell-setup/herdr-claude-detection.sh`; it reloads herdr's manifests when
@@ -1048,6 +1216,8 @@ checks with `herdr plugin disable poislagarde.worktree-cleanup`.
 
 ## 19. Restore the Karabiner Hyper Key
 
+**macOS only.** Karabiner-Elements doesn't exist on Linux; skip this section.
+
 Caps Lock acts as Hyper (shift+ctrl+option+cmd), a spare modifier for app chords.
 Karabiner-Elements is installed from its own installer (https://karabiner-elements.pqrs.org)
 and needs its Input Monitoring / driver approvals once in System Settings.
@@ -1066,7 +1236,7 @@ Run these checks and report results:
 
 ```bash
 zsh -c 'source ~/.zshrc && echo "zsh: OK"'
-brew --version
+brew --version    # macOS only
 nvm --version
 node --version
 npm --version
@@ -1081,13 +1251,23 @@ Confirm that `~/.nvm/versions/node/` contains the installed node version (not em
 Confirm `claude` resolves to the native install (`which claude` →
 `~/.local/bin/claude`, a symlink into `~/.local/share/claude/versions/`), not
 an npm global. Likewise `codex` → `~/.local/bin/codex` (a symlink into
-`~/.codex/packages/standalone/`), not a Homebrew cask or npm global.
+`~/.codex/packages/standalone/`), not a Homebrew cask or npm global. Where §8
+kept mise's copies, both resolve into `~/.local/share/mise/` instead.
 
-Confirm `~/.tmux.conf`, `~/.config/ghostty/config`, `~/.config/herdr/config.toml`,
-and `~/.shell-setup/tmux-persistence.sh` are **symlinks into this repo** (`ls -l`
-shows `->`), not copies — a copy silently drifts from the repo on the next edit.
+Confirm `~/.config/herdr/config.toml` and, on macOS, `~/.tmux.conf`,
+`~/.config/ghostty/config` and `~/.shell-setup/tmux-persistence.sh` are
+**symlinks into this repo** (`ls -l` shows `->`), not copies — a copy silently
+drifts from the repo on the next edit. On Linux, `~/.config/ghostty/config` is
+a regular file whose managed block loads this repo's `ghostty/config` and
+`ghostty/linux.conf`; `ghostty +validate-config` must pass.
 
-Confirm the tmux server agent is loaded and running:
+**Linux:** confirm the herdr detection watcher is active:
+
+```bash
+systemctl --user is-active local.shell-setup.herdr-claude-detection.path
+```
+
+**macOS:** confirm the tmux server agent is loaded and running:
 
 ```bash
 launchctl print gui/$(id -u)/local.shell-setup.tmux-server | grep -E "state|pid"

@@ -1,0 +1,12 @@
+# Linux counterpart of the plist's WatchPaths: rerun the detection overlay
+# whenever herdr refreshes its cached remote manifest.
+[Unit]
+Description=Watch herdr's cached remote Claude manifest (shell-setup)
+
+[Path]
+PathChanged=%h/.local/state/herdr/agent-detection/remote
+PathChanged=%h/.local/state/herdr/agent-detection/remote/claude.toml
+Unit=local.shell-setup.herdr-claude-detection.service
+
+[Install]
+WantedBy=default.target

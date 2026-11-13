@@ -11,6 +11,10 @@ import unittest
 
 GUARD = Path(__file__).resolve().parents[1] / "worktree-guard.py"
 
+# macOS always sets TMPDIR; Linux usually leaves it unset, so give "$TMPDIR"
+# a value for the guard to expand.
+os.environ.setdefault("TMPDIR", "/tmp")
+
 
 def decide(command, cwd="/path/to/repo"):
     payload = {"hook_event_name": "PreToolUse", "tool_name": "Bash", "cwd": cwd,
@@ -26,16 +30,21 @@ def decide(command, cwd="/path/to/repo"):
 
 class WorktreeGuard(unittest.TestCase):
     def test_denies_worktrees_under_temporary_directories(self):
-        for command in (
+        commands = [
             "git worktree add /tmp/wt main",
-            "git -C /path/to/repo worktree add -b feature /private/tmp/wt main",
-            "S=/private/tmp/agent/scratchpad; cd /path/to/repo && git worktree add -q --detach $S/wt origin/main",
             'git worktree add "$TMPDIR/wt"',
             'git worktree add "$(mktemp -d)/wt"',
             "cd /tmp && git worktree add wt",
             "git -C /tmp/repo worktree add ../wt",
             "git worktree add --reason why --lock -- /tmp/wt",
-        ):
+        ]
+        # /private/tmp is where macOS's /tmp symlink points; Linux has no such path.
+        if sys.platform == "darwin":
+            commands += [
+                "git -C /path/to/repo worktree add -b feature /private/tmp/wt main",
+                "S=/private/tmp/agent/scratchpad; cd /path/to/repo && git worktree add -q --detach $S/wt origin/main",
+            ]
+        for command in commands:
             with self.subTest(command=command):
                 self.assertEqual(decide(command), "deny")
 
