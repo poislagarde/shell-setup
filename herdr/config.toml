@@ -22,6 +22,11 @@ rows = [
 name = "solarized"
 auto_switch = false
 
+# Pass kitty graphics (inline images) through to Ghostty. Takes effect only
+# after a full Herdr restart, not reload-config.
+[terminal]
+kitty_graphics = true
+
 # Keybinds are Omarchy's herdr defaults, copied from
 # /usr/share/omarchy/config/herdr/config.toml. Compare after Omarchy updates
 # and copy changes here. The [[keys.command]] entries below are
