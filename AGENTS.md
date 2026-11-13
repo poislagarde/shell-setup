@@ -96,8 +96,10 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   by §16; edit either; one file). If you find a regular file here instead,
 >   that's drift — reconcile any differences into the repo, then re-symlink.
 >   On Linux it's a **regular file**: the distro's defaults plus a managed block
->   (created by §16) that loads `ghostty/config`, then `ghostty/linux.conf` —
->   edit the repo files, never between the markers.
+>   (created by §16) that loads `ghostty/config`, then the optional
+>   machine-local `~/.config/ghostty/local.conf` — edit the repo file or
+>   `local.conf`, never between the markers. Don't override `initial-window` in
+>   either: Linux launchers rely on it staying `false` (bootstrap §16).
 > - `~/.tmux.conf` → symlink to `tmux/tmux.conf` (created by §17, macOS only;
 >   same rule).
 > - `~/.zshrc` → **regular file**: machine-local lines plus a managed block
@@ -195,7 +197,6 @@ Linux, and so are the tmux-only assistant hooks).
 | Tool | Repo file | Home file |
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` (macOS: symlink to the repo file; Linux: the managed block loads it) |
-| Ghostty on Linux | `ghostty/linux.conf` | loaded last by the managed block in `~/.config/ghostty/config` (Linux only; reload with `ctrl+shift+,`) |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |
 | herdr branch labels | `herdr/branch-labels.ref` | `poislagarde.branch-labels` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | herdr branch label regex | `herdr/branch-labels.json` | `config.json` under `herdr plugin config-dir poislagarde.branch-labels` (symlink to the repo file; `herdr plugin action invoke poislagarde.branch-labels.refresh`) |

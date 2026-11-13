@@ -48,7 +48,6 @@ assistants/
 └── tests/                   # hook-payload regression test for the guard
 ghostty/
 ├── config                   # Ghostty terminal config (quick terminal, splits, NTE)
-├── linux.conf               # Linux overrides, loaded after config by ~/.config/ghostty/config's managed block
 ├── build-top-right.sh       # build a Ghostty app with a top-right quick terminal
 ├── install-top-right.sh     # replace Ghostty after quitting it; keep a backup
 └── top-right-quick-terminal.patch # pin the top quick terminal to the right edge

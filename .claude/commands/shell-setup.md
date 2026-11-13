@@ -668,10 +668,10 @@ requests them. Rebuild and reinstall the patch after updating Ghostty.
 
 **Linux:** keep the existing `~/.config/ghostty/config` (a distro default such
 as Omarchy's supplies the theme, font and Wayland settings) and append a
-**managed block** that loads this repo's config and then `ghostty/linux.conf`.
-Ghostty reads `config-file` includes after the file's own settings, in order,
-so the repo config wins over the file's own values and `linux.conf` wins over
-both. Re-running replaces the block. Run from the root of this repo:
+**managed block** that loads this repo's config. Ghostty reads `config-file`
+includes after the file's own settings and after command-line flags, so the
+repo config wins over both. Re-running replaces the block. Run from the root
+of this repo:
 
 ```bash
 mkdir -p ~/.config/ghostty
@@ -683,13 +683,22 @@ sed -i.bak '/^# >>> shell-setup managed >>>$/,/^# <<< shell-setup managed <<<$/d
 {
   printf '\n# >>> shell-setup managed >>>\n'
   printf 'config-file = "%s/ghostty/config"\n' "$PWD"
-  printf 'config-file = "%s/ghostty/linux.conf"\n' "$PWD"
+  printf '%s\n' 'config-file = ?"~/.config/ghostty/local.conf"'
   printf '# <<< shell-setup managed <<<\n'
 } >> ~/.config/ghostty/config
 ghostty +validate-config
 ```
 
-Reload a running Ghostty with `ctrl+shift+,`. Under Hyprland, the config's
+The block loads the optional `~/.config/ghostty/local.conf` last, for
+machine-local overrides of the repo config. For example, `font-size = 9`
+matches Omarchy's other apps where the repo's `font-size = 12` doesn't. The
+file stays outside this repo.
+
+Open Ghostty from the desktop launcher, which starts it through D-Bus and asks
+for one window, or with `ghostty +new-window [-e command]`. The repo config's
+`initial-window = false` also beats the `--initial-window` flag, so a plain
+`ghostty` or `ghostty -e command` opens no window, and overriding it to `true`
+makes a launcher start open two. Reload a running Ghostty with `ctrl+shift+,`. Under Hyprland, the config's
 `super+…` chords go to the window manager, not Ghostty. The top-right quick
 terminal build above is macOS-only.
 
@@ -1258,8 +1267,8 @@ Confirm `~/.config/herdr/config.toml` and, on macOS, `~/.tmux.conf`,
 `~/.config/ghostty/config` and `~/.shell-setup/tmux-persistence.sh` are
 **symlinks into this repo** (`ls -l` shows `->`), not copies — a copy silently
 drifts from the repo on the next edit. On Linux, `~/.config/ghostty/config` is
-a regular file whose managed block loads this repo's `ghostty/config` and
-`ghostty/linux.conf`; `ghostty +validate-config` must pass.
+a regular file whose managed block loads this repo's `ghostty/config`;
+`ghostty +validate-config` must pass.
 
 **Linux:** confirm the herdr detection watcher is active:
 
