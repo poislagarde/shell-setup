@@ -716,15 +716,15 @@ matches Omarchy's other apps where the repo's `font-size = 12` doesn't. The
 file stays outside this repo. Don't set `initial-window` there; `linux.conf`
 and the service override own it.
 
-To make Ghostty Omarchy's default terminal (Super + Return, the Quake console
-on Super + \`, and Omarchy's TUI launchers), run `omarchy default terminal ghostty`.
+On Omarchy, §20 makes Ghostty the default terminal (Super + Return, the Quake
+console and Omarchy's TUI launchers).
 Reload a running Ghostty with `ctrl+shift+,`. Under Hyprland, the config's
 `super+…` chords go to the window manager, not Ghostty. The top-right quick
 terminal build above is macOS-only.
 
 ## 17. Restore tmux Configuration
 
-**macOS only.** On Linux, skip this section and §20's tmux checks: the tmux
+**macOS only.** On Linux, skip this section and §21's tmux checks: the tmux
 server and its persistence coordinator run under launchd.
 
 Symlink this repo's tmux config at `~/.tmux.conf` — a **symlink, not a
@@ -1259,7 +1259,70 @@ merged, not symlinked:
 
 Karabiner picks the change up on save.
 
-## 20. Post-Setup Verification
+## 20. Adjust Omarchy's Quake Console
+
+**Linux, Omarchy only.** Skip this section where
+`${OMARCHY_PATH:-/usr/share/omarchy}/default/hypr/qconsole.lua` doesn't exist.
+
+`omarchy/qconsole.lua` adjusts Omarchy's Quake console (Super + \`):
+
+- It opens the default shell instead of the default agent.
+- It spans the full width and 75% of the usable height.
+- It is bound to the physical \` key (`code:49`), which dead-key layouts such as
+  US International never send as `grave`.
+
+It has to record the console's event subscriptions while Omarchy's defaults
+load, so a **managed block** replaces the `require("default.hypr.omarchy")`
+line in `~/.config/hypr/hyprland.lua` with lines that wrap it. Re-running
+replaces the block. `omarchy refresh hyprland` resets the file, so run this
+section again after one. Run from the root of this repo:
+
+```bash
+f=~/.config/hypr/hyprland.lua
+[ -f "$f.pre-shell-setup" ] || cp "$f" "$f.pre-shell-setup"
+tmp=$(mktemp)
+awk -v mod="$PWD/omarchy/qconsole.lua" '
+  /^-- >>> shell-setup managed >>>$/ { inblock = 1; next }
+  inblock && /^-- <<< shell-setup managed <<<$/ { inblock = 0; $0 = "require(\"default.hypr.omarchy\")" }
+  inblock { next }
+  $0 == "require(\"default.hypr.omarchy\")" && !done {
+    print "-- >>> shell-setup managed >>>"
+    print "-- Omarchy defaults, wrapped by the shell-setup Quake console changes."
+    printf "local shell_setup_qconsole = dofile(\"%s\")\n", mod
+    print "shell_setup_qconsole.capture()"
+    print "require(\"default.hypr.omarchy\")"
+    print "shell_setup_qconsole.apply()"
+    print "-- <<< shell-setup managed <<<"
+    done = 1
+    next
+  }
+  { print }
+' "$f" > "$tmp" && cat "$tmp" > "$f" && rm -f "$tmp"
+grep -qxF 'shell_setup_qconsole.apply()' "$f" ||
+  echo "No require(\"default.hypr.omarchy\") line in $f; wrap it by hand." >&2
+hyprctl reload >/dev/null && hyprctl configerrors
+```
+
+`hyprctl configerrors` must report nothing, and both checks must pass. If
+either fails after an Omarchy update, Omarchy changed how `qconsole.lua` seeds
+or sizes the console; the console then keeps that part of Omarchy's default.
+
+```bash
+hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
+hyprctl repl 'return tostring(qconsole_resized)'     # expect true
+```
+
+Make Ghostty Omarchy's default terminal, so Super + Return, the console and
+Omarchy's TUI launchers open it (§16 makes Ghostty work for those launches):
+
+```bash
+omarchy default terminal ghostty
+```
+
+A console that is already open keeps its windows; the shell seeding applies the
+next time it is created empty.
+
+## 21. Post-Setup Verification
 
 Run these checks and report results:
 
@@ -1297,6 +1360,15 @@ service loads the windowless override:
 systemctl --user is-active local.shell-setup.herdr-claude-detection.path
 systemctl --user show -p ExecStart app-com.mitchellh.ghostty.service | grep -q ghostty-service.conf &&
   echo "ghostty service override: OK"
+```
+
+**Omarchy:** confirm §20's Quake console changes loaded:
+
+```bash
+hyprctl configerrors
+hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
+hyprctl repl 'return tostring(qconsole_resized)'     # expect true
+omarchy default terminal                             # expect ghostty
 ```
 
 **macOS:** confirm the tmux server agent is loaded and running:
