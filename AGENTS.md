@@ -111,6 +111,10 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   `require("default.hypr.omarchy")` line: it `dofile`s `omarchy/qconsole.lua`
 >   around that require. Edit the repo module; personal Hyprland settings stay in
 >   `~/.config/hypr/`, never in this repo or between the markers.
+> - `~/.XCompose` (Linux) → **regular file** (Omarchy's template plus personal
+>   compose sequences) with a managed block (created by §21) at its end that
+>   `include`s `omarchy/dead-keys.XCompose`. Edit the repo file; personal
+>   sequences stay outside the markers, never in this repo.
 > - `~/.zprofile` → **regular file**, not linked (installer-owned,
 >   machine-specific) — edit both the home file and the `shell-setup.md`
 >   instructions (still inlined there).
@@ -204,6 +208,7 @@ Linux, and so are the tmux-only assistant hooks).
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` (macOS: symlink to the repo file; Linux: the managed block loads it) |
 | Omarchy Quake console | `omarchy/qconsole.lua` | loaded by the managed block in `~/.config/hypr/hyprland.lua`, which wraps `require("default.hypr.omarchy")` (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
+| US International dead keys | `omarchy/dead-keys.XCompose` | included by the managed block at the end of `~/.XCompose` (Linux; created by bootstrap §21; `omarchy restart xcompose`) |
 | Ghostty on Linux | `ghostty/linux.conf` | loaded after `ghostty/config` by the managed block in `~/.config/ghostty/config` (Linux only) |
 | Ghostty D-Bus service on Linux | `ghostty/linux-service.conf`, `ghostty/linux-service-override.conf` | `~/.shell-setup/ghostty-service.conf` (symlink) and `~/.config/systemd/user/app-com.mitchellh.ghostty.service.d/shell-setup.conf` (symlink); after edits `systemctl --user daemon-reload`, then restart the service (closes its windows) |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |

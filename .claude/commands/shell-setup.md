@@ -724,7 +724,7 @@ terminal build above is macOS-only.
 
 ## 17. Restore tmux Configuration
 
-**macOS only.** On Linux, skip this section and §21's tmux checks: the tmux
+**macOS only.** On Linux, skip this section and §22's tmux checks: the tmux
 server and its persistence coordinator run under launchd.
 
 Symlink this repo's tmux config at `~/.tmux.conf` — a **symlink, not a
@@ -1322,7 +1322,48 @@ omarchy default terminal ghostty
 A console that is already open keeps its windows; the shell seeding applies the
 next time it is created empty.
 
-## 21. Post-Setup Verification
+## 21. Make Dead Keys Type Like macOS
+
+**Linux only.**
+
+`omarchy/dead-keys.XCompose` makes US International's dead keys work like
+macOS's U.S. International – PC layout. A dead key accents only the letters that
+layout accents: á é í ó ú ý ç, ä ë ï ö ü ÿ, à è ì ò ù, ã ñ õ, and â ê î ô û.
+Before any other key, it types its own mark and then that key, so `'` + `m`
+gives `'m`. Layouts without dead keys never reach these lines.
+
+`~/.XCompose` holds personal compose sequences, so it stays a regular file. A
+**managed block** at its end includes the repo file after the system table,
+which lets the repo's lines override that table. Re-running replaces the block.
+Run from the root of this repo:
+
+```bash
+f=~/.XCompose
+if [ -f "$f" ]; then
+  [ -f "$f.pre-shell-setup" ] || cp "$f" "$f.pre-shell-setup"
+else
+  # A user compose file replaces the locale's table unless it includes it.
+  printf 'include "%%L"\n' > "$f"
+fi
+sed -i '/^# >>> shell-setup managed >>>$/,/^# <<< shell-setup managed <<<$/d' "$f"
+while [ -s "$f" ] && [ -z "$(tail -n 1 "$f")" ]; do sed -i '$d' "$f"; done
+{
+  printf '\n# >>> shell-setup managed >>>\n'
+  printf 'include "%s/omarchy/dead-keys.XCompose"\n' "$PWD"
+  printf '# <<< shell-setup managed <<<\n'
+} >> "$f"
+```
+
+Reload the input method. On Omarchy:
+
+```bash
+omarchy restart xcompose
+```
+
+Elsewhere, log out and back in. Apps that compose keys themselves, without the
+input method, pick the change up when they restart.
+
+## 22. Post-Setup Verification
 
 Run these checks and report results:
 
@@ -1353,13 +1394,15 @@ drifts from the repo on the next edit. On Linux, `~/.config/ghostty/config` is
 a regular file whose managed block loads this repo's `ghostty/config` and
 `ghostty/linux.conf`; `ghostty +validate-config` must pass.
 
-**Linux:** confirm the herdr detection watcher is active and Ghostty's D-Bus
-service loads the windowless override:
+**Linux:** confirm the herdr detection watcher is active, Ghostty's D-Bus
+service loads the windowless override, and `~/.XCompose` includes §21's dead
+keys:
 
 ```bash
 systemctl --user is-active local.shell-setup.herdr-claude-detection.path
 systemctl --user show -p ExecStart app-com.mitchellh.ghostty.service | grep -q ghostty-service.conf &&
   echo "ghostty service override: OK"
+grep -c '/omarchy/dead-keys.XCompose"$' ~/.XCompose   # expect 1
 ```
 
 **Omarchy:** confirm §20's Quake console changes loaded:

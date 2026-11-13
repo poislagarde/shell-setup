@@ -16,7 +16,7 @@ The command lives at [`.claude/commands/shell-setup.md`](.claude/commands/shell-
 
 ## What it does
 
-Claude runs a 21-section checklist top to bottom, pausing for verification between sections. At a high level:
+Claude runs a 22-section checklist top to bottom, pausing for verification between sections. At a high level:
 
 - **Packages** — Homebrew, taps, CLI formulae (`gh`, `go`, `nvm`, `tmux`, `pipx`, `auth0`, …), and casks (`ghostty`, `gcloud-cli`, …); on Linux, the same tools from pacman, the AUR and mise.
 - **Node** — nvm pinned to `~/.nvm` (survives `brew upgrade`), latest LTS as `default`.
@@ -26,6 +26,7 @@ Claude runs a 21-section checklist top to bottom, pausing for verification betwe
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, herdr, and tmux configs; tmux-resurrect plus a guarded persistence coordinator keep sessions, layouts, scrollback, and Claude/Codex conversations across Ghostty quits and reboots.
 - **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically (as does a tmpfs `/tmp` on Linux), and tells the agent to use a persistent directory instead.
 - **Omarchy** — Ghostty as the default terminal, and Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it.
+- **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -89,6 +90,7 @@ tmux/
 ├── assistant-resurrect/                 # coordinator helpers: save/resume Claude Code + Codex sessions
 └── assistant-activity/                  # assistant hooks: window-label activity states + pane auto-focus
 omarchy/
+├── dead-keys.XCompose       # US International dead keys typed as on macOS: ' + m → 'm (included by ~/.XCompose's managed block)
 └── qconsole.lua             # Omarchy's Quake console: default shell, full width × 75% height, physical ` key (loaded by ~/.config/hypr/hyprland.lua's managed block)
 zsh/
 └── zshrc                    # sourced by ~/.zshrc's managed block (theme/plugins, PATH, keybinds, awsenv)
