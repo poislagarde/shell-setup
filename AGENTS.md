@@ -96,9 +96,10 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   by §16; edit either; one file). If you find a regular file here instead,
 >   that's drift — reconcile any differences into the repo, then re-symlink.
 >   On Linux it's a **regular file**: the distro's defaults plus a managed block
->   (created by §16) that loads `ghostty/config` — edit the repo file, never
->   between the markers. Don't override `initial-window` there: Linux launchers
->   rely on it staying `false` (bootstrap §16).
+>   (created by §16) that loads `ghostty/config`, then the optional
+>   machine-local `~/.config/ghostty/local.conf` — edit the repo file or
+>   `local.conf`, never between the markers. Don't override `initial-window` in
+>   either: Linux launchers rely on it staying `false` (bootstrap §16).
 > - `~/.tmux.conf` → symlink to `tmux/tmux.conf` (created by §17, macOS only;
 >   same rule).
 > - `~/.zshrc` → **regular file**: machine-local lines plus a managed block

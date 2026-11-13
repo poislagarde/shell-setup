@@ -683,10 +683,16 @@ sed -i.bak '/^# >>> shell-setup managed >>>$/,/^# <<< shell-setup managed <<<$/d
 {
   printf '\n# >>> shell-setup managed >>>\n'
   printf 'config-file = "%s/ghostty/config"\n' "$PWD"
+  printf '%s\n' 'config-file = ?"~/.config/ghostty/local.conf"'
   printf '# <<< shell-setup managed <<<\n'
 } >> ~/.config/ghostty/config
 ghostty +validate-config
 ```
+
+The block loads the optional `~/.config/ghostty/local.conf` last, for
+machine-local overrides of the repo config. For example, `font-size = 9`
+matches Omarchy's other apps where the repo's `font-size = 12` doesn't. The
+file stays outside this repo.
 
 Open Ghostty from the desktop launcher, which starts it through D-Bus and asks
 for one window, or with `ghostty +new-window [-e command]`. The repo config's
