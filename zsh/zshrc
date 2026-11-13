@@ -16,8 +16,12 @@ typeset -U plugins
 # NVM: use ~/.nvm so brew upgrades don't wipe node installations
 export NVM_DIR="$HOME/.nvm"
 
+# mise-managed tools, where mise is installed (Omarchy ships claude, codex and
+# gh through it). Activate before Oh My Zsh so nvm's node stays ahead on PATH.
+command -v mise >/dev/null && eval "$(mise activate zsh)"
+
 # Homebrew Shell Completion
-FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+command -v brew >/dev/null && FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 
 source $ZSH/oh-my-zsh.sh
 

@@ -1,0 +1,9 @@
+# Linux counterpart of local.shell-setup.herdr-claude-detection.plist. Runs the
+# detection overlay; started by the matching .path unit whenever herdr
+# refreshes its cached remote manifest. Link and enable with bootstrap §18.
+[Unit]
+Description=Regenerate herdr's local Claude detection override (shell-setup)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.shell-setup/herdr-claude-detection.sh

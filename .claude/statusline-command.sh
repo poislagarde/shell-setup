@@ -3,18 +3,25 @@ input=$(cat)
 
 # Refresh the model-specific weekly usage cache in the background, at most once
 # per 180s (via an attempt marker) — this must never block rendering on the
-# network. The oauth token is read from the keychain and never written to disk;
-# a failed/401 fetch leaves the last good cache in place (tmp file + mv).
+# network. The oauth token is read from the macOS keychain, or from Claude
+# Code's own credentials file where there is no keychain (Linux), and never
+# written anywhere; a failed/401 fetch leaves the last good cache in place
+# (tmp file + mv).
 CACHE_DIR="$HOME/.claude/cache"
 USAGE_CACHE="$CACHE_DIR/oauth-usage.json"
 USAGE_ATTEMPT="$CACHE_DIR/oauth-usage.attempt"
 mkdir -p "$CACHE_DIR" 2>/dev/null
-attempt_mtime=$(stat -f %m "$USAGE_ATTEMPT" 2>/dev/null)
+attempt_mtime=$(stat -c %Y "$USAGE_ATTEMPT" 2>/dev/null || stat -f %m "$USAGE_ATTEMPT" 2>/dev/null)
 [ -z "$attempt_mtime" ] && attempt_mtime=0
 if [ "$(( $(date +%s) - attempt_mtime ))" -ge 180 ]; then
   touch "$USAGE_ATTEMPT" 2>/dev/null
   (
-    token=$(security find-generic-password -s "Claude Code-credentials" -a "$USER" -w 2>/dev/null | jq -r '.claudeAiOauth.accessToken // empty')
+    if command -v security >/dev/null 2>&1; then
+      creds=$(security find-generic-password -s "Claude Code-credentials" -a "$USER" -w 2>/dev/null)
+    else
+      creds=$(cat "$HOME/.claude/.credentials.json" 2>/dev/null)
+    fi
+    token=$(printf '%s' "$creds" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
     if [ -n "$token" ]; then
       curl -fsS --max-time 5 https://api.anthropic.com/api/oauth/usage \
         -H "Authorization: Bearer $token" \
@@ -104,6 +111,9 @@ make_bar() {
 # SGR color sequences are stripped first so they don't count toward the width.
 dwidth() { printf '%s' "$(( $(printf '%s' "$1" | sed "s/${ESC}\[[0-9;]*m//g" | wc -m | tr -d ' ') + $2 ))"; }
 
+# Format an epoch timestamp: BSD `date -r` (macOS), else GNU `date -d @` (Linux).
+epoch_fmt() { date -r "$1" "$2" 2>/dev/null || date -d "@$1" "$2" 2>/dev/null; }
+
 # Pieces, built once (each empty if its data is absent).
 now=$(date +%s)
 ctx=""
@@ -115,7 +125,7 @@ five_bar=""; five_pctstr=""; five_resetstr=""; five_hl=""; five_hlr=""
 if [ -n "$five_pct" ]; then
   five_bar=$(make_bar "$five_pct")
   five_pctstr="$(printf '%.0f' "$five_pct")%"
-  [ -n "$five_resets" ] && { t=$(date -r "$five_resets" '+%H:%M' 2>/dev/null); [ -n "$t" ] && five_resetstr="resets $t"; }
+  [ -n "$five_resets" ] && { t=$(epoch_fmt "$five_resets" '+%H:%M'); [ -n "$t" ] && five_resetstr="resets $t"; }
   # Past 80% usage the "x% resets y" tail turns red; otherwise it stays default.
   awk -v p="$five_pct" 'BEGIN{exit !(p+0>80)}' && { five_hl="$C_HOT"; five_hlr="$C_RESET"; }
 fi
@@ -127,14 +137,14 @@ if [ -n "$week_pct" ]; then
   # Reset stamp: time alone when it lands today, day + time when under 48h away,
   # otherwise just the day (a week out, the hour is noise).
   if [ -n "$week_resets" ]; then
-    if [ "$(date -r "$week_resets" '+%F' 2>/dev/null)" = "$(date '+%F')" ]; then
+    if [ "$(epoch_fmt "$week_resets" '+%F')" = "$(date '+%F')" ]; then
       wfmt='+%H:%M'
     elif [ "$(( week_resets - now ))" -lt 172800 ]; then
       wfmt='+%a %H:%M'
     else
       wfmt='+%a'
     fi
-    t=$(date -r "$week_resets" "$wfmt" 2>/dev/null); [ -n "$t" ] && week_resetstr="resets $t"
+    t=$(epoch_fmt "$week_resets" "$wfmt"); [ -n "$t" ] && week_resetstr="resets $t"
   fi
   awk -v p="$week_pct" 'BEGIN{exit !(p+0>80)}' && { week_hl="$C_HOT"; week_hlr="$C_RESET"; }
 fi
