@@ -31,40 +31,18 @@ source $ZSH/oh-my-zsh.sh
 bindkey '^U' backward-kill-line
 
 # Shift+Enter → insert a literal newline (keep editing on next line) instead
-# of submitting. Ghostty sends it as CSI 13;2u; the CSI 27 binding covers tmux,
-# which re-sends it in that modified-key form. Alt+Enter (ESC+Enter) does the
+# of submitting. Ghostty sends it as CSI 13;2u; Alt+Enter (ESC+Enter) does the
 # same in a bare shell. Inside herdr, zsh gets Shift+Enter as a plain Enter.
 zle-insert-newline() { LBUFFER+=$'\n' }
 zle -N zle-insert-newline
 bindkey '^[[13;2u' zle-insert-newline
 bindkey '^[^M' zle-insert-newline
-bindkey '^[[27;2;13~' zle-insert-newline
 
-# Shift+Space → insert a normal space. tmux's `bind -n S-Space` already hands
-# panes a plain space; this covers any other path that emits the CSI 27
-# modified-key form (^[[27;2;32~, 32=space, 2=shift), which zsh can't decode
-# and would leak as a stray `2~` tail.
-zle-insert-space() { LBUFFER+=' ' }
-zle -N zle-insert-space
-bindkey '^[[27;2;32~' zle-insert-space
-
-# Cmd+Opt+arrow → tmux pane navigation. Ghostty sends these modifier-11
-# sequences (^[[1;11{A,B,C,D}) directly; bind them to a no-op in a bare shell so
-# nothing prints. Inside tmux the multiplexer catches them first.
+# herdr's pane chords in a bare shell: bind them to a no-op so nothing prints.
+# Ctrl+Alt(+Shift)+arrow arrive with modifiers 7 and 8, and Alt+Shift+Enter as
+# CSI 13;4u (Omarchy's Ghostty config). Inside herdr, herdr catches them first.
 zle-noop() { }
 zle -N zle-noop
-bindkey '^[[1;11A' zle-noop
-bindkey '^[[1;11B' zle-noop
-bindkey '^[[1;11C' zle-noop
-bindkey '^[[1;11D' zle-noop
-# Same for the Cmd+Shift chords Ghostty forwards as CSI u for tmux
-# (= - [ ] with modifier 10): swallow them in a bare shell instead of leaking.
-bindkey '^[[61;10u' zle-noop
-bindkey '^[[45;10u' zle-noop
-bindkey '^[[91;10u' zle-noop
-bindkey '^[[93;10u' zle-noop
-# Same for herdr's pane chords: Ctrl+Alt(+Shift)+arrow (modifiers 7 and 8) and
-# Alt+Shift+Enter, which Omarchy's Ghostty config sends as CSI 13;4u.
 for _key in A B C D; do
   bindkey "^[[1;7$_key" zle-noop
   bindkey "^[[1;8$_key" zle-noop
@@ -72,33 +50,10 @@ done
 unset _key
 bindkey '^[[13;4u' zle-noop
 
-# Reassert a blinking thin bar at each prompt. Ghostty uses the same default;
-# tmux forwards DECSCUSR through its xterm*:cstyle capability.
+# Reassert a blinking thin bar at each prompt, Ghostty's default, in case a
+# program changed the cursor shape.
 _zsh_cursor_blinking_bar() { print -n '\e[5 q' }
 precmd_functions+=(_zsh_cursor_blinking_bar)
-
-# tmux pane-border git segments: push this pane's @branch/@dirty options on
-# every prompt, so a cd or branch switch updates the border bar instantly.
-# The status-refresh.sh sweep (5s) computes the SAME values for panes that
-# aren't sitting at a zsh prompt — keep the two computations in sync. Values
-# are cached in shell vars and only written on change, so an idle prompt
-# forces no tmux redraws.
-if [[ -n "$TMUX" && -n "$TMUX_PANE" ]]; then
-  _tmux_git_segments_refresh() {
-    local b d=''
-    b=$(git symbolic-ref --short HEAD 2>/dev/null) ||
-      b=$(git rev-parse --short HEAD 2>/dev/null) || b=''
-    if [[ -n "$b" ]]; then
-      git diff --quiet HEAD 2>/dev/null
-      (( $? == 1 )) && d=1
-    fi
-    [[ "$b" == "$_tmux_git_b" && "$d" == "$_tmux_git_d" ]] && return
-    _tmux_git_b=$b _tmux_git_d=$d
-    tmux set -p -t "$TMUX_PANE" @branch "$b" \; \
-         set -p -t "$TMUX_PANE" @dirty "$d" 2>/dev/null
-  }
-  precmd_functions+=(_tmux_git_segments_refresh)
-fi
 
 # Editor
 export EDITOR="zed --wait"
@@ -138,13 +93,7 @@ awsenv() {
 }
 
 # Claude Code.
-# CLAUDE_CODE_TMUX_TRUECOLOR=1 disables Claude Code's hard-coded color-level
-# downgrade from 24-bit to 256-palette whenever it sees $TMUX is set (a
-# pessimistic fallback for tmux setups that don't pass true color through).
-# Our tmux config (default-terminal=tmux-256color + xterm*:Tc override) does
-# support 24-bit end-to-end, so we opt back into full color. Harmless outside
-# tmux — the var is only consulted when $TMUX is set.
-alias claude='CLAUDE_CODE_TMUX_TRUECOLOR=1 claude --chrome'
+alias claude='claude --chrome'
 
 # Codex. Force the preferred reasoning effort on every launch — Codex itself
 # rewrites model_reasoning_effort in ~/.codex/config.toml (the /model picker
@@ -159,45 +108,3 @@ if [[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/shell-setup/local-env.sh" ]]; then
 fi
 # Project launchers use the local PROJECTS_DIR setting, falling back to home.
 export PROJECTS_DIR="${PROJECTS_DIR:-$HOME}"
-
-# tm — tmux session helper. `tm <name>` attaches to (or creates) the named
-# session, switching the current client instead when already inside tmux.
-# Plain `tm` shows a numbered picker of existing sessions, each marked
-# (attached)/(detached), via zsh's `select` builtin (no fzf dependency).
-# Inside tmux, Alt+Shift+S (choose-tree, see tmux.conf) is the richer equivalent;
-# `tm` is mainly for shells outside tmux — the detached escape-hatch shell,
-# VS Code's terminal, ssh. Names/labels are split from ONE list-sessions
-# call (tab-separated) so the two arrays can't drift if sessions churn.
-tm() {
-  emulate -L zsh
-  if (( $# )); then
-    if [[ -n "$TMUX" ]]; then
-      tmux new-session -d -s "$1" 2>/dev/null
-      tmux switch-client -t "=$1"
-    else
-      tmux new-session -A -s "$1"
-    fi
-    return
-  fi
-  local -a lines names display
-  lines=(${(f)"$(tmux list-sessions \
-    -F '#{session_name}	#{session_windows}w#{?session_attached, (attached), (detached)}' \
-    2>/dev/null)"})
-  if (( ${#lines} == 0 )); then
-    echo "tm: no tmux sessions — use \`tm <name>\` to start one" >&2
-    return 1
-  fi
-  names=("${(@)lines%%	*}")
-  display=("${(@)lines/	/ — }")
-  local choice PS3="tm> "
-  select choice in "${display[@]}"; do
-    [[ -n "$choice" ]] || { echo "tm: invalid choice" >&2; return 1 }
-    if [[ -n "$TMUX" ]]; then
-      tmux switch-client -t "=${names[$REPLY]}"
-    else
-      tmux attach-session -t "=${names[$REPLY]}"
-    fi
-    return
-  done
-  return 1  # reached on EOF (Ctrl+D) — nothing picked
-}

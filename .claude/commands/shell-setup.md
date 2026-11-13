@@ -56,15 +56,14 @@ brew install \
   python \
   railway \
   rust \
-  tmux \
   yt-dlp
 ```
 
 **Linux:** the same tools from pacman and the AUR, plus `zsh` (§5 needs it).
 `auth0` and `railway` have no Arch package, so mise installs them. `libpq` is
-`postgresql-libs`; `nvm` comes from its own installer in §6; tmux is skipped
-because §17 is macOS-only. Install `github-cli` too unless `gh` is already on
-PATH (Omarchy ships it through mise).
+`postgresql-libs`; `nvm` comes from its own installer in §6. Install
+`github-cli` too unless `gh` is already on PATH (Omarchy ships it through
+mise).
 
 ```bash
 sudo pacman -S --needed ffmpeg go jq postgresql-libs python python-pipx rust yt-dlp zsh
@@ -85,8 +84,8 @@ brew install --cask \
   session-manager-plugin
 ```
 
-`font-symbols-only-nerd-font` provides the Nerd Font icon glyphs (e.g. the
-Octicons folder in the tmux pane border); `ghostty/config` lists it as a
+`font-symbols-only-nerd-font` provides the Nerd Font icon glyphs;
+`ghostty/config` lists it as a
 `font-family` fallback after JetBrains Mono, so those glyphs render at
 single-cell width without changing the text font. (The git-branch glyph is
 drawn by Ghostty natively and needs no font.)
@@ -261,13 +260,11 @@ done
 The sourced `zsh/zshrc` sets up Oh My Zsh (theme + shell-setup's required plugins),
 points `NVM_DIR` at `~/.nvm`, activates mise where it's installed, wires Homebrew + user site-functions completions
 onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, the
-`claude` alias, and the `tm` session helper (`tm <name>` attaches/creates a
-tmux session; plain `tm` is a numbered picker marking sessions attached/detached).
-Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics),
-Shift+Enter (Ghostty's CSI 13;2u) as a literal newline, Shift+Space via the CSI 27
-plumbing, no-ops in bare shells for forwarded pane chords, and a precmd that re-asserts a blinking
-thin-bar cursor inside tmux. tmux does not auto-start: Ghostty shells stay plain
-until `herdr` or `tm` is run.
+`claude` alias. Keyboard tweaks: `^U` → `backward-kill-line` (macOS
+Cmd+Backspace semantics), Shift+Enter (Ghostty's CSI 13;2u) as a literal
+newline, no-ops in bare shells for herdr's pane chords, and a precmd that
+re-asserts a blinking thin-bar cursor. Ghostty shells stay plain until `herdr`
+is run.
 
 Because the managed block lives at the end of `~/.zshrc`, the sourced file's
 scalar assignments (theme, `DISABLE_AUTO_TITLE`, etc.) win over anything
@@ -484,12 +481,7 @@ export PATH="$PATH:$HOME/.local/bin"
 
 Deep-copy this repo's `.claude/` into `~/.claude/` — except this bootstrap command itself (`commands/shell-setup.md`), which is run one-time from this repo (a project-scoped `/shell-setup`) and is never needed as a global command. For `settings.json` specifically, recursively merge so existing keys are preserved and this repo's values win on conflict (everything else is overwritten by this repo's copy; files already in `~/.claude/` that don't exist in the repo are left alone).
 
-The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `assistant-resurrect/` for session persistence and `assistant-activity/` for the window-label activity indicator (§17), `worktree-register.py` for deferred Herdr registration (§18), and `worktree-guard.py`, which refuses `git worktree add` into `/tmp` or `$TMPDIR` (linked below). Complete those symlinks before starting a new assistant session.
-
-**Linux:** §17 (tmux) is macOS-only, so the block below drops the tmux-only
-hooks (`assistant-resurrect/`, `assistant-activity/`) from both assistants'
-repo hooks before merging. Only the worktree guard and the herdr worktree
-registration hooks are installed.
+The merged `settings.json` includes hooks pointing at `~/.shell-setup/` — `worktree-register.py` for deferred Herdr registration (§18), and `worktree-guard.py`, which refuses `git worktree add` into `/tmp` or `$TMPDIR` (linked below). Complete those symlinks before starting a new assistant session.
 
 Run from the root of this repo:
 
@@ -522,19 +514,8 @@ merge_hooks() {   # merge_hooks <live file> <repo file>
   ' "$1" "$2" > "$tmp" && mv "$tmp" "$1"
 }
 
-# The repo hooks file to merge on this platform: as-is on macOS; on Linux a copy
-# without the tmux-only hooks (§17 is macOS-only), dropping emptied events.
-platform_hooks() {   # platform_hooks <repo file>  → prints the path to merge
-  if [ "$(uname)" = Darwin ]; then printf '%s\n' "$1"; return 0; fi
-  tmp=$(mktemp)
-  jq '.hooks |= (with_entries(.value |= (map(.hooks |= map(select((.command // "")
-        | test("assistant-(resurrect|activity)/") | not)))
-        | map(select((.hooks | length) > 0))))
-      | with_entries(select((.value | length) > 0)))' "$1" > "$tmp" && printf '%s\n' "$tmp"
-}
-
 # 1. Claude Code settings.
-merge_hooks ~/.claude/settings.json "$(platform_hooks .claude/settings.json)"
+merge_hooks ~/.claude/settings.json .claude/settings.json
 
 # 2. Copy everything else, overwriting on conflict but preserving files in
 #    ~/.claude that aren't in the repo (no --delete). Exclude the bootstrap
@@ -562,11 +543,11 @@ grep -qxF '@~/.claude/show-visual-work.md' ~/.claude/CLAUDE.md 2>/dev/null ||
   printf '%s\n' '@~/.claude/show-visual-work.md' >> ~/.claude/CLAUDE.md
 
 # 4. Codex CLI counterpart: install the hooks (the Codex-side equivalent of the
-#    Claude hooks above; both point at scripts symlinked by §17). Codex requires
+#    Claude hooks above; both point at scripts symlinked here and in §18). Codex requires
 #    you to TRUST each hook before it runs, keyed by a hash of the entry — so
 #    review and trust new or changed entries with /hooks on your first `codex`
 #    run after this. Do not bypass hook trust.
-merge_hooks ~/.codex/hooks.json "$(platform_hooks .codex/hooks.json)"
+merge_hooks ~/.codex/hooks.json .codex/hooks.json
 
 # 5. Codex settings: merge the tracked top-level defaults and [tui] block into
 #    ~/.codex/config.toml. Preserve all other machine-local settings.
@@ -722,303 +703,63 @@ Reload a running Ghostty with `ctrl+shift+,`. Under Hyprland, the config's
 `super+…` chords go to the window manager, not Ghostty. The top-right quick
 terminal build above is macOS-only.
 
-## 17. Restore tmux Configuration
+## 17. Remove an Earlier tmux Setup
 
-**macOS only.** On Linux, skip this section and §22's tmux checks: the tmux
-server and its persistence coordinator run under launchd.
+This repo no longer sets up tmux. Where an earlier version of this step
+installed it, remove everything it left: the tmux-only assistant hooks (they
+would fail on every Claude Code and Codex event once their scripts are gone),
+the launchd agent that kept a tmux server running, tmux itself, the links into
+this repo's former `tmux/` directory, and tmux's plugins and saved sessions.
+Each command does nothing where its target is absent, so run the block on every
+machine, Linux included.
 
-Symlink this repo's tmux config at `~/.tmux.conf` — a **symlink, not a
-copy**, same reasoning as the Ghostty config in §16. Enables mouse support
-(scroll + click-to-select-pane) and session persistence across reboots
-(tmux-resurrect plus the repo-owned persistence coordinator).
+**macOS:** booting out the agent stops the tmux server and everything running
+in it.
 
-Run from the root of this repo. The block inspects any live default server
-before changing tmux wiring. An uncoordinated server requires explicit
-topology approval and a second run.
-
-```bash
-# Preflight the live server before replacing its config, hooks, helpers, or
-# scheduler. `-N` guarantees these checks cannot start a server.
-_tmux_default() {
-  env -u TMUX -u TMUX_PANE -u TMUX_TMPDIR tmux -N -L default "$@"
-}
-_tmux_inventory() {
-  local rows
-  rows=$(
-    _tmux_default list-sessions -F 'S|#{session_id}|#{session_name}|#{session_windows}|#{session_attached}' &&
-    _tmux_default list-windows -a -F 'W|#{session_id}|#{window_id}|#{window_index}|#{window_name}|#{window_layout}' &&
-    _tmux_default list-panes -a -F 'P|#{window_id}|#{pane_id}|#{pane_index}|#{pane_current_path}|#{pane_current_command}'
-  ) || return 1
-  printf '%s\n' "$rows" | LC_ALL=C sort
-}
-_tmux_make_review_token() {
-  local pid=$1 inventory=$2 digest
-  digest=$(printf '%s\n' "$inventory" | /usr/bin/shasum -a 256 | awk '{print $1}') || return 1
-  [ -n "$digest" ] || return 1
-  printf '%s:%s\n' "$pid" "$digest"
-}
-_tmux_validated_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
-_tmux_initial_phase=
-_tmux_reviewed_inventory=
-_tmux_review_token=
-if [ -n "$_tmux_validated_pid" ]; then
-  [ -z "${TMUX:-}" ] || {
-    echo "Transfer tmux ownership from a plain non-tmux shell; no tmux files were changed." >&2
-    exit 1
-  }
-  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
-    echo "Detach every tmux client before transfer; no tmux files were changed." >&2
-    exit 1
-  }
-  _tmux_initial_phase=$(_tmux_default show-option -gqv @shell-setup-persistence-state 2>/dev/null || true)
-  _tmux_reviewed_inventory=$(_tmux_inventory) || {
-    echo "Could not inspect the live tmux topology; no tmux files were changed." >&2
-    exit 1
-  }
-  _tmux_review_token=$(_tmux_make_review_token "$_tmux_validated_pid" "$_tmux_reviewed_inventory") || exit 1
-  if [ "$_tmux_initial_phase" != ready ] && \
-     [ "${TMUX_PERSISTENCE_MIGRATION_APPROVAL:-}" != "$_tmux_review_token" ]; then
-    echo "Live uncoordinated tmux topology:" >&2
-    printf '%s\n' "$_tmux_reviewed_inventory" >&2
-    printf 'windows=%s panes=%s\n' \
-      "$(_tmux_default list-windows -a -F '#{session_name}:#{window_index}' | wc -l | tr -d ' ')" \
-      "$(_tmux_default list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}' | wc -l | tr -d ' ')" >&2
-    printf "After confirmation, run: export TMUX_PERSISTENCE_MIGRATION_APPROVAL='%s'\n" \
-      "$_tmux_review_token" >&2
-    echo "Then rerun §17 from the same plain, detached shell." >&2
-    exit 1
-  fi
-fi
-
-# Everything tmux.conf and the assistant hooks reference by a fixed path lives
-# in ~/.shell-setup/ — this repo's own home directory, not a tool's config dir
-# (see AGENTS.md).
-mkdir -p ~/.shell-setup
-
-# The pane-border-format is generated (tmux/build-pane-border-format.sh) and
-# source-file'd by tmux.conf from a fixed ~/.shell-setup path — link it before
-# the `tmux source-file` below, which parses (and so needs) it.
-ln -sfn "$(pwd)/tmux/pane-border-format.conf" ~/.shell-setup/pane-border-format.conf
-
-# Background loop tmux.conf launches (run-shell) to tick the @pulse option while
-# any window is working, animating the window-label "breathe". Linked from a
-# fixed ~/.shell-setup path; harmless if missing (the run-shell just fails quietly).
-ln -sfn "$(pwd)/tmux/status-refresh.sh" ~/.shell-setup/status-refresh.sh
-
-# Persistence coordinator: the only path used for periodic, detach, and manual
-# saves; startup restore; readiness; verification; and retained sidecars.
-command -v python3 >/dev/null || {
-  echo "python3 is required for durable tmux save barriers." >&2
-  exit 1
-}
-command -v jq >/dev/null || {
-  echo "jq is required for assistant-session persistence." >&2
-  exit 1
-}
-command -v sqlite3 >/dev/null || {
-  echo "sqlite3 is required for Codex session discovery." >&2
-  exit 1
-}
-ln -sfn "$(pwd)/tmux/tmux-persistence.sh" ~/.shell-setup/tmux-persistence.sh
-
-# Assistant session persistence: symlink the resurrect hook scripts to the
-# fixed path referenced by tmux.conf and ~/.claude/settings.json.
-ln -sfn "$(pwd)/tmux/assistant-resurrect" ~/.shell-setup/assistant-resurrect
-
-# Assistant activity indicator: the hooks that report what each assistant is
-# doing (§15 registers them in ~/.claude/settings.json and ~/.codex/hooks.json)
-# and the pane-focus script tmux.conf hooks onto session-window-changed.
-ln -sfn "$(pwd)/tmux/assistant-activity" ~/.shell-setup/assistant-activity
-
-# Install TPM and Resurrect without starting the default tmux server. The
-# launchd agent below must remain the sole automatic server owner.
-mkdir -p ~/.tmux/plugins
-if [ ! -d ~/.tmux/plugins/tpm/.git ]; then
-  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || exit 1
-fi
-if [ ! -d ~/.tmux/plugins/tmux-resurrect/.git ]; then
-  git clone https://github.com/tmux-plugins/tmux-resurrect ~/.tmux/plugins/tmux-resurrect || exit 1
-fi
-# launchd owns both `tmux -D` and the save scheduler. The supervisor restores
-# and verifies before Ghostty clients may attach. It waits without mutating a
-# foreign server if one already owns the default socket.
-ln -sfn "$(pwd)/tmux/tmux-server-agent.sh" ~/.shell-setup/tmux-server-agent.sh
-cp tmux/local.shell-setup.tmux-server.plist ~/Library/LaunchAgents/
-
-# Activate the coordinated hooks only after the preflight and any required
-# migration approval. Seed an uncoordinated topology in the same uninterrupted
-# handoff; an already coordinated server takes an ordinary save.
-_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
-if [ -n "$_tmux_validated_pid" ]; then
-  [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
-    echo "tmux changed after preflight; refusing activation." >&2
-    exit 1
-  }
-  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
-    echo "A tmux client attached after preflight; refusing activation." >&2
-    exit 1
-  }
-  if [ "$_tmux_initial_phase" != ready ]; then
-    _tmux_activation_inventory=$(_tmux_inventory) || exit 1
-    _tmux_activation_token=$(_tmux_make_review_token "$_tmux_current_pid" "$_tmux_activation_inventory") || exit 1
-    [ "${TMUX_PERSISTENCE_MIGRATION_APPROVAL:-}" = "$_tmux_review_token" ] && \
-      [ "$_tmux_activation_token" = "$_tmux_review_token" ] || {
-      echo "The approved tmux topology changed before activation; review it again." >&2
-      exit 1
-    }
-  fi
-elif [ -n "$_tmux_current_pid" ]; then
-  echo "A tmux server appeared after preflight; refusing activation." >&2
-  exit 1
-fi
-ln -sfn "$(pwd)/tmux/tmux.conf" ~/.tmux.conf
-if [ -n "$_tmux_validated_pid" ]; then
-  _tmux_default source-file ~/.tmux.conf || {
-    echo "tmux config reload failed; leaving the live server running." >&2
-    exit 1
-  }
-  if [ "$_tmux_initial_phase" = ready ]; then
-    ~/.shell-setup/tmux-persistence.sh save || {
-      echo "Coordinated tmux save failed; leaving the live server running." >&2
-      exit 1
-    }
-  else
-    ~/.shell-setup/tmux-persistence.sh save --seed || {
-      echo "Approved migration seed failed; leaving the live server running." >&2
-      exit 1
-    }
-  fi
-  ~/.shell-setup/tmux-persistence.sh validate-current || {
-    echo "The managed generation is incomplete or differs from live tmux; leaving the server running." >&2
-    exit 1
-  }
-fi
-
-# Pin the validated server through the handoff. Never kill a process that
-# appeared after validation, and never replace a server while clients exist.
-_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
-if [ -n "$_tmux_validated_pid" ]; then
-  [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
-    echo "tmux changed after validation; refusing ownership transfer." >&2
-    exit 1
-  }
-  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
-    echo "A tmux client attached after validation; refusing ownership transfer." >&2
-    exit 1
-  }
-elif [ -n "$_tmux_current_pid" ]; then
-  echo "A tmux server appeared after the initial check; refusing ownership transfer." >&2
-  exit 1
-fi
-
-if launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1; then
-  launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server || exit 1
-fi
-# Stop a manually owned default server only after its managed generation has
-# validated and only from the plain shell required above.
-_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
-if [ -n "$_tmux_current_pid" ]; then
-  [ -n "$_tmux_validated_pid" ] && [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
-    echo "An unvalidated tmux server owns the socket; refusing to kill it." >&2
-    exit 1
-  }
-  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
-    echo "A tmux client is attached; refusing to kill the server." >&2
-    exit 1
-  }
-  _tmux_default kill-server || exit 1
-fi
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist || exit 1
-~/.shell-setup/tmux-persistence.sh wait-ready || exit 1
-~/.shell-setup/tmux-persistence.sh status
-# Retire the unused plugin only after its coordinated replacement is healthy.
-if [ -d ~/.tmux/plugins/tmux-continuum ]; then
-  mkdir -p "$HOME/.Trash" || exit 1
-  mv ~/.tmux/plugins/tmux-continuum \
-    "$HOME/.Trash/tmux-continuum.$(date +%Y%m%dT%H%M%S)" || exit 1
-fi
-unset TMUX_PERSISTENCE_MIGRATION_APPROVAL
-unset _tmux_validated_pid _tmux_current_pid _tmux_initial_phase
-unset _tmux_reviewed_inventory _tmux_review_token
-unset _tmux_activation_inventory _tmux_activation_token
-unset -f _tmux_default _tmux_inventory _tmux_make_review_token
-```
-
-When the block stops on a live server that predates the coordinator, report
-the displayed session, window, and pane inventory and wait for confirmation.
-Only after the user confirms that topology may be adopted, export
-the exact `TMUX_PERSISTENCE_MIGRATION_APPROVAL` token printed by the preflight
-and rerun all of §17 from the same plain, detached shell. The token binds the
-approval to that server PID and topology. The second run rechecks both before
-activating the new config, then publishes and validates the migration seed and
-transfers ownership without another pause.
-
-The plist is a copy, so editing `tmux/local.shell-setup.tmux-server.plist` needs
-the `cp` above plus a reload for launchd to see it. From a plain non-tmux
-shell, save first, then reload:
+Run from the root of this repo:
 
 ```bash
-[ -z "${TMUX:-}" ] || {
-  echo "Run this ownership transfer from a plain non-tmux shell." >&2
-  exit 1
+# 1. The tmux-only assistant hooks (assistant-resurrect/, assistant-activity/),
+#    dropping events they leave empty. Every other hook is kept.
+strip_tmux_hooks() {   # strip_tmux_hooks <live hooks file>
+  jq -e '.hooks' "$1" >/dev/null 2>&1 || return 0
+  tmp=$(mktemp)
+  jq '.hooks |= (with_entries(.value |= (map(.hooks |= map(select((.command // "")
+        | test("assistant-(resurrect|activity)/") | not)))
+        | map(select((.hooks | length) > 0))))
+      | with_entries(select((.value | length) > 0)))' "$1" > "$tmp" && mv "$tmp" "$1"
 }
-_tmux_default() {
-  env -u TMUX -u TMUX_PANE -u TMUX_TMPDIR tmux -N -L default "$@"
-}
-_tmux_validated_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
-[ -n "$_tmux_validated_pid" ] || {
-  echo "No tmux server is available to save; refusing ownership transfer." >&2
-  exit 1
-}
-[ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
-  echo "Detach every tmux client before transferring server ownership." >&2
-  exit 1
-}
-~/.shell-setup/tmux-persistence.sh save || exit 1
-~/.shell-setup/tmux-persistence.sh validate-current || exit 1
-_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
-[ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
-  echo "tmux changed after validation; refusing ownership transfer." >&2
-  exit 1
-}
-if launchctl print gui/$(id -u)/local.shell-setup.tmux-server >/dev/null 2>&1; then
-  launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server || exit 1
+strip_tmux_hooks ~/.claude/settings.json
+strip_tmux_hooks ~/.codex/hooks.json
+
+# 2. macOS: the launchd agent (stopping the server it owns), then tmux.
+if [ "$(uname)" = Darwin ]; then
+  launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server 2>/dev/null
+  rm -f ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist
+  if brew list tmux >/dev/null 2>&1; then brew uninstall tmux; fi
 fi
-_tmux_current_pid=$(_tmux_default display-message -p '#{pid}' 2>/dev/null || true)
-if [ -n "$_tmux_current_pid" ]; then
-  [ "$_tmux_current_pid" = "$_tmux_validated_pid" ] || {
-    echo "An unvalidated tmux server owns the socket; refusing to kill it." >&2
-    exit 1
-  }
-  [ -z "$(_tmux_default list-clients -F '#{client_name}' 2>/dev/null || true)" ] || {
-    echo "A tmux client is attached; refusing to kill the server." >&2
-    exit 1
-  }
-  _tmux_default kill-server || exit 1
-fi
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist || exit 1
-~/.shell-setup/tmux-persistence.sh wait-ready || exit 1
-~/.shell-setup/tmux-persistence.sh status
-unset _tmux_validated_pid _tmux_current_pid
-unset -f _tmux_default
+
+# 3. Links into this repo's former tmux/ directory.
+for link in ~/.tmux.conf ~/.shell-setup/pane-border-format.conf \
+  ~/.shell-setup/status-refresh.sh ~/.shell-setup/tmux-persistence.sh \
+  ~/.shell-setup/tmux-server-agent.sh ~/.shell-setup/assistant-resurrect \
+  ~/.shell-setup/assistant-activity; do
+  case "$(readlink "$link" 2>/dev/null)" in
+    "$PWD"/tmux/*) rm -f "$link" ;;
+  esac
+done
+
+# 4. tmux's plugins (TPM, tmux-resurrect) and saved sessions.
+rm -rf ~/.tmux "${XDG_DATA_HOME:-$HOME/.local/share}/tmux" \
+  "${XDG_STATE_HOME:-$HOME/.local/state}/tmux-persistence"
 ```
-
-Reload any running tmux session with `tmux source-file ~/.tmux.conf` (or `prefix + :source ~/.tmux.conf`).
-
-Session persistence: the coordinator serializes every save under a full-duration kernel lock and publishes a timestamped layout, pane-content archive, and assistant-session map as one generation in `~/.local/share/tmux/resurrect/`. It saves every 15 minutes and on client detach, retains the newest 96 complete generations, ages unkeyed legacy layouts after 30 days while preserving the newest five, and repairs interrupted publications. Saves remain paused until startup restore verifies exact session/window/pane identity; pane cwd differences are recorded as non-gating diagnostics. Ghostty waits up to 10 seconds for an attachable server and, when a persistence operation holds the lock, up to another 60 seconds to reserve a session; expiry falls back to a plain shell. A completed degraded restore remains attachable while saves stay paused. Manual save/restore: `prefix + Ctrl-s` / `prefix + Ctrl-r`.
-
-Health and recovery: `~/.shell-setup/tmux-persistence.sh status` reports the current gate and log path. A red tmux status warning means saves are paused or the last save failed. For an intentional topology collapse, use `~/.shell-setup/tmux-persistence.sh restore --accept-risk`; after inspecting a degraded live restore, use `~/.shell-setup/tmux-persistence.sh acknowledge`. To roll back, repoint `~/.local/share/tmux/resurrect/last` at an older managed `tmux_resurrect_*.txt` and restore normally; its keyed sidecars are staged automatically. Unkeyed layouts predating the coordinator are not restorable and are pruned by age.
-
-Panes whose command starts with `npm start` are relaunched verbatim on restore (`@resurrect-processes`, additive to resurrect's default whitelist of vim/less/top/…). On top of the layout, panes running **Claude Code or Codex CLI get their conversations resumed**: the coordinator invokes `tmux/assistant-resurrect/` (a trimmed-down take on [timvw/tmux-assistant-resurrect](https://github.com/timvw/tmux-assistant-resurrect)) to record each pane's assistant session ID and relaunch that ID in the restored pane. SessionStart tracking uses one `session-track.sh <tool>` hook registered in `.claude/settings.json` for Claude and `.codex/hooks.json` for Codex (see §15). Codex uses `resume-codex.sh <id>` so a successful startup update retries the same ID with the new binary. When no hook record exists, save falls back per assistant: Claude to the newest transcript for the cwd (same semantics as `claude --continue`), Codex to its `~/.codex/state_*.sqlite` thread DB (opened `immutable` since the running Codex app-server holds the file).
 
 ## 18. Restore herdr Configuration
 
 Install herdr with its native installer (`~/.local/bin/herdr`, updated with
 `herdr update`), then symlink the config and the Claude launcher — symlinks,
-not copies, same reasoning as §16. Use herdr or tmux, never together or nested.
-Shared keybinds are a muscle-memory convenience; each multiplexer can bind
-chords independently. Check conflicts against the chosen multiplexer, Ghostty,
-and OS-level shortcuts.
+not copies, same reasoning as §16. Check its keybinds against Ghostty and
+OS-level shortcuts.
 
 ```bash
 command -v herdr >/dev/null || curl -fsSL https://herdr.dev/install.sh | sh
@@ -1409,10 +1150,9 @@ an npm global. Likewise `codex` → `~/.local/bin/codex` (a symlink into
 `~/.codex/packages/standalone/`), not a Homebrew cask or npm global. Where §8
 kept mise's copies, both resolve into `~/.local/share/mise/` instead.
 
-Confirm `~/.config/herdr/config.toml` and, on macOS, `~/.tmux.conf`,
-`~/.config/ghostty/config` and `~/.shell-setup/tmux-persistence.sh` are
-**symlinks into this repo** (`ls -l` shows `->`), not copies — a copy silently
-drifts from the repo on the next edit. On Linux, `~/.config/ghostty/config` is
+Confirm `~/.config/herdr/config.toml` and, on macOS, `~/.config/ghostty/config`
+are **symlinks into this repo** (`ls -l` shows `->`), not copies — a copy
+silently drifts from the repo on the next edit. On Linux, `~/.config/ghostty/config` is
 a regular file whose managed block loads this repo's `ghostty/config` and
 `ghostty/linux.conf`; `ghostty +validate-config` must pass.
 
@@ -1438,13 +1178,12 @@ omarchy default terminal                             # expect ghostty
 xkbcli dump-keymap-wayland | grep 'key <TLDE>'       # expect grave, asciitilde, dead_grave, dead_tilde
 ```
 
-**macOS:** confirm the tmux server agent is loaded and running:
+Confirm §17 left nothing of tmux behind:
 
 ```bash
-launchctl print gui/$(id -u)/local.shell-setup.tmux-server | grep -E "state|pid"
-command -v python3
-command -v jq
-command -v sqlite3
-~/.shell-setup/tmux-persistence.sh wait-ready
-~/.shell-setup/tmux-persistence.sh status
+grep -l 'assistant-\(resurrect\|activity\)/' ~/.claude/settings.json ~/.codex/hooks.json 2>/dev/null ||
+  echo "tmux hooks: none"
+ls -d ~/.tmux.conf ~/.tmux ~/.shell-setup/tmux-* ~/.shell-setup/assistant-* 2>/dev/null ||
+  echo "tmux files: none"
+command -v tmux || echo "tmux: absent"   # macOS: expect absent
 ```

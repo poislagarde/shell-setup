@@ -39,9 +39,7 @@ quick-terminal-space-behavior = move
 # fresh shells.
 window-save-state = always
 
-# No blank window at launch — ⌥Space is the way in. A startup window's shell
-# has no GHOSTTY_QUICK_TERMINAL, so it claims a *regular* tmux session and the
-# quick session holding your work stays detached behind it. macOS keeps Ghostty
+# No blank window at launch — ⌥Space is the way in. macOS keeps Ghostty
 # running with no windows (quit-after-last-window-closed defaults to false), so
 # the global hotkey and ⌘N still work, and saved windows still restore.
 initial-window = false
@@ -51,8 +49,8 @@ initial-window = false
 # inverse: 1.0 = opaque, 0.0 = invisible.
 background-opacity = 0.95
 
-# Do NOT set `font-family` here. The tmux pane-border glyphs (branch U+E725,
-# folder U+F07C) come from Symbols Nerd Font Mono (installed by /shell-setup via
+# Do NOT set `font-family` here. Nerd Font icon glyphs (branch U+E725, folder
+# U+F07C) come from Symbols Nerd Font Mono (installed by /shell-setup via
 # `brew install --cask font-symbols-only-nerd-font`), and Ghostty's automatic
 # fallback already resolves them at single-cell width — verified, no explicit
 # config needed. Adding `font-family = JetBrains Mono` + `font-family = Symbols
@@ -75,9 +73,8 @@ cursor-style = bar
 mouse-scroll-multiplier = discrete:1
 
 # Deliberately NOT setting mouse-shift-capture: Shift must stay Ghostty's
-# mouse-reporting bypass so Cmd+Shift+click opens links while tmux owns the
-# mouse. The tmux pane/window drag-swaps use Ctrl instead (C- bindings),
-# which the mouse protocol forwards to tmux on its own.
+# mouse-reporting bypass so Cmd+Shift+click opens links while a program such
+# as herdr captures the mouse.
 
 # Shift+drag selections land on the macOS clipboard, not just Ghostty's
 # internal selection clipboard (`true` stops at the latter on macOS).
@@ -95,8 +92,7 @@ keybind = super+q>super+q=quit
 
 # Do NOT bind shift+space here. A keybind fires ahead of macOS text input, so
 # it discards a pending dead key (US-International `"` + Shift+Space must still
-# type `"`). tmux normalizes Shift+Space to a plain space instead — see the
-# `bind -n S-Space` line in ~/.tmux.conf.
+# type `"`).
 
 # Shift+Enter → CSI 13;2u, the kitty-protocol Shift+Enter (as Omarchy sends
 # it). Claude Code and Codex read it as "insert newline", directly and inside
@@ -108,7 +104,7 @@ keybind = shift+enter=csi:13;2u
 
 # --- Pane management ---
 # Keep the custom Ghostty-native split, focus, and zoom bindings disabled;
-# herdr/tmux own these chords.
+# herdr owns these chords.
 # keybind = ctrl+shift+==new_split:right
 # keybind = ctrl+shift+-=new_split:down
 # keybind = performable:super+alt+left=goto_split:left
@@ -138,23 +134,6 @@ keybind = alt+9=unbind
 #   ⌘W       → close_surface            (close current pane)
 #   ⌘] / ⌘[  → goto_split:next/previous
 #   ⌘D / ⌘⇧D → also bound to new_split:right / new_split:down (bonus paths)
-
-# ⌘⌥+arrow → send modifier-11 arrow sequences; tmux binds them to spatial pane
-# focus (herdr uses Ctrl+Alt+arrows). In a bare shell, ~/.zshrc swallows these
-# sequences. On Omarchy, Hyprland takes ⌘⌥+arrow and ⌘⇧= / ⌘⇧- first.
-keybind = super+alt+left=csi:1;11D
-keybind = super+alt+right=csi:1;11C
-keybind = super+alt+up=csi:1;11A
-keybind = super+alt+down=csi:1;11B
-
-# tmux reads ⌘⇧[ / ⌘⇧] and ⌘⇧= / ⌘⇧- as M-S-… (Cmd is Meta to it) for pane
-# cycling and splits. Forward them as CSI u (key;modifiers, 10 = Cmd+Shift),
-# which tmux decodes; this replaces Ghostty's own tab bindings on the bracket
-# chords.
-keybind = super+shift+[=csi:91;10u
-keybind = super+shift+]=csi:93;10u
-keybind = super+shift+==csi:61;10u
-keybind = super+shift+-=csi:45;10u
 
 # ⌘⇧T is bound by default to `undo` (reopen the most recently closed tab/
 # split). Uncomment to rebind to `new_tab` instead:
@@ -189,14 +168,12 @@ keybind = alt+delete=esc:d
 keybind = delete=text:\x04
 
 # ⌘K → Ctrl+L. Ghostty's default super+k=clear_screen clears Ghostty's
-# scrollback, but inside tmux that buffer is empty (tmux owns the screen),
-# so it appears to do nothing. Sending Ctrl+L instead lets:
-#   - outside tmux: the shell's clear-screen widget fire (zsh redraws prompt)
-#   - inside tmux:  our `bind -n C-l send-keys C-l \; clear-history` upgrade
-#                   clear both the screen and tmux's scrollback.
+# scrollback, but inside herdr that buffer is empty (herdr owns the screen), so
+# it appears to do nothing. Ctrl+L lets the program in front clear instead (zsh
+# redraws its prompt).
 keybind = super+k=text:\x0c
 
 # ⌘⇧K → nuke Ghostty's own scrollback buffer (the original super+k behavior).
-# Useful outside tmux when you want the full wipe instead of just a viewport
-# redraw. Inside tmux it's a no-op (tmux owns the screen) — use ⌘K there.
+# Useful outside herdr when you want the full wipe instead of just a viewport
+# redraw. Inside herdr it's a no-op (herdr owns the screen) — use ⌘K there.
 keybind = super+shift+k=clear_screen

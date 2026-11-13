@@ -23,9 +23,8 @@ name = "solarized"
 auto_switch = false
 
 # Keybinds are Omarchy's herdr defaults, copied from
-# /usr/share/omarchy/config/herdr/config.toml: tmux sessions <> herdr spaces,
-# tmux windows <> herdr tabs, tmux panes <> herdr panes. Compare after
-# Omarchy updates and copy changes here. The [[keys.command]] entries below are
+# /usr/share/omarchy/config/herdr/config.toml. Compare after Omarchy updates
+# and copy changes here. The [[keys.command]] entries below are
 # this repo's additions. Keep the README "herdr keybinds" tables in sync.
 #
 # Ghostty unbinds its Linux Alt+1..9 and Ctrl+Alt+arrow defaults so these reach
@@ -106,7 +105,7 @@ type = "plugin_action"
 description = "forward through space history"
 command = "poislagarde.last-workspace.forward"
 
-# Claude Code launchers (tmux: C-M-=, C-M-p, C-M-S-=, C-M-S--). The new pane
+# Claude Code launchers. The new pane
 # gets a normal shell and the command is typed into it, so the zshrc `claude`
 # alias and exported vars apply.
 [[keys.command]]

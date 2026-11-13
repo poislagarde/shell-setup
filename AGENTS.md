@@ -24,13 +24,12 @@ Commit straight to `main` in this repository and push — no branch, no pull
 request, unless the user asks for one. Pull requests still apply to every other
 repository you work in.
 
-## Multiplexer keybindings
+## herdr keybindings
 
-herdr and tmux are alternative environments: the user runs one or the other,
-never together or nested. Check keybinding conflicts against the chosen
-multiplexer, Ghostty, and OS-level shortcuts. A binding in tmux does not reserve
-that chord in herdr, or vice versa. Matching chords between them is optional
-muscle-memory convenience, not a compatibility requirement.
+herdr is the multiplexer. Its keys are Omarchy's herdr defaults, copied from
+`/usr/share/omarchy/config/herdr/config.toml`, plus this repo's
+`[[keys.command]]` entries. Check new bindings against herdr, Ghostty, and
+OS-level shortcuts; Omarchy's Hyprland binds the Super chords first.
 
 ## Language choice for herdr plugins
 
@@ -55,24 +54,22 @@ land in **two places**:
 
 Editing only the repo copy leaves the running machine unchanged; editing only the
 home copy means the change is lost on the next bootstrap. Always do both, then
-tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
-~/.tmux.conf`, `source ~/.zshrc`).
+tell the user how to reload (e.g. reload Ghostty config,
+`herdr server reload-config`, `source ~/.zshrc`).
 
 > **Keep the README keybind cheatsheets in sync — without being asked.**
-> `README.md` has "herdr keybinds", "tmux keybinds" and "Ghostty keybinds"
-> tables, and they are the user's only cheatsheet. Whenever you add, remove, or
-> change a binding in `herdr/config.toml` (`[keys]` / `[[keys.command]]`),
-> `tmux/tmux.conf` (`bind` / `bind -n` lines) or `ghostty/config`
+> `README.md` has "herdr keybinds" and "Ghostty keybinds" tables, and they are
+> the user's only cheatsheet. Whenever you add, remove, or change a binding in
+> `herdr/config.toml` (`[keys]` / `[[keys.command]]`) or `ghostty/config`
 > (`keybind = …` lines), update the matching README table in the same change —
 > it's a third place the edit has to land. Every chord bound in a config,
 > including each alternate in an array binding, gets a table row; then re-read
 > the surrounding prose of that section (intro paragraphs, notes, blockquotes)
 > and fix anything the change made untrue. Before committing a keybind change,
-> diff the tables against the configs one more time. Skip the pure
-> CSI-forwarding Ghostty keybinds (e.g. `keybind = super+alt+left=csi:1;11D`):
-> those are plumbing that *implements* a herdr/tmux chord, not user-facing
-> shortcuts, so they belong in those tables (as the chord they produce), not the
-> Ghostty one. herdr's input parser does not decode `csi:27;<mod>;<key>~`
+> diff the tables against the configs one more time. Skip Ghostty keybinds that
+> only pass a chord through to herdr (e.g. `keybind = alt+1=unbind`): those are
+> plumbing that *implements* a herdr chord, not user-facing shortcuts, so they
+> belong in the herdr tables (as the chord they produce), not the Ghostty one. herdr's input parser does not decode `csi:27;<mod>;<key>~`
 > forwarders, so don't add any.
 
 > **Note:** most home files are **symlinks** back into this repo (or source it),
@@ -101,8 +98,6 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   files or `local.conf`, never between the markers. `initial-window` is owned
 >   by `linux.conf` (`true`, for direct launches) and `linux-service.conf`
 >   (`false`, for the D-Bus service); don't set it anywhere else on Linux.
-> - `~/.tmux.conf` → symlink to `tmux/tmux.conf` (created by §17, macOS only;
->   same rule).
 > - `~/.zshrc` → **regular file**: machine-local lines plus a managed block
 >   (created by §9) that just `source`s the repo's `zsh/zshrc` — edit the repo
 >   file only; local additions stay outside the markers, never between them.
@@ -128,81 +123,16 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 > - `~/.codex/hooks.json` → **merge**, not symlinked (the user may add hooks
 >   there that this repo doesn't track, so §15 upserts only the entries whose
 >   command lives under `~/.shell-setup` and leaves the rest alone) — edit both.
-> - `~/.shell-setup/` → **regular directory of symlinks** into this repo (created
->   by §17), the home for every script and generated config this repo installs
->   outside a tool's own config dir. Scripts referenced from a config or a hook
->   go here, never into a tool's directory (`~/.tmux/` also holds TPM's
->   `plugins/` and resurrect's legacy `resurrect/`, so a path under it can't
->   identify a file as ours — which the `settings.json` hook merge relies on).
-
-## Testing tmux changes
-
-**Never run mutating tmux commands (`new-session`, `kill-session`, `kill-server`,
-`send-keys`, …) against the default server.** The user's entire working
-environment lives in it, so session names used in tests can collide with real
-ones. (This has happened: a test `new-session -s quick` failed with "duplicate
-session" because the real quick-terminal session had that name, and the cleanup
-`kill-session` destroyed the user's whole environment, including the running
-assistant panes.)
-
-Run experiments on a throwaway server on a separate socket instead:
-
-```bash
-tmux -L cc-test -f /dev/null new-session -d -s whatever   # isolated server
-tmux -L cc-test ...                                       # more test commands
-tmux -L cc-test kill-server                               # clean up everything
-```
-
-After changing the persistence coordinator, its hooks, or its launchd wiring,
-run both isolated suites:
-
-```bash
-tmux/tests/tmux-persistence-test.sh
-tmux/tests/tmux-resurrect-contract-test.sh
-```
-
-The contract suite reports `SKIP` when the installed Resurrect plugin is absent.
-
-After changing `tmux/status-refresh.sh` or the activity hooks, run
-`tmux/tests/status-refresh-test.sh` — also confined to a private socket.
-
-Against the default server, stick to read-only commands (`list-sessions`,
-`list-panes`, `list-keys`, `display-message -p`, `show-options`). Reloading
-config (`tmux source-file ~/.tmux.conf`) and `unbind`ing a stale binding are
-fine. Don't kill real sessions unless the user explicitly asks — and even then,
-check what's running in them first (`list-panes` + child processes). Target a
-numerically-named session by its id (`-t '$5'`), never by name (`-t '=5'`):
-the name form resolves to the current session, so the check inspects the
-wrong session's panes.
-
-The default server runs under launchd (`local.shell-setup.tmux-server`, KeepAlive), so
-`kill-server` is a restart: launchd relaunches the server and the persistence
-coordinator restores the latest verified generation. To actually stop it, use
-`launchctl bootout gui/$(id -u)/local.shell-setup.tmux-server`; re-enable with
-`launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.shell-setup.tmux-server.plist`.
-
-If real state does get damaged: tmux-resurrect keeps timestamped snapshots in
-`~/.local/share/tmux/resurrect/` — repoint the `last` symlink at a pre-damage
-snapshot and run the guarded restore (`prefix + Ctrl-r` or
-`~/.shell-setup/tmux-persistence.sh restore`). Managed snapshots stage their
-matching pane-content and assistant-session companions automatically. Unkeyed
-snapshots predating the coordinator are not restorable — they have no
-companions that can be paired safely — so they are sent to review and pruned
-by age. Never invoke the plugin's upstream `scripts/restore.sh` directly; that
-bypasses locking, companion staging, and restore verification.
-
-For a red persistence warning, run
-`~/.shell-setup/tmux-persistence.sh status`. A `needs-review` state requires
-choosing another snapshot or `restore --accept-risk`; a `degraded` state
-requires inspecting `~/.local/state/tmux-persistence/last-restore.diff` before
-`~/.shell-setup/tmux-persistence.sh acknowledge`. Completed degraded restores
-remain attachable, but saves stay paused. A save failure leaves the prior
-generation current; inspect the reported log and retry the save.
+> - `~/.shell-setup/` → **regular directory of symlinks** into this repo (first
+>   created by §15), the home for every script and generated config this repo
+>   installs outside a tool's own config dir. Scripts referenced from a config or
+>   a hook go here, never into a tool's directory, so a path under
+>   `~/.shell-setup` identifies a file as ours — which the `settings.json` hook
+>   merge relies on.
 
 ### Where each file maps
 
-The tmux and Karabiner rows apply to macOS only (§17 and §19 are skipped on
-Linux, and so are the tmux-only assistant hooks).
+The Karabiner row applies to macOS only (§19 is skipped on Linux).
 
 | Tool | Repo file | Home file |
 | --- | --- | --- |
@@ -228,14 +158,6 @@ Linux, and so are the tmux-only assistant hooks).
 | herdr Claude detection LaunchAgent | `herdr/local.shell-setup.herdr-claude-detection.plist` | `~/Library/LaunchAgents/local.shell-setup.herdr-claude-detection.plist` (macOS; rendered copy with `__HOME__` replaced; after edits re-render as in bootstrap §18, then `launchctl bootout` + `bootstrap`) |
 | herdr Claude detection systemd units | `herdr/local.shell-setup.herdr-claude-detection.service` and `.path` | `~/.config/systemd/user/` (Linux; symlinks made by `systemctl --user link` in bootstrap §18; after edits `systemctl --user daemon-reload`, then restart the `.path` unit) |
 | herdr Claude launcher | `herdr/claude-pane.sh` | `~/.shell-setup/claude-pane.sh` (symlink to the repo file; run by the `[[keys.command]]` bindings) |
-| tmux | `tmux/tmux.conf` | `~/.tmux.conf` |
-| tmux assistant-resurrect | `tmux/assistant-resurrect/` | `~/.shell-setup/assistant-resurrect` (symlink to the repo dir; edit either; one place) |
-| tmux assistant-activity | `tmux/assistant-activity/` | `~/.shell-setup/assistant-activity` (symlink to the repo dir; edit either; one place) |
-| tmux pane border | `tmux/pane-border-format.conf` (generated — edit `tmux/build-pane-border-format.sh` and re-run) | `~/.shell-setup/pane-border-format.conf` (symlink to the repo file; `source-file`d by `tmux.conf`) |
-| tmux status refresh | `tmux/status-refresh.sh` | `~/.shell-setup/status-refresh.sh` (symlink to the repo file; `run-shell`'d by `tmux.conf`; the running loop survives reloads, so restart the tmux server to pick up edits) |
-| tmux persistence | `tmux/tmux-persistence.sh` | `~/.shell-setup/tmux-persistence.sh` (symlink to the repo file; used by tmux hooks, keybindings, zsh readiness, and the launchd agent) |
-| tmux server agent | `tmux/tmux-server-agent.sh` | `~/.shell-setup/tmux-server-agent.sh` (symlink to the repo file; run by the launchd agent) |
-| tmux server LaunchAgent | `tmux/local.shell-setup.tmux-server.plist` | `~/Library/LaunchAgents/local.shell-setup.tmux-server.plist` (copy — launchd is unreliable with symlinked plists; after edits re-`cp`, then `launchctl bootout` + `bootstrap`) |
 | Claude Code | `.claude/` (settings.json, commands) | `~/.claude/` |
 | Claude Code statusline | `.claude/statusline-command.sh` | `~/.claude/statusline-command.sh` (symlink to the repo file) |
 | Claude Code + Codex worktree guard | `assistants/worktree-guard.py` | `~/.shell-setup/worktree-guard.py` (symlink to the repo file; run by both assistants' `PreToolUse` hooks; test with `assistants/tests/worktree-guard-test.py`) |
