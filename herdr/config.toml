@@ -64,8 +64,8 @@ resize_pane_right = "ctrl+alt+shift+right"
 
 rename_pane = "prefix+shift+o"
 
-# Tabs
-new_tab = "prefix+c"
+# Tabs (alt+t is this repo's addition)
+new_tab = ["prefix+c", "alt+t"]
 rename_tab = "prefix+r"
 close_tab = "prefix+k"
 switch_tab = ["prefix+1..9", "alt+1..9"]

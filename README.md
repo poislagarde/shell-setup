@@ -118,13 +118,13 @@ Also installed but used indirectly, not via their own command: **sanesidebuttons
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
+herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus `Alt+T` for a new tab and this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
 
 ### Tabs
 
 | Keys | Action |
 | --- | --- |
-| prefix, `c` | New tab |
+| `Alt+T` / prefix, `c` | New tab |
 | prefix, `n` | Next tab |
 | prefix, `p` | Previous tab |
 | `Alt+Shift+←` / `Alt+Shift+→` | Move tab toward the front / back |
