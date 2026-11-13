@@ -48,6 +48,9 @@ assistants/
 └── tests/                   # hook-payload regression test for the guard
 ghostty/
 ├── config                   # Ghostty terminal config (quick terminal, splits, NTE)
+├── linux.conf               # Linux: open a window on direct launches (loaded after config)
+├── linux-service.conf       # Linux: keep Ghostty's D-Bus service windowless
+├── linux-service-override.conf # Linux: systemd drop-in that loads linux-service.conf into that service
 ├── build-top-right.sh       # build a Ghostty app with a top-right quick terminal
 ├── install-top-right.sh     # replace Ghostty after quitting it; keep a backup
 └── top-right-quick-terminal.patch # pin the top quick terminal to the right edge

@@ -96,10 +96,11 @@ tell the user how to reload (e.g. reload Ghostty config, `tmux source-file
 >   by §16; edit either; one file). If you find a regular file here instead,
 >   that's drift — reconcile any differences into the repo, then re-symlink.
 >   On Linux it's a **regular file**: the distro's defaults plus a managed block
->   (created by §16) that loads `ghostty/config`, then the optional
->   machine-local `~/.config/ghostty/local.conf` — edit the repo file or
->   `local.conf`, never between the markers. Don't override `initial-window` in
->   either: Linux launchers rely on it staying `false` (bootstrap §16).
+>   (created by §16) that loads `ghostty/config`, `ghostty/linux.conf`, then
+>   the optional machine-local `~/.config/ghostty/local.conf` — edit the repo
+>   files or `local.conf`, never between the markers. `initial-window` is owned
+>   by `linux.conf` (`true`, for direct launches) and `linux-service.conf`
+>   (`false`, for the D-Bus service); don't set it anywhere else on Linux.
 > - `~/.tmux.conf` → symlink to `tmux/tmux.conf` (created by §17, macOS only;
 >   same rule).
 > - `~/.zshrc` → **regular file**: machine-local lines plus a managed block
@@ -197,6 +198,8 @@ Linux, and so are the tmux-only assistant hooks).
 | Tool | Repo file | Home file |
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` (macOS: symlink to the repo file; Linux: the managed block loads it) |
+| Ghostty on Linux | `ghostty/linux.conf` | loaded after `ghostty/config` by the managed block in `~/.config/ghostty/config` (Linux only) |
+| Ghostty D-Bus service on Linux | `ghostty/linux-service.conf`, `ghostty/linux-service-override.conf` | `~/.shell-setup/ghostty-service.conf` (symlink) and `~/.config/systemd/user/app-com.mitchellh.ghostty.service.d/shell-setup.conf` (symlink); after edits `systemctl --user daemon-reload`, then restart the service (closes its windows) |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |
 | herdr branch labels | `herdr/branch-labels.ref` | `poislagarde.branch-labels` plugin (GitHub source pinned to this commit; install with bootstrap §18; herdr manages the checkout and runtime state) |
 | herdr branch label regex | `herdr/branch-labels.json` | `config.json` under `herdr plugin config-dir poislagarde.branch-labels` (symlink to the repo file; `herdr plugin action invoke poislagarde.branch-labels.refresh`) |
