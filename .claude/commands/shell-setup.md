@@ -294,6 +294,24 @@ export PROJECTS_DIR="$HOME/path/to/projects"
 export EDITOR="nvim"   # Omarchy: "omarchy-launch-editor --inline"
 ```
 
+**Linux:** Ghostty and herdr start `$SHELL`, so none of the above loads until
+zsh is the login shell and the desktop session has picked it up. Check both:
+
+```bash
+getent passwd "$USER" | cut -d: -f7                  # login shell
+systemctl --user show-environment | grep '^SHELL='   # what new terminals start
+```
+
+If the login shell isn't zsh, offer to switch it and hand the user:
+
+```bash
+chsh -s "$(command -v zsh)"
+```
+
+If the session's `SHELL` still isn't zsh, ask the user to reboot before
+continuing. The session keeps the `SHELL` it logged in with, and a quick
+log-out-and-in can leave systemd's user manager running with the old value.
+
 ## 10. Install AWS CLI
 
 Use AWS's official installer (not Homebrew or a distro package — AWS does not maintain third-party repositories). Reference: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
