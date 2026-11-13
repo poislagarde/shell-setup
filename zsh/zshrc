@@ -31,11 +31,12 @@ source $ZSH/oh-my-zsh.sh
 bindkey '^U' backward-kill-line
 
 # Shift+Enter → insert a literal newline (keep editing on next line) instead
-# of submitting. Ghostty sends it as ESC+Enter to match the Alt+Enter sequence
-# Codex TUI understands; the CSI 27 binding covers any terminal/tmux path that
-# emits that modified-key form.
+# of submitting. Ghostty sends it as CSI 13;2u; the CSI 27 binding covers tmux,
+# which re-sends it in that modified-key form. Alt+Enter (ESC+Enter) does the
+# same in a bare shell. Inside herdr, zsh gets Shift+Enter as a plain Enter.
 zle-insert-newline() { LBUFFER+=$'\n' }
 zle -N zle-insert-newline
+bindkey '^[[13;2u' zle-insert-newline
 bindkey '^[^M' zle-insert-newline
 bindkey '^[[27;2;13~' zle-insert-newline
 
@@ -47,9 +48,9 @@ zle-insert-space() { LBUFFER+=' ' }
 zle -N zle-insert-space
 bindkey '^[[27;2;32~' zle-insert-space
 
-# Cmd+Opt+arrow → herdr/tmux pane navigation. Ghostty sends these modifier-11
+# Cmd+Opt+arrow → tmux pane navigation. Ghostty sends these modifier-11
 # sequences (^[[1;11{A,B,C,D}) directly; bind them to a no-op in a bare shell so
-# nothing prints. Inside herdr or tmux the multiplexer catches them first.
+# nothing prints. Inside tmux the multiplexer catches them first.
 zle-noop() { }
 zle -N zle-noop
 bindkey '^[[1;11A' zle-noop
@@ -62,6 +63,14 @@ bindkey '^[[61;10u' zle-noop
 bindkey '^[[45;10u' zle-noop
 bindkey '^[[91;10u' zle-noop
 bindkey '^[[93;10u' zle-noop
+# Same for herdr's pane chords: Ctrl+Alt(+Shift)+arrow (modifiers 7 and 8) and
+# Alt+Shift+Enter, which Omarchy's Ghostty config sends as CSI 13;4u.
+for _key in A B C D; do
+  bindkey "^[[1;7$_key" zle-noop
+  bindkey "^[[1;8$_key" zle-noop
+done
+unset _key
+bindkey '^[[13;4u' zle-noop
 
 # Reassert a blinking thin bar at each prompt. Ghostty uses the same default;
 # tmux forwards DECSCUSR through its xterm*:cstyle capability.

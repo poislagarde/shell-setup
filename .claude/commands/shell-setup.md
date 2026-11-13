@@ -264,8 +264,8 @@ onto `fpath`, the PATH, the `awsenv <profile>` AWS SSO helper, the
 `claude` alias, and the `tm` session helper (`tm <name>` attaches/creates a
 tmux session; plain `tm` is a numbered picker marking sessions attached/detached).
 Keyboard tweaks: `^U` → `backward-kill-line` (macOS Cmd+Backspace semantics),
-Shift+Enter as Codex-compatible Esc+Enter, Shift+Space via the CSI 27 plumbing,
-Cmd+Opt+arrow no-ops for bare shells, and a precmd that re-asserts a blinking
+Shift+Enter (Ghostty's CSI 13;2u) as a literal newline, Shift+Space via the CSI 27
+plumbing, no-ops in bare shells for forwarded pane chords, and a precmd that re-asserts a blinking
 thin-bar cursor inside tmux. tmux does not auto-start: Ghostty shells stay plain
 until `herdr` or `tm` is run.
 

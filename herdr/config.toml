@@ -23,7 +23,8 @@ name = "solarized"
 auto_switch = false
 
 # Keybinds mirror tmux/tmux.conf with tmux windows <> herdr spaces and tmux
-# panes <> herdr tabs; each array keeps herdr's default first. tmux reads Cmd
+# panes <> herdr tabs, except the pane chords, which follow Omarchy's herdr
+# defaults (see below). Each array keeps herdr's default first. tmux reads Cmd
 # as Meta, so Cmd and Alt chords land on the same tmux binding. Shifted punctuation is bound in both forms the terminal may
 # send (shift+key under the kitty keyboard protocol, the shifted character
 # otherwise). Keep the README "herdr keybinds" table in sync.
@@ -43,13 +44,21 @@ previous_tab = ["prefix+p", "alt+shift+[", "alt+{", "cmd+shift+[", "cmd+{"]
 switch_tab = ["prefix+1..9", "alt+shift+1..9"]
 rename_tab = ["prefix+shift+t", "prefix+comma"]
 close_tab = ["prefix+shift+x", "prefix+ampersand"]
-split_vertical = ["prefix+v", "cmd+shift+="]
-split_horizontal = ["prefix+minus", "cmd+shift+-"]
-zoom = ["prefix+z", "alt+shift+enter"]
-focus_pane_left = ["prefix+h", "cmd+alt+left"]
-focus_pane_down = ["prefix+j", "cmd+alt+down"]
-focus_pane_up = ["prefix+k", "cmd+alt+up"]
-focus_pane_right = ["prefix+l", "cmd+alt+right"]
+# Pane chords are Omarchy's herdr defaults (/usr/share/omarchy/config/herdr/
+# config.toml on Omarchy): Omarchy's Hyprland binds the Super chords first.
+# Alt+Enter only splits because Ghostty sends Shift+Enter as CSI 13;2u, never as
+# Esc+Enter (see ghostty/config).
+split_vertical = ["prefix+v", "alt+shift+enter"]
+split_horizontal = ["prefix+minus", "alt+enter"]
+zoom = "prefix+z"
+focus_pane_left = ["prefix+h", "ctrl+alt+left"]
+focus_pane_down = ["prefix+j", "ctrl+alt+down"]
+focus_pane_up = ["prefix+k", "ctrl+alt+up"]
+focus_pane_right = ["prefix+l", "ctrl+alt+right"]
+resize_pane_left = "ctrl+alt+shift+left"
+resize_pane_down = "ctrl+alt+shift+down"
+resize_pane_up = "ctrl+alt+shift+up"
+resize_pane_right = "ctrl+alt+shift+right"
 # Agents cycle in agent-panel order (priority sort: attention-needing first).
 next_agent = "alt+tab"
 previous_agent = "alt+shift+tab"

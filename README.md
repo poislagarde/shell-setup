@@ -249,7 +249,7 @@ State comes from lifecycle hooks both assistants fire (`tmux/assistant-activity/
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never together or nested. Some chords share muscle memory with tmux (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**), but tmux bindings place no restrictions on herdr bindings. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts. herdr's own defaults stay active alongside the custom bindings (`prefix+?` lists everything). Prefix is `Ctrl+B`.
+herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never together or nested. Some chords share muscle memory with tmux (**tmux windows ↔ herdr spaces**, **tmux panes ↔ herdr tabs**), but tmux bindings place no restrictions on herdr bindings. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts. Pane chords use Omarchy's herdr defaults, because Omarchy's Hyprland binds the Super chords before Ghostty sees them. herdr's own defaults stay active alongside the custom bindings (`prefix+?` lists everything). Prefix is `Ctrl+B`.
 
 ### Tabs (tmux panes)
 
@@ -266,12 +266,13 @@ herdr (`herdr/config.toml`) is the daily multiplexer. Use herdr or tmux, never t
 
 | Keys | Action |
 | --- | --- |
-| `Cmd+Shift+=` / prefix, `v` | Split right (side-by-side) |
-| `Cmd+Shift+-` / prefix, `-` | Split down (stacked) |
+| `Alt+Shift+Enter` / prefix, `v` | Split right (side-by-side) |
+| `Alt+Enter` / prefix, `-` | Split down (stacked) |
 | `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
 | `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
-| `Cmd+Opt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
-| `Alt+Shift+Enter` / prefix, `z` | Zoom / unzoom active pane |
+| `Ctrl+Alt+←/→/↑/↓` / prefix, `h`/`j`/`k`/`l` | Move focus between panes (spatial) |
+| `Ctrl+Alt+Shift+←/→/↑/↓` | Resize the active pane |
+| prefix, `z` | Zoom / unzoom active pane |
 | prefix, `Tab` / prefix, `Shift+Tab` | Next / previous pane |
 | prefix, `Shift+H`/`J`/`K`/`L` | Swap pane left/down/up/right |
 | prefix, `r` | Resize mode (arrows, `Esc` to leave) |
@@ -495,7 +496,7 @@ Restart Ghostty after changing `quick-terminal-position`.
 | `Alt+Space` | Toggle the quick terminal (global — works from any app; macOS only, unbound on Linux, where Omarchy's Quake console on ``Super+` `` takes its place) |
 | `Cmd+D` / `Cmd+Shift+D` | New native split right / down |
 | `Cmd+]` / `Cmd+[` | Next / previous split |
-| `Cmd+Shift+[` / `]`, `Cmd+Shift+=` / `-` | Forwarded to the terminal — herdr tab cycling and splits, tmux pane cycling and splits |
+| `Cmd+Shift+[` / `]`, `Cmd+Shift+=` / `-` | Forwarded to the terminal — herdr tab cycling (`[` / `]`), tmux pane cycling and splits |
 | `Cmd+W` | Close the split / surface |
 | `Cmd+Q`, then `Cmd+Q` | Quit Ghostty |
 
@@ -520,7 +521,7 @@ The gaps Ghostty doesn't bind out of the box:
 | `Alt+Backspace` | Delete word backward |
 | `Alt+Delete` (`fn+Alt+Backspace`) | Delete word forward |
 | `fn+Backspace` (`⌦`) | Forward-delete a character |
-| `Shift+Enter` | Insert a literal newline in shells and Codex-style TUIs |
+| `Shift+Enter` | Insert a newline without submitting in Claude Code, Codex and zsh (inside herdr, zsh gets a plain Enter) |
 
 ## License
 

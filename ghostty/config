@@ -98,11 +98,13 @@ keybind = super+q>super+q=quit
 # type `"`). tmux normalizes Shift+Space to a plain space instead — see the
 # `bind -n S-Space` line in ~/.tmux.conf.
 
-# Shift+Enter — send the same ESC+Enter byte sequence as Alt+Enter. Codex TUI
-# treats that as "insert newline" (it ignores the CSI 27 modified-key
-# encoding, so don't switch to that form). zsh binds this sequence back to a
-# literal newline too, so shells get the same multi-line editing behavior.
-keybind = shift+enter=text:\x1b\x0d
+# Shift+Enter → CSI 13;2u, the kitty-protocol Shift+Enter (as Omarchy sends
+# it). Claude Code and Codex read it as "insert newline", directly and inside
+# herdr, which hands it on to apps that enable the kitty keyboard protocol.
+# Never send Esc+Enter here: that is Alt+Enter, herdr's split-down chord. Don't
+# use the CSI 27 modified-key form either: Codex ignores it. zsh binds CSI
+# 13;2u to a literal newline in a bare shell; inside herdr it gets plain Enter.
+keybind = shift+enter=csi:13;2u
 
 # --- Pane management ---
 # Keep the custom Ghostty-native split, focus, and zoom bindings disabled;
@@ -115,20 +117,28 @@ keybind = shift+enter=text:\x1b\x0d
 # keybind = performable:super+alt+down=goto_split:down
 # keybind = performable:alt+shift+enter=toggle_split_zoom
 
+# Ghostty's Linux defaults bind Ctrl+Alt+arrows to goto_split; herdr moves
+# between its panes with them, so let them through to the terminal.
+keybind = ctrl+alt+arrow_left=unbind
+keybind = ctrl+alt+arrow_right=unbind
+keybind = ctrl+alt+arrow_up=unbind
+keybind = ctrl+alt+arrow_down=unbind
+
 # Ghostty's defaults already cover the rest of the split workflow:
 #   ⌘W       → close_surface            (close current pane)
 #   ⌘] / ⌘[  → goto_split:next/previous
 #   ⌘D / ⌘⇧D → also bound to new_split:right / new_split:down (bonus paths)
 
-# ⌘⌥+arrow → send modifier-11 arrow sequences; herdr and tmux both bind them to
-# spatial pane focus. In a bare shell, ~/.zshrc swallows these sequences.
+# ⌘⌥+arrow → send modifier-11 arrow sequences; tmux binds them to spatial pane
+# focus (herdr uses Ctrl+Alt+arrows). In a bare shell, ~/.zshrc swallows these
+# sequences. On Omarchy, Hyprland takes ⌘⌥+arrow and ⌘⇧= / ⌘⇧- first.
 keybind = super+alt+left=csi:1;11D
 keybind = super+alt+right=csi:1;11C
 keybind = super+alt+up=csi:1;11A
 keybind = super+alt+down=csi:1;11B
 
-# herdr cycles tabs with ⌘⇧[ / ⌘⇧] and splits with ⌘⇧= / ⌘⇧-; tmux reads the
-# same chords as M-S-… (Cmd is Meta to it) for pane cycling and splits. Forward
+# herdr cycles tabs with ⌘⇧[ / ⌘⇧]; tmux reads those and ⌘⇧= / ⌘⇧- as M-S-…
+# (Cmd is Meta to it) for pane cycling and splits. Forward
 # them as CSI u (key;modifiers, 10 = Cmd+Shift), which both decode; this
 # replaces Ghostty's own tab bindings on the bracket chords.
 keybind = super+shift+[=csi:91;10u
