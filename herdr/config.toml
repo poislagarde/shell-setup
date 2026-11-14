@@ -80,8 +80,8 @@ next_tab = "prefix+n"
 move_tab_previous = "alt+shift+left"
 move_tab_next = "alt+shift+right"
 
-# Spaces
-new_workspace = "prefix+shift+c"
+# Spaces (alt+shift+t is this repo's addition)
+new_workspace = ["prefix+shift+c", "alt+shift+t"]
 rename_workspace = "prefix+shift+r"
 close_workspace = "prefix+shift+k"
 previous_workspace = ["prefix+shift+p", "alt+up"]

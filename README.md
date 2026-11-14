@@ -119,7 +119,7 @@ Also installed but used indirectly, not via their own command: **sanesidebuttons
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus `Alt+T` for a new tab, `Alt+Shift+1`…`9` for spaces, and this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
+herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus `Alt+T` for a new tab, `Alt+Shift+T` for a new space, `Alt+Shift+1`…`9` for spaces, and this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
 
 ### Tabs
 
@@ -158,7 +158,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 
 | Keys | Action |
 | --- | --- |
-| prefix, `Shift+C` | New space |
+| `Alt+Shift+T` / prefix, `Shift+C` | New space |
 | `Ctrl+Alt+=` | New space running **Claude Code** (at `$HOME`) |
 | `Ctrl+Alt+p` | New space running **Claude Code** in `$PROJECTS_DIR` |
 | `Alt+↓` / prefix, `Shift+N` | Next space |
