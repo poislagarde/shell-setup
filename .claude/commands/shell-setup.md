@@ -852,33 +852,6 @@ default (Omarchy ships one) is not drift: back it up as
 packages it) satisfies the `command -v herdr` check; update it with the system
 package manager instead of `herdr update`.
 
-**Linux with fcitx5:** fcitx5's "Toggle embedded preedit" shortcut,
-`Ctrl+Alt+P`, takes the key before herdr's Claude Code tab binding. Empty that
-hotkey in `~/.config/fcitx5/config` and leave the rest of the file alone
-(Omarchy owns it). Re-running replaces the section:
-
-```bash
-if command -v fcitx5 >/dev/null; then
-  mkdir -p ~/.config/fcitx5 && touch ~/.config/fcitx5/config
-  python3 - ~/.config/fcitx5/config <<'EOF'
-import sys
-path = sys.argv[1]
-note = "# shell-setup: leave Ctrl+Alt+P to herdr."
-out, skip = [], False
-for line in open(path).read().splitlines():
-    if line.startswith("["):
-        skip = line.strip() == "[Hotkey/TogglePreedit]"
-    if not skip and line != note:
-        out.append(line)
-while out and not out[-1].strip():
-    out.pop()
-out += ["", note, "[Hotkey/TogglePreedit]"]
-open(path, "w").write("\n".join(out).lstrip("\n") + "\n")
-EOF
-  fcitx5-remote -r 2>/dev/null || true
-fi
-```
-
 The Claude Code and Codex integrations add a `SessionStart` hook to
 `~/.claude/settings.json` and `~/.codex/hooks.json` that reports each session
 to herdr, so after a server restart herdr resumes those panes with
@@ -1162,6 +1135,38 @@ while [ -s "$f" ] && [ -z "$(tail -n 1 "$f")" ]; do sed -i '$d' "$f"; done
   printf 'include "%s/omarchy/dead-keys.XCompose"\n' "$PWD"
   printf '# <<< shell-setup managed <<<\n'
 } >> "$f"
+```
+
+Where fcitx5 is installed, turn off preedit, its inline preview of a character
+being composed, and clear its `Ctrl+Alt+P` preedit toggle, which takes the key
+before herdr's Claude Code tab binding. Omarchy owns the rest of
+`~/.config/fcitx5/config`, so change only these two settings. Re-running
+replaces them; the reload below applies them:
+
+```bash
+if command -v fcitx5 >/dev/null; then
+  mkdir -p ~/.config/fcitx5 && touch ~/.config/fcitx5/config
+  python3 - ~/.config/fcitx5/config <<'EOF'
+import sys
+path = sys.argv[1]
+note = "# shell-setup: leave Ctrl+Alt+P to herdr."
+out, skip = [], False
+for line in open(path).read().splitlines():
+    if line.startswith("["):
+        skip = line.strip() == "[Hotkey/TogglePreedit]"
+    if not skip and line != note and not line.startswith("PreeditEnabledByDefault="):
+        out.append(line)
+headers = [line.strip() for line in out]
+if "[Behavior]" in headers:
+    out.insert(headers.index("[Behavior]") + 1, "PreeditEnabledByDefault=False")
+else:
+    out += ["", "[Behavior]", "PreeditEnabledByDefault=False"]
+while out and not out[-1].strip():
+    out.pop()
+out += ["", note, "[Hotkey/TogglePreedit]"]
+open(path, "w").write("\n".join(out).lstrip("\n") + "\n")
+EOF
+fi
 ```
 
 **Omarchy only:** make the `` ` `` key a plain key. Skip this part where

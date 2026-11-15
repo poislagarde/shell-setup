@@ -136,7 +136,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | prefix, `k` | Close tab |
 
 > Ghostty sends `Alt+←/→` as word jumps (`Esc b` / `Esc f`), so herdr leaves out Omarchy's `Alt+←/→` tab keys; use prefix, `p` / `n`.
-> On Linux, bootstrap §18 clears fcitx5's `Ctrl+Alt+P` "toggle preedit" shortcut so the key reaches herdr.
+> On Linux, bootstrap §21 clears fcitx5's `Ctrl+Alt+P` "toggle preedit" shortcut so the key reaches herdr.
 
 ### Panes (splits)
 
