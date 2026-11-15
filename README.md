@@ -26,7 +26,7 @@ Claude runs a 22-section checklist top to bottom, pausing for verification betwe
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, and herdr configs.
 - **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically (as does a tmpfs `/tmp` on Linux), and tells the agent to use a persistent directory instead.
 - **Omarchy** — Ghostty as the default terminal; Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it; and `Super+Shift+Z` to undo the last move of a window to another workspace, such as a `Super+Shift+1`…`0` slip that pulls the console's window out.
-- **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents. On Omarchy, `` ` `` and `~` type immediately; their dead keys move to AltGr, and ñ is AltGr+N. Alt+←/→ jump words and Alt+Backspace deletes one in every app, and AltGr works as Alt with the arrows and Backspace.
+- **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents. On Omarchy, `` ` `` and `~` type immediately; their dead keys move to AltGr, and ñ is AltGr+N. Super and Alt edit text as Cmd and Option do on macOS, in every app ([Omarchy keys](#omarchy-keys)); Caps Lock is a Hyper key that takes over Omarchy's window keys on the arrows.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
 
@@ -78,9 +78,10 @@ herdr/
 ├── local.shell-setup.herdr-claude-detection.service # Linux: systemd unit the path unit starts to regenerate the override
 └── claude-pane.sh           # opens a herdr space/tab/split running Claude Code (symlinked to ~/.shell-setup/)
 omarchy/
-├── alt-keys.lua             # Alt+←/→/Backspace edit words in every app; AltGr acts as Alt with arrows and Backspace (loaded by ~/.config/hypr/hyprland.lua's managed block)
 ├── dead-keys.XCompose       # US International dead keys typed as on macOS: ' + m → 'm (included by ~/.XCompose's managed block)
-├── xkb/                     # linked into ~/.config/xkb: US International's ` and ~ as plain keys, dead keys on AltGr
+├── hyper-keys.lua           # moves Omarchy's Super+arrow/Backspace window keys to Hyper (Caps Lock) (loaded by ~/.config/hypr/hyprland.lua's managed block)
+├── text-keys.lua            # macOS-style text keys in every app: Super as Cmd, Alt as Option, AltGr as Alt (loaded by ~/.config/hypr/hyprland.lua's managed block)
+├── xkb/                     # linked into ~/.config/xkb: US International's ` and ~ as plain keys, dead keys on AltGr; Caps Lock as Hyper
 │   ├── rules/evdev
 │   └── symbols/shell-setup
 ├── qconsole.lua             # Omarchy's Quake console: default shell, full width × 75% height, physical ` key (loaded by ~/.config/hypr/hyprland.lua's managed block)
@@ -131,7 +132,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | `Ctrl+Alt+P` | New tab running **Claude Code** in `$PROJECTS_DIR` |
 | prefix, `n` | Next tab |
 | prefix, `p` | Previous tab |
-| `Alt+Shift+←` / `Alt+Shift+→` | Move tab toward the front / back |
+| prefix, `←` / prefix, `→` | Move tab toward the front / back |
 | `Alt+1` … `Alt+9` / prefix, `1` … `9` | Jump to tab 1–9 |
 | prefix, `r` | Rename tab |
 | prefix, `k` | Close tab |
@@ -182,7 +183,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | prefix, `s` | herdr settings |
 | prefix, `?` | List all key bindings |
 
-> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓, and Alt+Shift+1…9 reach herdr as Ctrl+Alt+1…9 because Shift+6 is a dead key on US International (`omarchy/alt-keys.lua`).
+> On Omarchy, AltGr+↑/↓ switch spaces like Alt+↑/↓, and Alt+Shift+1…9 reach herdr as Ctrl+Alt+1…9 because Shift+6 is a dead key on US International (`omarchy/text-keys.lua`).
 > On macOS, use the left Option key; Ghostty sends Option+Shift+6 as Ctrl+Alt+6 for the same reason on U.S. International – PC.
 
 PR worktrees use [herdr-pr-worktree](https://github.com/poislagarde/herdr-pr-worktree),
@@ -405,8 +406,40 @@ The gaps Ghostty doesn't bind out of the box:
 | `Alt+Delete` (`fn+Alt+Backspace`) | Delete word forward |
 | `fn+Backspace` (`⌦`) | Forward-delete a character |
 | `Shift+Enter` | Insert a newline without submitting in Claude Code, Codex and zsh (inside herdr, zsh gets a plain Enter) |
+| `Alt+Shift+←` / `Alt+Shift+→` | Select a word at a time (zsh) |
+| `Cmd+Shift+←` / `Cmd+Shift+→` | Select to line start / end (sent as `Shift+Home` / `Shift+End`; zsh) |
+| `Cmd+↑` / `Cmd+↓` | Start / end of the input (sent as `Ctrl+Home` / `Ctrl+End`; zsh) |
+| `Cmd+Shift+↑` / `Cmd+Shift+↓` | Select to start / end of the input (sent as `Ctrl+Shift+Home` / `Ctrl+Shift+End`; zsh) |
 
-> On Omarchy, `Alt+←/→` and `Alt+Backspace` work on words in every app, not only Ghostty; GUI apps get the `Ctrl` chords, so browsers lose `Alt+←/→` for back/forward. AltGr works as Alt with these keys (`omarchy/alt-keys.lua`).
+In zsh, typing or pasting replaces the selection, the deleting keys remove it, `←` / `→` move to its start or end, and any other key clears it. Claude Code has no keyboard selection: there these keys only move the cursor, and `Cmd+↑` / `Cmd+↓` do nothing.
+
+## Omarchy keys
+
+Super stands in for Cmd and Alt for Option, so text keys work as on macOS in every app (`omarchy/text-keys.lua`). GUI apps get the Linux equivalents; terminals get the chords above. AltGr works as Alt with the arrows and Backspace.
+
+| Keys | Action |
+| --- | --- |
+| `Super+←` / `Super+→` | Start / end of line (`Home` / `End`) |
+| `Super+↑` / `Super+↓` | Start / end of the document (`Ctrl+Home` / `Ctrl+End`) |
+| `Super+Shift+arrow` | Select to there |
+| `Super+Backspace` | Delete to line start |
+| `Alt+←` / `Alt+→` | Word back / forward (`Ctrl+←` / `Ctrl+→`); browsers lose these for back/forward |
+| `Alt+Shift+←` / `Alt+Shift+→` | Select a word at a time (`Ctrl+Shift+←` / `Ctrl+Shift+→`) |
+| `Alt+Backspace` | Delete word backward |
+
+Caps Lock is Hyper, a modifier of its own, and Omarchy's window keys that sat on Super with the arrows or Backspace use it instead, keeping their other modifiers (`omarchy/hyper-keys.lua`, `omarchy/xkb/`). There is no Caps Lock and no Compose key.
+
+| Keys | Action |
+| --- | --- |
+| `Hyper+arrow` | Focus the window in that direction |
+| `Hyper+Shift+arrow` | Swap with the window in that direction |
+| `Hyper+Ctrl+←` / `Hyper+Ctrl+→` | Focus the previous / next window in a group |
+| `Hyper+Alt+arrow` | Move the window into the group in that direction |
+| `Hyper+Ctrl+Shift+arrow` | Move the window to the monitor in that direction |
+| `Hyper+Alt+Shift+arrow` | Move the workspace to the monitor in that direction |
+| `Hyper+Backspace` | Toggle window transparency |
+| `Hyper+Shift+Backspace` | Toggle window gaps |
+| `Hyper+Ctrl+Backspace` | Toggle single-window square aspect |
 
 ## License
 

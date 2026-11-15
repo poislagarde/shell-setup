@@ -76,6 +76,72 @@ fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
 autoload bashcompinit && bashcompinit
 autoload -Uz compinit && compinit -i
 
+# Text-field selection. Alt+Shift+←/→ select a word at a time, Cmd/Super+Shift+
+# ←/→ to the start or end of the line, and Cmd/Super+Shift+↑/↓ to the start or
+# end of the input; Cmd/Super+↑/↓ go there. Ghostty sends the Cmd/Super chords
+# as Shift+Home/End, Ctrl+Home/End and Ctrl+Shift+Home/End (ghostty/config).
+# Typing or pasting replaces the selection, deleting keys remove it, ←/→ move
+# to its start or end, and any other key clears it.
+zle-input-start() { CURSOR=0 }
+zle-input-end() { CURSOR=${#BUFFER} }
+zle -N zle-input-start
+zle -N zle-input-end
+bindkey '^[[1;5H' zle-input-start
+bindkey '^[[1;5F' zle-input-end
+
+typeset -gA _zle_select_moves=(
+  zle-select-word-back backward-word
+  zle-select-word-forward forward-word
+  zle-select-line-start beginning-of-line
+  zle-select-line-end end-of-line
+  zle-select-input-start zle-input-start
+  zle-select-input-end zle-input-end
+)
+zle-select() {
+  (( REGION_ACTIVE )) || zle set-mark-command
+  zle $_zle_select_moves[$WIDGET]
+}
+for _w in ${(k)_zle_select_moves}; do
+  zle -N $_w zle-select
+done
+bindkey '^[[1;4D' zle-select-word-back
+bindkey '^[[1;4C' zle-select-word-forward
+bindkey '^[[1;2H' zle-select-line-start
+bindkey '^[[1;2F' zle-select-line-end
+bindkey '^[[1;6H' zle-select-input-start
+bindkey '^[[1;6F' zle-select-input-end
+
+# Wrap the editing widgets (keeping Oh My Zsh's url-quote-magic and
+# bracketed-paste-magic) so they act on the selection first. This must follow
+# compinit, which redefines delete-char-or-list.
+zle-select-edit() {
+  if (( REGION_ACTIVE )); then
+    local start=$(( MARK < CURSOR ? MARK : CURSOR )) end=$(( MARK > CURSOR ? MARK : CURSOR ))
+    REGION_ACTIVE=0
+    case $WIDGET in
+      forward-char) CURSOR=$end; return ;;
+      backward-char) CURSOR=$start; return ;;
+    esac
+    BUFFER=${BUFFER[1,start]}${BUFFER[end+1,-1]}
+    CURSOR=$start
+    [[ $WIDGET == (self-insert|bracketed-paste) ]] || return
+  fi
+  zle zle-select-orig-$WIDGET -- "$@"
+}
+for _w in self-insert bracketed-paste backward-delete-char delete-char \
+    delete-char-or-list backward-kill-word backward-kill-line forward-char backward-char; do
+  [[ $widgets[$_w] == user:zle-select-edit ]] && continue  # already wrapped
+  zle -A $_w zle-select-orig-$_w
+  zle -N $_w zle-select-edit
+done
+unset _w
+
+zle-select-clear() {
+  [[ $LASTWIDGET == zle-select-* ]] || REGION_ACTIVE=0
+}
+autoload -Uz add-zle-hook-widget
+add-zle-hook-widget line-pre-redraw zle-select-clear
+
 # PATH
 export PATH="$HOME/bin:$PATH"
 export PATH="$PATH:$HOME/.local/bin"

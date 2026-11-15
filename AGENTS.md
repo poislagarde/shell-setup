@@ -30,6 +30,8 @@ herdr is the multiplexer. Its keys are Omarchy's herdr defaults, copied from
 `/usr/share/omarchy/config/herdr/config.toml`, plus this repo's
 `[[keys.command]]` entries. Check new bindings against herdr, Ghostty, fcitx5,
 and OS-level shortcuts; Omarchy's Hyprland binds the Super chords first.
+Super + arrows, Alt + ←/→ and Alt + Shift + ←/→ edit text in every app
+(`omarchy/text-keys.lua`), so herdr leaves them to the pane.
 
 ## Language choice for herdr plugins
 
@@ -104,7 +106,8 @@ tell the user how to reload (e.g. reload Ghostty config,
 > - `~/.config/hypr/hyprland.lua` (Omarchy) → **regular file** (Omarchy's user
 >   template) with a managed block (created by §20) in place of its
 >   `require("default.hypr.omarchy")` line: it `dofile`s `omarchy/qconsole.lua`
->   around that require, then `omarchy/alt-keys.lua` and `omarchy/undo-move.lua`.
+>   and `omarchy/hyper-keys.lua` around that require, then
+>   `omarchy/text-keys.lua` and `omarchy/undo-move.lua`.
 >   Edit the repo modules; personal Hyprland settings stay in `~/.config/hypr/`,
 >   never in this repo or between the markers.
 > - `~/.XCompose` (Linux) → **regular file** (Omarchy's template plus personal
@@ -139,11 +142,12 @@ The Karabiner row applies to macOS only (§19 is skipped on Linux).
 | --- | --- | --- |
 | Ghostty | `ghostty/config` | `~/.config/ghostty/config` (macOS: symlink to the repo file; Linux: the managed block loads it) |
 | Omarchy Quake console | `omarchy/qconsole.lua` | loaded by the managed block in `~/.config/hypr/hyprland.lua`, which wraps `require("default.hypr.omarchy")` (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
-| Omarchy Alt keys | `omarchy/alt-keys.lua` | loaded by the same managed block, after Omarchy's defaults (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
+| Omarchy Hyper window keys | `omarchy/hyper-keys.lua` | loaded by the same managed block, around Omarchy's defaults (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
+| Omarchy text keys | `omarchy/text-keys.lua` | loaded by the same managed block, after Omarchy's defaults (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
 | Omarchy window-move undo | `omarchy/undo-move.lua` | loaded by the same managed block, after the Alt keys (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
 | US International dead keys | `omarchy/dead-keys.XCompose` | included by the managed block at the end of `~/.XCompose` (Linux; created by bootstrap §21; `omarchy restart xcompose`) |
 | fcitx5 preedit | inlined in `.claude/commands/shell-setup.md` §21 | `PreeditEnabledByDefault=False` under `[Behavior]` and an empty `[Hotkey/TogglePreedit]` section (so `Ctrl+Alt+P` reaches herdr) in `~/.config/fcitx5/config` (Linux with fcitx5; change only those two settings, Omarchy owns the rest; `omarchy restart xcompose`) |
-| Plain `` ` `` key | `omarchy/xkb/rules/evdev`, `omarchy/xkb/symbols/shell-setup` | `~/.config/xkb/rules/evdev` and `~/.config/xkb/symbols/shell-setup` (symlinks; Omarchy only, since the rules load `/etc/xkb/rules/evdev`; created by bootstrap §21; after edits force a keymap recompile and restart fcitx5 as §21 does) |
+| Plain `` ` `` key, Caps Lock as Hyper | `omarchy/xkb/rules/evdev`, `omarchy/xkb/symbols/shell-setup` | `~/.config/xkb/rules/evdev` and `~/.config/xkb/symbols/shell-setup` (symlinks; Omarchy only, since the rules load `/etc/xkb/rules/evdev`; created by bootstrap §21; after edits force a keymap recompile and restart fcitx5 as §21 does) |
 | Ghostty on Linux | `ghostty/linux.conf` | loaded after `ghostty/config` by the managed block in `~/.config/ghostty/config` (Linux only) |
 | Ghostty D-Bus service on Linux | `ghostty/linux-service.conf`, `ghostty/linux-service-override.conf` | `~/.shell-setup/ghostty-service.conf` (symlink) and `~/.config/systemd/user/app-com.mitchellh.ghostty.service.d/shell-setup.conf` (symlink); after edits `systemctl --user daemon-reload`, then restart the service (closes its windows) |
 | herdr | `herdr/config.toml` | `~/.config/herdr/config.toml` (symlink to the repo file; edit either; `herdr server reload-config`) |

@@ -1042,11 +1042,23 @@ Karabiner picks the change up on save.
 - It is bound to the physical \` key (`code:49`), which dead-key layouts such as
   US International never send as `grave`.
 
-`omarchy/alt-keys.lua` gives every app macOS-style Alt keys:
+`omarchy/hyper-keys.lua` moves Omarchy's window keys on Super + arrows and
+Super + Backspace to Hyper with the same extra modifiers: Hyper + arrows focus,
+Hyper + Shift + arrows swap, and so on. Hyper is Caps Lock once §21 has run.
 
-- Alt + ←/→ jump a word and Alt + Backspace deletes the previous one. GUI apps
-  get the Ctrl chords; terminals get the Alt chords, which Ghostty turns into
-  word jumps (§16). Browsers lose Alt + ←/→ for back/forward.
+`omarchy/text-keys.lua` gives every app macOS-style text keys, with Super as
+Cmd and Alt as Option:
+
+- Alt + ←/→ jump a word, Alt + Shift + ←/→ select a word at a time, and
+  Alt + Backspace deletes the previous word. GUI apps get the Ctrl chords;
+  terminals get the Alt chords, which Ghostty turns into word jumps (§16) or
+  passes on to zsh and the apps in herdr. Browsers lose Alt + ←/→ for
+  back/forward.
+- Super + ←/→ go to the start or end of the line, Super + ↑/↓ to the start or
+  end of the document, and Super + Backspace deletes to the start of the line;
+  with Shift, the arrows select. GUI apps get Home/End and Ctrl + Home/End;
+  terminals get the Super chords, which Ghostty turns into `^A` / `^E` / `^U`
+  (§16) or passes on.
 - AltGr acts as Alt with these keys and with ↑/↓, so AltGr + ↑/↓ switch herdr
   spaces. Apps can't see AltGr as a modifier and would get a plain key.
 
@@ -1056,10 +1068,10 @@ console's window out. The window returns to the workspace it left; a window
 returned to the console or scratchpad reopens it over the workspace that was
 showing. One level only.
 
-The console module has to record the console's event subscriptions while
-Omarchy's defaults load, so a **managed block** replaces the
-`require("default.hypr.omarchy")` line in `~/.config/hypr/hyprland.lua` with
-lines that wrap it and then load the Alt keys and undo modules. Re-running
+The console and Hyper modules have to act while Omarchy's defaults load, so a
+**managed block** replaces the `require("default.hypr.omarchy")` line in
+`~/.config/hypr/hyprland.lua` with lines that wrap it and then load the text
+keys and undo modules. Re-running
 replaces the block. `omarchy refresh hyprland` resets the file, so run this
 section again after one. Run from the root of this repo:
 
@@ -1073,13 +1085,16 @@ awk -v dir="$PWD/omarchy" '
   inblock { next }
   $0 == "require(\"default.hypr.omarchy\")" && !done {
     print "-- >>> shell-setup managed >>>"
-    print "-- Omarchy defaults, wrapped by the shell-setup Quake console changes,"
-    print "-- then the shell-setup Alt keys and window-move undo."
+    print "-- Omarchy defaults, wrapped by the shell-setup Quake console and Hyper"
+    print "-- key changes, then the shell-setup text keys and window-move undo."
     printf "local shell_setup_qconsole = dofile(\"%s/qconsole.lua\")\n", dir
+    printf "local shell_setup_hyper_keys = dofile(\"%s/hyper-keys.lua\")\n", dir
     print "shell_setup_qconsole.capture()"
+    print "shell_setup_hyper_keys.capture()"
     print "require(\"default.hypr.omarchy\")"
+    print "shell_setup_hyper_keys.apply()"
     print "shell_setup_qconsole.apply()"
-    printf "dofile(\"%s/alt-keys.lua\")\n", dir
+    printf "dofile(\"%s/text-keys.lua\")\n", dir
     printf "dofile(\"%s/undo-move.lua\")\n", dir
     print "-- <<< shell-setup managed <<<"
     done = 1
@@ -1092,15 +1107,18 @@ grep -qxF 'shell_setup_qconsole.apply()' "$f" ||
 hyprctl reload >/dev/null && hyprctl configerrors
 ```
 
-`hyprctl configerrors` must report nothing, and all four checks must pass. If
+`hyprctl configerrors` must report nothing, and all six checks must pass. If
 one of the first two fails after an Omarchy update, Omarchy changed how
 `qconsole.lua` seeds or sizes the console; the console then keeps that part of
-Omarchy's default.
+Omarchy's default. If the fourth finds a Super chord, Omarchy bound a window key
+outside Hyprland's `hl.bind` while its defaults load; move it by hand.
 
 ```bash
 hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
 hyprctl repl 'return tostring(qconsole_resized)'     # expect true
-hyprctl binds -j | jq '[.[] | select(.description | IN("Word back", "Word forward", "Delete word back", "Alt + Up", "Alt + Down"))] | length'   # expect 8
+hyprctl repl 'return hyper_keys_moved'               # expect 25
+hyprctl binds -j | jq '[.[] | select((.modmask / 64 | floor) % 2 == 1) | select(.key | ascii_upcase | IN("LEFT", "RIGHT", "UP", "DOWN", "BACKSPACE")) | select(.description | test("^(Go to|Select to|Delete to line start)") | not)] | length'   # expect 0
+hyprctl binds -j | jq '[.[] | select(.description | test("^(Word |Select word |Delete word back|Alt \\+ |Go to |Select to |Delete to line start)"))] | length'   # expect 21
 hyprctl binds -j | jq '[.[] | select(.description == "Undo window move")] | length'   # expect 1
 ```
 
@@ -1178,13 +1196,18 @@ EOF
 fi
 ```
 
-**Omarchy only:** make the `` ` `` key a plain key. Skip this part where
-`/etc/xkb/rules/evdev` doesn't exist, since the repo's rules load it.
+**Omarchy only:** make the `` ` `` key a plain key and Caps Lock a Hyper key.
+Skip this part where `/etc/xkb/rules/evdev` doesn't exist, since the repo's
+rules load it.
 
 `omarchy/xkb/` holds XKB rules that load Omarchy's. For `us intl` only, they
 make `` ` `` and `~` type immediately and move their dead keys to AltGr and
 AltGr + Shift. ñ stays on AltGr + N. §20 binds the Quake console to the
-physical key, so the console keeps working. libxkbcommon reads `~/.config/xkb`
+physical key, so the console keeps working. Wherever Omarchy's
+`omarchy:shift_caps_compose` option is set (its default, and on any keyboard
+whose own options repeat it), Caps Lock becomes Hyper: a modifier of its own
+(Mod3) that §20 binds Omarchy's window keys to. That replaces Caps Lock and
+Omarchy's Shift + Caps Lock Compose; there is no Compose key. libxkbcommon reads `~/.config/xkb`
 before `/etc/xkb`, so link both files there. If
 `~/.config/xkb/rules/evdev` already exists and isn't this link, stop and ask:
 it would be replaced.
@@ -1204,6 +1227,7 @@ hyprctl repl 'hl.config({input = {kb_rules = "evdev"}})' >/dev/null
 hyprctl reload >/dev/null && hyprctl configerrors
 omarchy restart xcompose
 xkbcli dump-keymap-wayland | grep 'key <TLDE>'   # expect grave, asciitilde, dead_grave, dead_tilde
+xkbcli dump-keymap-wayland | grep -A4 'key <CAPS>' | grep -c 'SetMods(modifiers=Mod3)'   # expect 1
 ```
 
 Elsewhere, log out and back in. Apps that compose keys themselves, without the
@@ -1250,17 +1274,19 @@ systemctl --user show -p ExecStart app-com.mitchellh.ghostty.service | grep -q g
 grep -c '/omarchy/dead-keys.XCompose"$' ~/.XCompose   # expect 1
 ```
 
-**Omarchy:** confirm §20's Quake console changes, Alt keys and window-move
-undo, and §21's plain `` ` `` key, loaded:
+**Omarchy:** confirm §20's Quake console changes, Hyper window keys, text keys
+and window-move undo, and §21's plain `` ` `` key and Hyper key, loaded:
 
 ```bash
 hyprctl configerrors
 hyprctl repl 'return qconsole_agent_seeds_removed'   # expect 1
 hyprctl repl 'return tostring(qconsole_resized)'     # expect true
-hyprctl binds -j | jq '[.[] | select(.description | IN("Word back", "Word forward", "Delete word back", "Alt + Up", "Alt + Down"))] | length'   # expect 8
+hyprctl repl 'return hyper_keys_moved'               # expect 25
+hyprctl binds -j | jq '[.[] | select(.description | test("^(Word |Select word |Delete word back|Alt \\+ |Go to |Select to |Delete to line start)"))] | length'   # expect 21
 hyprctl binds -j | jq '[.[] | select(.description == "Undo window move")] | length'   # expect 1
 omarchy default terminal                             # expect ghostty
 xkbcli dump-keymap-wayland | grep 'key <TLDE>'       # expect grave, asciitilde, dead_grave, dead_tilde
+xkbcli dump-keymap-wayland | grep -A4 'key <CAPS>' | grep -c 'SetMods(modifiers=Mod3)'   # expect 1
 ```
 
 Confirm §17 left nothing of tmux behind:

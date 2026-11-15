@@ -4,3 +4,16 @@ partial alphanumeric_keys
 xkb_symbols "plain_grave" {
   key <TLDE> { [ grave, asciitilde, dead_grave, dead_tilde ] };
 };
+
+// Caps Lock is Hyper, alone on Mod3 so it combines with Shift, Ctrl and Alt
+// (Hyprland's MOD3). It replaces Omarchy's Caps Lock and Shift + Caps Lock
+// Compose; there is no Compose key.
+partial modifier_keys
+xkb_symbols "caps_hyper" {
+  key <CAPS> {
+    type[Group1] = "ONE_LEVEL",
+    symbols[Group1] = [ Hyper_L ],
+    actions[Group1] = [ SetMods(modifiers = Mod3) ]
+  };
+  modifier_map Mod3 { <CAPS> };
+};

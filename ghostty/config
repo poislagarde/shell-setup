@@ -107,7 +107,7 @@ keybind = shift+enter=csi:13;2u
 # Alt+Shift+6 itself never reaches herdr; a keybind fires ahead of macOS text
 # input. Match the physical key, since Shift+6 is no longer `6`. zsh binds the
 # sequence to a no-op for a bare shell. On Omarchy, Hyprland rewrites the chord
-# before Ghostty sees it (omarchy/alt-keys.lua).
+# before Ghostty sees it (omarchy/text-keys.lua).
 keybind = alt+shift+digit_6=csi:54;7u
 
 # --- Pane management ---
@@ -148,13 +148,25 @@ keybind = alt+9=unbind
 # keybind = super+shift+t=new_tab
 
 # --- Natural Text Editing ---
-# Ghostty already binds most of these by default; the ones below cover the
-# gaps it does NOT bind out of the box.
-#
-# Already-default in Ghostty (kept commented for reference):
-#   keybind = super+arrow_left=text:\x01    # Cmd+←  → start of line (^A)
-#   keybind = super+arrow_right=text:\x05   # Cmd+→  → end of line   (^E)
-#   keybind = super+backspace=text:\x15     # Cmd+⌫  → kill to line start (^U)
+# ⌘+← / ⌘+→ → start / end of line (^A / ^E). macOS Ghostty binds these by
+# default; Linux Ghostty doesn't, and on Omarchy Super + arrows reach it through
+# omarchy/text-keys.lua.
+keybind = super+arrow_left=text:\x01
+keybind = super+arrow_right=text:\x05
+
+# The other ⌘ + arrows → the Home/End keys a Linux text field uses for them:
+# ⌘⇧+← / ⌘⇧+→ → Shift+Home / Shift+End (select to line start / end), ⌘+↑ / ⌘+↓
+# → Ctrl+Home / Ctrl+End (start / end of the input), and ⌘⇧+↑ / ⌘⇧+↓ →
+# Ctrl+Shift+Home / Ctrl+Shift+End (select to there). herdr drops Super arrows
+# for apps without the kitty keyboard protocol, zsh included, but passes these
+# on; zsh binds them (zsh/zshrc). This replaces macOS Ghostty's ⌘+↑ / ⌘+↓
+# jump-to-prompt, which does nothing inside herdr.
+keybind = super+shift+arrow_left=csi:1;2H
+keybind = super+shift+arrow_right=csi:1;2F
+keybind = super+arrow_up=csi:1;5H
+keybind = super+arrow_down=csi:1;5F
+keybind = super+shift+arrow_up=csi:1;6H
+keybind = super+shift+arrow_down=csi:1;6F
 
 # ⌥+← / ⌥+→ → word back / forward (Esc b / Esc f), as macOS Ghostty does by
 # default. Linux Ghostty sends Alt+arrow CSI instead, which herdr would read as
