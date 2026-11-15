@@ -46,7 +46,9 @@ end
 -- Seed an empty console with the default shell instead of `omarchy-agent`. Its
 -- own app ID makes the terminal start a separate instance, so the window lands
 -- on the console rather than being handed to an already-running terminal (as
--- Ghostty's single-instance mode would).
+-- Ghostty's single-instance mode would). Hyprland creates the console empty
+-- even for a window being moved onto it (Super + Shift + `, Super + Shift + Z),
+-- so the check waits a loop for the move to land.
 local function seed_shell()
   qconsole_agent_seeds_removed = 0
   for _, hook in ipairs(hooks) do
@@ -57,9 +59,15 @@ local function seed_shell()
   end
 
   hl.on("workspace.created", function(ws)
-    if ws and ws.name == CONSOLE and ws.is_empty then
-      hl.exec_cmd(o.launch("xdg-terminal-exec --app-id=org.omarchy.qconsole"), { workspace = CONSOLE .. " silent" })
+    if not (ws and ws.name == CONSOLE and ws.is_empty) then
+      return
     end
+    hl.timer(function()
+      local console = hl.get_workspace(CONSOLE)
+      if console and console.is_empty then
+        hl.exec_cmd(o.launch("xdg-terminal-exec --app-id=org.omarchy.qconsole"), { workspace = CONSOLE .. " silent" })
+      end
+    end, { timeout = 1, type = "oneshot" })
   end)
 end
 

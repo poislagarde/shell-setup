@@ -30,8 +30,9 @@ hl.on("window.open", function(window)
   remember(window, window and window.workspace)
 end)
 
-hl.on("window.destroy", function(window)
-  if window then
+-- window.destroy no longer knows the window's address; window.close does.
+hl.on("window.close", function(window)
+  if window and window.address then
     placed[window.address] = nil
   end
 end)

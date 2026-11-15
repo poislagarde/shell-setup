@@ -1036,7 +1036,8 @@ Karabiner picks the change up on save.
 
 `omarchy/qconsole.lua` adjusts Omarchy's Quake console (Super + \`):
 
-- It opens the default shell instead of the default agent.
+- It opens the default shell instead of the default agent, and none when a
+  window is moved onto it.
 - It spans the full width and 75% of the usable height.
 - It is bound to the physical \` key (`code:49`), which dead-key layouts such as
   US International never send as `grave`.
