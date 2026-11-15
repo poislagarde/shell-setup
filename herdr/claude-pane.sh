@@ -1,12 +1,16 @@
 #!/bin/sh
 # Open a herdr space, tab or split and type a command into its shell.
-# Usage: claude-pane.sh space|tab|right|down [command=claude] [cwd=$HOME|--projects]
+# Usage: claude-pane.sh space|tab|right|down [command=claude] [cwd|--projects]
+# cwd defaults to $HOME for a space and to the active pane's directory otherwise.
 # Meant for a [[keys.command]] shell binding: herdr supplies HERDR_BIN_PATH,
 # HERDR_ACTIVE_WORKSPACE_ID, HERDR_ACTIVE_PANE_ID and HERDR_ACTIVE_PANE_CWD.
 set -eu
 herdr=${HERDR_BIN_PATH:-herdr}
 cmd=${2:-claude}
-cwd=${3:-$HOME}
+case ${1:-} in
+  space) cwd=${3:-$HOME} ;;
+  *) cwd=${3:-${HERDR_ACTIVE_PANE_CWD:-$HOME}} ;;
+esac
 if [ "$cwd" = --projects ]; then
   local_env_file="${XDG_CONFIG_HOME:-$HOME/.config}/shell-setup/local-env.sh"
   if [ -r "$local_env_file" ]; then
@@ -23,7 +27,7 @@ case ${1:-} in
     key=root_pane ;;
   right|down)
     json=$("$herdr" pane split --pane "$HERDR_ACTIVE_PANE_ID" --direction "$1" \
-      --cwd "${HERDR_ACTIVE_PANE_CWD:-$HOME}" --focus)
+      --cwd "$cwd" --focus)
     key=pane ;;
   *) echo "usage: $0 space|tab|right|down [command] [cwd]" >&2; exit 2 ;;
 esac

@@ -76,7 +76,7 @@ herdr/
 ├── local.shell-setup.herdr-claude-detection.plist # LaunchAgent: regenerates that override when herdr refreshes its manifest
 ├── local.shell-setup.herdr-claude-detection.path  # Linux: systemd path unit watching the same manifest
 ├── local.shell-setup.herdr-claude-detection.service # Linux: systemd unit the path unit starts to regenerate the override
-└── claude-pane.sh           # opens a herdr tab/split running Claude Code (symlinked to ~/.shell-setup/)
+└── claude-pane.sh           # opens a herdr space/tab/split running Claude Code (symlinked to ~/.shell-setup/)
 omarchy/
 ├── alt-keys.lua             # Alt+←/→/Backspace edit words in every app; AltGr acts as Alt with arrows and Backspace (loaded by ~/.config/hypr/hyprland.lua's managed block)
 ├── dead-keys.XCompose       # US International dead keys typed as on macOS: ' + m → 'm (included by ~/.XCompose's managed block)
@@ -126,6 +126,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | Keys | Action |
 | --- | --- |
 | `Alt+T` / prefix, `c` | New tab |
+| `Ctrl+Alt+T` | New tab running **Claude Code** (in the active pane's directory) |
 | prefix, `n` | Next tab |
 | prefix, `p` | Previous tab |
 | `Alt+Shift+←` / `Alt+Shift+→` | Move tab toward the front / back |
@@ -141,8 +142,8 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | --- | --- |
 | `Alt+Shift+Enter` / prefix, `v` | Split right (side-by-side) |
 | `Alt+Enter` / prefix, `h` | Split down (stacked) |
-| `Ctrl+Alt+Shift+=` | Split right running **Claude Code** |
-| `Ctrl+Alt+Shift+-` | Split down running **Claude Code** |
+| `Ctrl+Alt+Shift+Enter` | Split right running **Claude Code** |
+| `Ctrl+Alt+Enter` | Split down running **Claude Code** |
 | `Ctrl+Alt+←/→/↑/↓` | Move focus between panes (spatial) |
 | prefix, `Tab` / prefix, `Shift+Tab` | Next / previous pane |
 | prefix, `;` | Last pane |
@@ -159,8 +160,8 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | Keys | Action |
 | --- | --- |
 | `Alt+Shift+T` / prefix, `Shift+C` | New space |
-| `Ctrl+Alt+=` | New space running **Claude Code** (at `$HOME`) |
-| `Ctrl+Alt+p` | New space running **Claude Code** in `$PROJECTS_DIR` |
+| `Ctrl+Alt+Shift+T` | New space running **Claude Code** (at `$HOME`) |
+| `Ctrl+Alt+P` | New space running **Claude Code** in `$PROJECTS_DIR` |
 | `Alt+↓` / prefix, `Shift+N` | Next space |
 | `Alt+↑` / prefix, `Shift+P` | Previous space |
 | `Alt+Shift+1` … `Alt+Shift+9` (or `Ctrl+Alt+1` … `9`) | Jump to space 1–9 |
