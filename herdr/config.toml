@@ -118,9 +118,10 @@ type = "plugin_action"
 description = "forward through space history"
 command = "poislagarde.last-workspace.forward"
 
-# Claude Code launchers: Ctrl plus the plain new-tab, new-space or split key.
-# The new pane gets a normal shell and the command is typed into it, so the
-# zshrc `claude` alias and exported vars apply.
+# Claude Code launchers: Ctrl plus the plain new-tab, new-space or split key,
+# opening in the active pane's directory. P in place of T opens in
+# $PROJECTS_DIR. The new pane gets a normal shell and the command is typed into
+# it, so the zshrc `claude` alias and exported vars apply.
 [[keys.command]]
 key = "ctrl+alt+t"
 type = "shell"
@@ -130,11 +131,17 @@ command = "~/.shell-setup/claude-pane.sh tab"
 [[keys.command]]
 key = "ctrl+alt+shift+t"
 type = "shell"
-description = "new space running Claude Code at $HOME"
+description = "new space running Claude Code"
 command = "~/.shell-setup/claude-pane.sh space"
 
 [[keys.command]]
 key = "ctrl+alt+p"
+type = "shell"
+description = "new tab running Claude Code in $PROJECTS_DIR"
+command = "~/.shell-setup/claude-pane.sh tab claude --projects"
+
+[[keys.command]]
+key = "ctrl+alt+shift+p"
 type = "shell"
 description = "new space running Claude Code in $PROJECTS_DIR"
 command = "~/.shell-setup/claude-pane.sh space claude --projects"

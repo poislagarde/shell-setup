@@ -127,6 +127,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | --- | --- |
 | `Alt+T` / prefix, `c` | New tab |
 | `Ctrl+Alt+T` | New tab running **Claude Code** (in the active pane's directory) |
+| `Ctrl+Alt+P` | New tab running **Claude Code** in `$PROJECTS_DIR` |
 | prefix, `n` | Next tab |
 | prefix, `p` | Previous tab |
 | `Alt+Shift+←` / `Alt+Shift+→` | Move tab toward the front / back |
@@ -160,8 +161,8 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | Keys | Action |
 | --- | --- |
 | `Alt+Shift+T` / prefix, `Shift+C` | New space |
-| `Ctrl+Alt+Shift+T` | New space running **Claude Code** (at `$HOME`) |
-| `Ctrl+Alt+P` | New space running **Claude Code** in `$PROJECTS_DIR` |
+| `Ctrl+Alt+Shift+T` | New space running **Claude Code** (in the active pane's directory) |
+| `Ctrl+Alt+Shift+P` | New space running **Claude Code** in `$PROJECTS_DIR` |
 | `Alt+↓` / prefix, `Shift+N` | Next space |
 | `Alt+↑` / prefix, `Shift+P` | Previous space |
 | `Alt+Shift+1` … `Alt+Shift+9` (or `Ctrl+Alt+1` … `9`) | Jump to space 1–9 |
