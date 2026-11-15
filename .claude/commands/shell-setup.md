@@ -798,6 +798,8 @@ else
   systemctl --user enable --now local.shell-setup.herdr-claude-detection.path
   systemctl --user start local.shell-setup.herdr-claude-detection.service
 fi
+herdr integration install claude
+herdr integration install codex
 herdr plugin install poislagarde/herdr-branch-labels \
   --ref "$(cat herdr/branch-labels.ref)" --yes
 branch_labels_config_dir="$(herdr plugin config-dir poislagarde.branch-labels)"
@@ -849,6 +851,15 @@ default (Omarchy ships one) is not drift: back it up as
 `config.toml.pre-shell-setup` and link over it. A distro-installed herdr (Omarchy
 packages it) satisfies the `command -v herdr` check; update it with the system
 package manager instead of `herdr update`.
+
+The Claude Code and Codex integrations add a `SessionStart` hook to
+`~/.claude/settings.json` and `~/.codex/hooks.json` that reports each session
+to herdr, so after a server restart herdr resumes those panes with
+`claude --resume` or `codex resume`. Without them, restored agent panes come
+back as plain shells, including those revived by the worktree-cleanup plugin.
+§15's hook merge keeps these entries. Trust the new Codex hook with `/hooks` on
+the next `codex` run. When `herdr integration status` reports either as
+outdated, rerun its install command.
 
 `herdr/claude-detection-overlay.sh` writes herdr's local Claude detection
 override, `~/.config/herdr/agent-detection/claude.toml`, from the cached remote

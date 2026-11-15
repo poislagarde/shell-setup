@@ -342,6 +342,10 @@ registration and metadata; directory names alone do not establish eligibility.
 | --- | --- |
 | prefix, `o` | Jump to the agent behind the visible notification |
 
+After a herdr server restart, Claude Code and Codex panes resume their
+conversations through herdr's integrations (bootstrap §18). Only sessions
+started after the integrations were installed can resume.
+
 A Claude session idle at its prompt with a background shell or Monitor still
 running counts as working: its sidebar circle stays yellow `●` until the job
 exits (see `herdr/claude-detection-overlay.sh`).
