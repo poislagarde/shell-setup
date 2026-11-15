@@ -25,7 +25,7 @@ Claude runs a 22-section checklist top to bottom, pausing for verification betwe
 - **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, and herdr configs.
 - **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically (as does a tmpfs `/tmp` on Linux), and tells the agent to use a persistent directory instead.
-- **Omarchy** — Ghostty as the default terminal, and Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it.
+- **Omarchy** — Ghostty as the default terminal; Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it; and `Super+Shift+Z` to undo the last move of a window to another workspace, such as a `Super+Shift+1`…`0` slip that pulls the console's window out.
 - **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents. On Omarchy, `` ` `` and `~` type immediately; their dead keys move to AltGr, and ñ is AltGr+N. Alt+←/→ jump words and Alt+Backspace deletes one in every app, and AltGr works as Alt with the arrows and Backspace.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
@@ -83,7 +83,8 @@ omarchy/
 ├── xkb/                     # linked into ~/.config/xkb: US International's ` and ~ as plain keys, dead keys on AltGr
 │   ├── rules/evdev
 │   └── symbols/shell-setup
-└── qconsole.lua             # Omarchy's Quake console: default shell, full width × 75% height, physical ` key (loaded by ~/.config/hypr/hyprland.lua's managed block)
+├── qconsole.lua             # Omarchy's Quake console: default shell, full width × 75% height, physical ` key (loaded by ~/.config/hypr/hyprland.lua's managed block)
+└── undo-move.lua            # Super+Shift+Z puts the last window moved to another workspace back (loaded by ~/.config/hypr/hyprland.lua's managed block)
 zsh/
 └── zshrc                    # sourced by ~/.zshrc's managed block (theme/plugins, PATH, keybinds, awsenv)
 ```
