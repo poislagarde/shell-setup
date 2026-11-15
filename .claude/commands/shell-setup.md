@@ -1137,15 +1137,27 @@ theme is dark. Omarchy renders `omarchy/themed/shell-setup-ghostty.conf.tpl`
 into the current theme on every theme change; `ghostty/linux.conf` loads the
 result, which loads `ghostty/linux-dark.conf` for dark themes only. That file
 loads after `~/.config/ghostty/local.conf`, so a `foreground` there doesn't
-override it. When Retro 82 is already active, refresh it instead of setting it
-again, since `omarchy theme set` resets the background. Run from the root of
-this repo:
+override it.
+
+The top bar's text takes the same color. `omarchy/theme-set-bar-text.sh`, a
+theme-set hook, reads the `foreground` of `ghostty/linux-dark.conf` and writes
+it as `[bar] text` into a **managed block** at the end of
+`~/.config/omarchy/shell.toml`; on a light theme it removes the block. The bar
+watches that file and layers it over the theme. Other settings in the file,
+such as `[font] base-size` from `omarchy display text size`, stay outside the
+markers; never edit between them.
+
+When Retro 82 is already active, refresh it instead of setting it again, since
+`omarchy theme set` resets the background. Either one runs the hook. Run from
+the root of this repo:
 
 ```bash
-mkdir -p ~/.shell-setup ~/.config/omarchy/themed
+mkdir -p ~/.shell-setup ~/.config/omarchy/themed ~/.config/omarchy/hooks/theme-set.d
 ln -sfn "$PWD/ghostty/linux-dark.conf" ~/.shell-setup/ghostty-dark.conf
 ln -sfn "$PWD/omarchy/themed/shell-setup-ghostty.conf.tpl" \
   ~/.config/omarchy/themed/shell-setup-ghostty.conf.tpl
+ln -sfn "$PWD/omarchy/theme-set-bar-text.sh" \
+  ~/.config/omarchy/hooks/theme-set.d/shell-setup-bar-text
 if [ "$(omarchy theme current)" = "Retro 82" ]; then
   omarchy theme refresh
 else
@@ -1153,6 +1165,7 @@ else
 fi
 omarchy theme current                                # expect Retro 82
 ghostty +show-config --changes-only=false | grep '^foreground'   # expect #e4e4e4
+grep -A2 '^# >>> shell-setup managed >>>$' ~/.config/omarchy/shell.toml   # expect [bar] text = "#e4e4e4"
 ```
 
 ## 21. Adjust US International Dead Keys
