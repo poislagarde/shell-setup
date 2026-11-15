@@ -2,7 +2,9 @@
 
 My personal macOS and Linux bootstrap, packaged as a Claude Code slash command so any fresh machine can be brought up to my baseline by handing the instructions to Claude.
 
-Linux support targets Arch-based systems (pacman plus an AUR helper), as on [Omarchy](https://omarchy.org). There, the Karabiner Hyper key is skipped, and Ghostty keeps the distro's config with this repo's layered on top.
+It is machine-agnostic: nothing here depends on one machine's hardware. Fixes for a particular machine, such as its keyboard row, touchpad or display, live in a separate repository for that machine.
+
+Linux support targets Arch-based systems (pacman plus an AUR helper), as on [Omarchy](https://omarchy.org). There, XKB makes Caps Lock the Hyper key instead of Karabiner, and Ghostty keeps the distro's config with this repo's layered on top.
 
 ## Usage
 

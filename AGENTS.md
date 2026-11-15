@@ -18,6 +18,15 @@ paths, or local account identifiers. Store machine-specific project paths and
 setup commands in local files outside this checkout. Check the complete diff
 for those details before committing or publishing.
 
+## Machine-agnostic
+
+Everything here must work on any machine running macOS or Omarchy. Settings
+that exist because of one machine's hardware (its keyboard row, touchpad,
+display, fingerprint reader, or anything matched by a device name) belong in a
+separate repository for that machine, and personal preferences stay in the home
+directory. When such a setting has to cooperate with this repo, hook into
+something generic, such as an Omarchy option or a layout, never a device.
+
 ## Committing here
 
 Commit straight to `main` in this repository and push — no branch, no pull
@@ -144,7 +153,7 @@ The Karabiner row applies to macOS only (§19 is skipped on Linux).
 | Omarchy Quake console | `omarchy/qconsole.lua` | loaded by the managed block in `~/.config/hypr/hyprland.lua`, which wraps `require("default.hypr.omarchy")` (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
 | Omarchy Hyper window keys | `omarchy/hyper-keys.lua` | loaded by the same managed block, around Omarchy's defaults (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
 | Omarchy text keys | `omarchy/text-keys.lua` | loaded by the same managed block, after Omarchy's defaults (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
-| Omarchy window-move undo | `omarchy/undo-move.lua` | loaded by the same managed block, after the Alt keys (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
+| Omarchy window-move undo | `omarchy/undo-move.lua` | loaded by the same managed block, after the text keys (Omarchy only; created by bootstrap §20; `hyprctl reload`, then `hyprctl configerrors`) |
 | Omarchy theme | inlined in `.claude/commands/shell-setup.md` §20 | Omarchy's current theme, Retro 82 (`omarchy theme current`; Omarchy only; switch with `omarchy theme set "Retro 82"`, which also retints Ghostty) |
 | US International dead keys | `omarchy/dead-keys.XCompose` | included by the managed block at the end of `~/.XCompose` (Linux; created by bootstrap §21; `omarchy restart xcompose`) |
 | fcitx5 preedit | inlined in `.claude/commands/shell-setup.md` §21 | `PreeditEnabledByDefault=False` under `[Behavior]` and an empty `[Hotkey/TogglePreedit]` section (so `Ctrl+Alt+P` reaches herdr) in `~/.config/fcitx5/config` (Linux with fcitx5; change only those two settings, Omarchy owns the rest; `omarchy restart xcompose`) |
