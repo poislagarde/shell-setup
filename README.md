@@ -25,7 +25,7 @@ Claude runs a 22-section checklist top to bottom, pausing for verification betwe
 - **Git** — a `git up` alias and [`git-mux`](https://github.com/poislagarde/git-mux) for running a command across many repos with per-host SSH multiplexing.
 - **Dotfiles** — Claude Code (`.claude/`), Ghostty, and herdr configs.
 - **Agent guardrails** — a Claude Code and Codex `PreToolUse` hook (`assistants/worktree-guard.py`) refuses `git worktree add` into `/tmp` or `$TMPDIR`, which macOS empties automatically (as does a tmpfs `/tmp` on Linux), and tells the agent to use a persistent directory instead.
-- **Omarchy** — Ghostty as the default terminal; Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it; and `Super+Shift+Z` to undo the last move of a window to another workspace, such as a `Super+Shift+1`…`0` slip that pulls the console's window out.
+- **Omarchy** — the Retro 82 theme, with soft-white terminal text on dark themes; Ghostty as the default terminal; Omarchy's Quake console (``Super+` ``) opening the default shell at full width and 75% height, bound to the physical key so US International's dead `` ` `` still reaches it; and `Super+Shift+Z` to undo the last move of a window to another workspace, such as a `Super+Shift+1`…`0` slip that pulls the console's window out.
 - **Keyboard (Linux)** — US International dead keys type as on macOS: `'` + `m` gives `'m`, and a dead key accents only the letters macOS accents. On Omarchy, `` ` `` and `~` type immediately; their dead keys move to AltGr, and ñ is AltGr+N. Super and Alt edit text as Cmd and Option do on macOS, in every app ([Omarchy keys](#omarchy-keys)); Caps Lock is a Hyper key that takes over Omarchy's window keys on the arrows.
 
 This list is deliberately non-exhaustive. The authoritative source — exact commands, idempotency rules, managed-block markers, and per-section verification — is **[`.claude/commands/shell-setup.md`](.claude/commands/shell-setup.md)**, the file Claude actually executes.
@@ -51,6 +51,7 @@ assistants/
 ghostty/
 ├── config                   # Ghostty terminal config (quick terminal, splits, NTE)
 ├── linux.conf               # Linux: open a window on direct launches (loaded after config)
+├── linux-dark.conf          # Linux: soft-white default text while the Omarchy theme is dark
 ├── linux-service.conf       # Linux: keep Ghostty's D-Bus service windowless
 ├── linux-service-override.conf # Linux: systemd drop-in that loads linux-service.conf into that service
 ├── build-top-right.sh       # build a Ghostty app with a top-right quick terminal
@@ -81,6 +82,8 @@ omarchy/
 ├── dead-keys.XCompose       # US International dead keys typed as on macOS: ' + m → 'm (included by ~/.XCompose's managed block)
 ├── hyper-keys.lua           # moves Omarchy's Super+arrow/Backspace window keys to Hyper (Caps Lock) (loaded by ~/.config/hypr/hyprland.lua's managed block)
 ├── text-keys.lua            # macOS-style text keys in every app: Super as Cmd, Alt as Option, AltGr as Alt (loaded by ~/.config/hypr/hyprland.lua's managed block)
+├── themed/                  # Omarchy theme templates (linked into ~/.config/omarchy/themed)
+│   └── shell-setup-ghostty.conf.tpl # loads ghostty/linux-dark.conf when the theme is dark
 ├── xkb/                     # linked into ~/.config/xkb: US International's ` and ~ as plain keys, dead keys on AltGr; Caps Lock as Hyper
 │   ├── rules/evdev
 │   └── symbols/shell-setup

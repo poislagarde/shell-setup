@@ -1132,6 +1132,29 @@ omarchy default terminal ghostty
 A console that is already open keeps its windows; the shell seeding applies the
 next time it is created empty.
 
+Use the Retro 82 theme, with Ghostty's default text in soft white while the
+theme is dark. Omarchy renders `omarchy/themed/shell-setup-ghostty.conf.tpl`
+into the current theme on every theme change; `ghostty/linux.conf` loads the
+result, which loads `ghostty/linux-dark.conf` for dark themes only. That file
+loads after `~/.config/ghostty/local.conf`, so a `foreground` there doesn't
+override it. When Retro 82 is already active, refresh it instead of setting it
+again, since `omarchy theme set` resets the background. Run from the root of
+this repo:
+
+```bash
+mkdir -p ~/.shell-setup ~/.config/omarchy/themed
+ln -sfn "$PWD/ghostty/linux-dark.conf" ~/.shell-setup/ghostty-dark.conf
+ln -sfn "$PWD/omarchy/themed/shell-setup-ghostty.conf.tpl" \
+  ~/.config/omarchy/themed/shell-setup-ghostty.conf.tpl
+if [ "$(omarchy theme current)" = "Retro 82" ]; then
+  omarchy theme refresh
+else
+  omarchy theme set "Retro 82"
+fi
+omarchy theme current                                # expect Retro 82
+ghostty +show-config --changes-only=false | grep '^foreground'   # expect #e4e4e4
+```
+
 ## 21. Adjust US International Dead Keys
 
 **Linux only.**
