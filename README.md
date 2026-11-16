@@ -127,7 +127,7 @@ Also installed but used indirectly, not via their own command: **sanesidebuttons
 
 ## herdr keybinds
 
-herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus `Alt+T` for a new tab, `Alt+Shift+T` for a new space, `Alt+Shift+1`…`9` for spaces, and this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, fcitx5, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
+herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr defaults (`/usr/share/omarchy/config/herdr/config.toml`), plus `Alt+T` for a new tab, `Alt+Shift+T` for a new space, `Alt+Shift+1`…`9` for spaces, `Alt+Z` to zoom a pane, and this repo's plugin and Claude Code commands. Check herdr shortcuts against herdr, Ghostty, fcitx5, and OS-level shortcuts; Omarchy's Hyprland binds the Super chords, so herdr uses none. herdr's own defaults stay active where Omarchy's set doesn't replace them (`prefix+?` lists everything; on Omarchy, `Super+Ctrl+K` opens its herdr keybinding menu). Prefix is `Ctrl+Space`; on macOS, turn off **System Settings › Keyboard › Keyboard Shortcuts › Input Sources › Select the previous input source** so it reaches herdr.
 
 ### Tabs
 
@@ -159,7 +159,7 @@ herdr (`herdr/config.toml`) is the multiplexer. Its keys are Omarchy's herdr def
 | prefix, `;` | Last pane |
 | `Ctrl+Alt+Shift+←/→/↑/↓` | Resize the active pane |
 | prefix, `Ctrl+←/→/↑/↓` | Resize mode (arrows, `Esc` to leave) |
-| prefix, `z` | Zoom / unzoom active pane |
+| `Alt+Z` / prefix, `z` | Zoom / unzoom active pane |
 | prefix, `Shift+O` | Rename pane |
 | `Alt+Esc` / prefix, `x` | Close pane |
 | prefix, `[` | Copy mode (`q` to quit) |
